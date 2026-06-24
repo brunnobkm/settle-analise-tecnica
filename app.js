@@ -127,7 +127,7 @@ function openTable(i) {
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
-  renderSummary();
+  renderSummary(); renderCta();
   $("#tableOverlay").hidden = false;
 }
 const closeTable = () => { $("#tableOverlay").hidden = true; active = null; renderGrid(); };
@@ -136,11 +136,26 @@ function renderSummary() {
   const it = ITEMS[active], sum = itemSummary(active);
   const stChip = sum.status === "ok" ? `<span class="badge ok">${ICO_OK} Atende</span>` : `<span class="badge bad">${ICO_NO} Não atende</span>`;
   let extra = "";
-  if ((it.tipo === "produto" || it.tipo === "solucao") && BEST) {
+  if (it.tipo === "produto" && BEST) {
     extra += ` <span class="diverg">Recomendado: <b style="font-family:var(--mono)">${esc(BEST.sku.model)}</b> — ${BEST.ok}/${BEST.evaluable} (${BEST.pct}%)</span>`;
+    extra += ` <span class="diverg">Divergências do recomendado: <b>${BEST.diverg.length ? esc(BEST.diverg.join(", ")) : "nenhuma"}</b></span>`;
     const ci = prefs.chosen[active]; if (ci != null) extra += `<span class="chip-chosen">${ICO_OK} Escolhido: ${esc(SKUS[ci].model)}</span>`;
+  } else if (sum.kind === "check") {
+    const pend = it.checklist.filter(r => r.st === "no" || r.st === "parcial").map(r => r.req);
+    extra += ` <span class="diverg">Atende ${sum.ok} de ${sum.total} · Pendências: <b>${pend.length ? esc(pend.join(", ")) : "nenhuma"}</b></span>`;
+  } else if (it.tipo === "solucao") {
+    extra += ` <span class="diverg">Frentes: ${sum.secs.map(s => `${s.ok ? "✓" : "✗"} ${TIPO_LABEL[s.tipo].toLowerCase()}`).join(" · ")}</span>`;
+    if (BEST) { extra += ` <span class="diverg">Câmeras: <b style="font-family:var(--mono)">${esc(BEST.sku.model)}</b> ${BEST.pct}%${BEST.diverg.length ? ` · divergências: ${esc(BEST.diverg.join(", "))}` : ""}</span>`; const ci = prefs.chosen[active]; if (ci != null) extra += `<span class="chip-chosen">${ICO_OK} ${esc(SKUS[ci].model)}</span>`; }
   }
   $("#toSummary").innerHTML = `<span class="to-item-name">${esc(it.nome)}</span>${stChip}${extra}`;
+}
+function renderCta() {
+  const sum = itemSummary(active);
+  const hint = sum.status === "ok" ? "Item pronto para entrar na proposta." : "Há pendências — revise, questione ou descarte antes de prosseguir.";
+  $("#toCta").innerHTML = `<div class="cta-hint">${hint}</div>
+    <button class="btn primary" data-cta="add">Adicionar à proposta</button>
+    <button class="btn" data-cta="question">Questionar / Impugnar</button>
+    <button class="btn danger" data-cta="discard">Descartar item</button>`;
 }
 
 /* ---------- Mecânica: matriz (produto) ---------- */
@@ -208,7 +223,7 @@ function renderChecklist(host, clArr, sec) {
     const st = CL_ST[r.st] || CL_ST.ne;
     return `<tr>
       <td class="c-check"><span class="cbox"></span></td>
-      <td class="c-req"><div class="req-name">${esc(r.req)}</div><div class="req-exig">Exigido: <span class="val">${esc(r.exig)}</span></div><button class="req-origin" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu (página e trecho)">${ICO_ARROW} Ver no edital · p.${r.origem.pag}</button></td>
+      <td class="c-req"><div class="req-name">${esc(r.req)}</div><div class="req-exig">Exigido: <span class="val">${esc(r.exig)}</span></div><div class="cl-actions"><button class="req-origin" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu (página e trecho)">${ICO_ARROW} Ver no edital · p.${r.origem.pag}</button><button class="req-origin" data-clquestion="${sec}:${ri}" data-tip="Questionar / impugnar este requisito">${ICO_CHAT} Questionar</button></div></td>
       <td><span class="badge soft">${esc(r.modulo || "—")}</span></td>
       <td><button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para alternar o status">${st.ico}${st.label}</button></td>
       <td>${confBadge(r.c)}</td>
@@ -291,7 +306,13 @@ function wire() {
     if (e.target.closest("#addReq")) { addReq(); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); toggleClStatus(s, r); return; }
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
+    const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
     const ac = e.target.closest("[data-addcl]"); if (ac) { addClReq(+ac.dataset.addcl); return; }
+  });
+  $("#toCta").addEventListener("click", e => {
+    const b = e.target.closest("[data-cta]"); if (!b) return;
+    const m = { add: "✓ Item adicionado à proposta", question: "Abrindo fluxo de questionamento / impugnação…", discard: "Item descartado" };
+    toast(m[b.dataset.cta] || "Ação");
   });
   tb.addEventListener("focusout", e => { const el = e.target.closest("[data-edit]"); if (el) commitEdit(el); });
   tb.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("[data-edit]")) { e.preventDefault(); e.target.blur(); } });

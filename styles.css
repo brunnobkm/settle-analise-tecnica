@@ -153,6 +153,9 @@ button { font-family: inherit; cursor: pointer; }
 .to-actions { display: flex; align-items: center; gap: 8px; }
 .to-summary { flex-shrink: 0; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--bg-soft); }
 .to-body { flex: 1; min-height: 0; overflow: auto; padding: 0; }
+.to-cta { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-soft); }
+.to-cta .cta-hint { flex: 1; min-width: 200px; font-size: 13px; color: var(--muted-foreground); }
+.cl-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .to-item-name { font-size: 14px; font-weight: 600; max-width: 620px; }
 
 /* ---------- Bloco resumo do edital ---------- */
