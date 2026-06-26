@@ -13,6 +13,25 @@ const EDITAL = {
   modalidade: "Pregão - Eletrônico",
   julgamento: "Menor preço por lote",
   valorGlobal: "R$ 4.775.427,20",
+  docTexto: `TERMO DE REFERÊNCIA — AQUISIÇÃO E INSTALAÇÃO DE SISTEMA DE VIDEOMONITORAMENTO
+
+1. OBJETO
+Contratação de empresa especializada para fornecimento de equipamentos de videomonitoramento e prestação continuada de serviços de instalação, com cerco virtual, leitura de placas (LPR) e reconhecimento facial, conforme especificações constantes neste Termo de Referência.
+
+2. ESPECIFICAÇÕES TÉCNICAS DAS CÂMERAS
+2.1. As câmeras deverão possuir resolução mínima de 4 MP (2688 × 1520 pixels), com varredura progressiva.
+2.2. Suporte a compressão de vídeo H.265+ / H.265 / H.264, com taxa de bits ajustável.
+2.3. Lente fixa com distância focal de 2,8 mm, abertura de diafragma F2.0 ou inferior, e campo de visão horizontal de no mínimo 100°.
+2.4. Sensibilidade luminosa em modo colorido de no máximo 0,005 Lux (F2.0, AGC ON) e iluminação infravermelha com alcance mínimo de 30 metros.
+2.5. Deverá possuir análise inteligente embarcada (deep learning) para classificação de pessoas e veículos, com detecção por cruzamento de linha e captura facial.
+
+3. PROTEÇÃO E AMBIENTE
+3.1. Invólucro com grau de proteção mínimo IP67 e resistência a impacto IK10.
+3.2. Faixa de operação de -30 °C a +60 °C, umidade ≤ 95%.
+
+4. ARMAZENAMENTO E REDE
+4.1. Armazenamento local em cartão microSD de até 256 GB para gravação na borda.
+4.2. Alimentação via PoE (IEEE 802.3af) e/ou 12 Vdc.`,
 };
 
 /* catálogo de SKUs (produto) */

@@ -321,6 +321,69 @@ function wire() {
   document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
 }
 
+/* ============================================================
+   Editar informações (lado a lado com o edital) + vincular fonte
+   ============================================================ */
+const LINK_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5l3-3M5 8L3.5 9.5a2.1 2.1 0 0 0 3 3L8 11M11 8l1.5-1.5a2.1 2.1 0 0 0-3-3L8 5"/></svg>`;
+let editList = [], esActive = null, pendingText = null, pendingRange = null;
+function currentReqList() { if (SPECS) return SPECS.filter(s => !s.exigNa); if (currentChecklists.length) return currentChecklists[0]; return []; }
+function renderEsFields() {
+  $("#esFields").innerHTML = editList.map((s, i) => `
+    <div class="es-field ${i === esActive ? "active" : ""}" data-ef="${i}">
+      <label>${esc(s.req)}</label>
+      <input class="inp" value="${esc(s.exig || "")}" placeholder="Informe o valor esperado" data-eival="${i}">
+      <button class="es-link ${s.fonte ? "linked" : ""}" data-eilink="${i}">${LINK_SVG} ${s.fonte ? "Fonte vinculada" : "Vincular fonte no edital"}</button>
+    </div>`).join("");
+}
+function openEditSheet() {
+  editList = currentReqList();
+  if (!editList.length) { toast("Nada para editar neste item"); return; }
+  esActive = null; pendingText = null;
+  $("#esDesc").textContent = ITEMS[active].nome;
+  $("#esDoc").innerHTML = esc(EDITAL.docTexto);
+  $("#esDocHint").textContent = "Selecione um trecho para vincular como fonte";
+  renderEsFields();
+  $("#editSheet").hidden = false;
+}
+function hidePopover() { $("#fontePopover").hidden = true; pendingText = null; pendingRange = null; }
+function saveEditSheet() {
+  if (SPECS) { recompute(); if ($("#matrixHost")) renderMatrix(); }
+  else currentChecklists.forEach((c, i) => renderChecklist($("#clHost-" + i), c, i));
+  renderSummary();
+  $("#editSheet").hidden = true; hidePopover();
+  toast("Análise de compatibilidade atualizada com os novos dados");
+}
+function initEditSheet() {
+  $("#toEdit").onclick = openEditSheet;
+  $("#esClose").onclick = () => { $("#editSheet").hidden = true; hidePopover(); };
+  $("#esSave").onclick = saveEditSheet;
+  $("#esFields").addEventListener("input", e => { const el = e.target.closest("[data-eival]"); if (el) editList[+el.dataset.eival].exig = el.value; });
+  $("#esFields").addEventListener("click", e => {
+    const lk = e.target.closest("[data-eilink]"); if (!lk) return;
+    esActive = +lk.dataset.eilink; renderEsFields();
+    $("#esDocHint").textContent = `Selecione no edital o trecho que comprova: "${editList[esActive].req}"`;
+  });
+  $("#esDoc").addEventListener("mouseup", () => {
+    const sel = window.getSelection(), txt = sel.toString().trim();
+    if (!txt || esActive == null || !$("#esDoc").contains(sel.anchorNode)) { hidePopover(); return; }
+    pendingText = txt; pendingRange = sel.getRangeAt(0).cloneRange();
+    const r = sel.getRangeAt(0).getBoundingClientRect(), pop = $("#fontePopover");
+    pop.hidden = false;
+    pop.style.top = Math.max(8, r.top - pop.offsetHeight - 8) + "px";
+    pop.style.left = Math.max(8, Math.min(r.left + r.width / 2 - pop.offsetWidth / 2, innerWidth - pop.offsetWidth - 8)) + "px";
+  });
+  $("#fontePopover").addEventListener("click", e => {
+    const b = e.target.closest("[data-fonte]"); if (!b) return;
+    if (b.dataset.fonte === "confirm" && pendingText != null && esActive != null) {
+      editList[esActive].fonte = pendingText;
+      try { const m = document.createElement("mark"); m.className = "bound"; pendingRange.surroundContents(m); } catch (_) { }
+      renderEsFields(); toast(`Fonte vinculada: "${editList[esActive].req}"`);
+    }
+    window.getSelection().removeAllRanges(); hidePopover();
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#editSheet").hidden) { $("#editSheet").hidden = true; hidePopover(); } });
+}
+
 /* ---------- tooltip próprio ---------- */
 function initTooltip() {
   const tip = document.createElement("div"); tip.className = "tt"; document.body.appendChild(tip);
@@ -339,4 +402,4 @@ function initTooltip() {
 }
 
 /* boot */
-renderGrid(); wire(); initTooltip();
+renderGrid(); wire(); initEditSheet(); initTooltip();
