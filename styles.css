@@ -111,16 +111,17 @@ button { font-family: inherit; cursor: pointer; }
 .rs-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--brand-600); margin-bottom: 4px; }
 .to-resumo p { margin: 0; font-size: 13px; color: var(--foreground); line-height: 1.55; max-width: 960px; }
 /* seções colapsáveis no topo do overlay (Figma 8732-22531) */
-.to-collapsibles { padding: 4px 16px; }
-.cps { border-bottom: 1px solid var(--border); }
-.cps > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; padding: 14px 4px; font-size: 14px; font-weight: 500; color: var(--foreground); }
+.to-collapsibles { padding: 16px 20px 4px; display: flex; flex-direction: column; gap: 12px; }
+.cps { border: 1px solid var(--border); border-radius: var(--r-box); background: #FFF; }
+.cps > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 52px; box-sizing: border-box; font-size: 14px; font-weight: 600; color: var(--foreground); }
 .cps > summary::-webkit-details-marker { display: none; }
 .cps .caret-svg { color: var(--muted-foreground); transition: transform .15s; flex-shrink: 0; }
-.cps[open] > summary .caret-svg { transform: rotate(180deg); }
+.cps:not([open]) > summary .caret-svg { transform: rotate(180deg); }
 .cps-title { flex: 1; }
 .cps-cnt { font-size: 12px; font-weight: 600; color: var(--muted-foreground); background: var(--muted); border-radius: var(--r-full); padding: 1px 9px; }
-.cps-body { padding: 0 4px 16px 28px; }
+.cps-body { padding: 0 16px 16px; }
 .cps-desc { margin: 0 0 8px; font-size: 13px; color: var(--foreground); line-height: 1.55; max-width: 980px; }
+.cps-desc:last-child { margin-bottom: 0; }
 .cps-body .ex-note { font-size: 12px; color: var(--muted-foreground); margin-bottom: 10px; }
 .cps-body .tag-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; }
 .cps-body .tag-item { font-size: 12px; color: var(--foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 3px 9px; }

@@ -136,12 +136,7 @@ function renderGrid() {
 function openTable(i) {
   active = i; const it = ITEMS[i];
   currentChecklists = []; SPECS = null; BEST = null; activeMatrixHolder = null;
-  const hasMatrix = it.tipo === "produto" || it.tipo === "solucao";
-  $("#diffToggle").style.display = hasMatrix ? "" : "none";
-  $("#tableOverlay").classList.toggle("diff-only", hasMatrix && !!prefs.diff);
-  $("#tableOverlay").classList.toggle("show-conf", prefs.conf !== false);
-  $("#diffToggle").classList.toggle("on", !!prefs.diff);
-  $("#confToggle").classList.toggle("on", prefs.conf !== false);
+  $("#toTitle").textContent = it.titulo || it.nome;
 
   if (it.tipo === "produto") { activeMatrixHolder = it; SPECS = matrixOf(it); recompute(); }
   let body = collapsiblesHTML(it);
@@ -158,36 +153,9 @@ function openTable(i) {
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
-  renderSummary(); renderCta();
   $("#tableOverlay").hidden = false;
 }
 const closeTable = () => { $("#tableOverlay").hidden = true; active = null; renderGrid(); };
-
-function renderSummary() {
-  const it = ITEMS[active], sum = itemSummary(active);
-  const stChip = sum.status === "ok" ? `<span class="badge ok">${ICO_OK} Atende</span>` : `<span class="badge bad">${ICO_NO} Não atende</span>`;
-  let extra = "";
-  if (it.tipo === "produto" && BEST) {
-    extra += ` <span class="diverg">Recomendado: <b style="font-family:var(--mono)">${esc(BEST.sku.model)}</b> — ${BEST.ok}/${BEST.evaluable} (${BEST.pct}%)</span>`;
-    extra += ` <span class="diverg">Divergências do recomendado: <b>${BEST.diverg.length ? esc(BEST.diverg.join(", ")) : "nenhuma"}</b></span>`;
-    const ci = prefs.chosen[active]; if (ci != null) extra += `<span class="chip-chosen">${ICO_OK} Escolhido: ${esc(SKUS[ci].model)}</span>`;
-  } else if (sum.kind === "check") {
-    const pend = it.checklist.filter(r => r.st === "no" || r.st === "parcial").map(r => r.req);
-    extra += ` <span class="diverg">Atende ${sum.ok} de ${sum.total} · Pendências: <b>${pend.length ? esc(pend.join(", ")) : "nenhuma"}</b></span>`;
-  } else if (it.tipo === "solucao") {
-    extra += ` <span class="diverg">Frentes: ${sum.secs.map(s => `${s.ok ? "✓" : "✗"} ${TIPO_LABEL[s.tipo].toLowerCase()}`).join(" · ")}</span>`;
-    if (BEST) { extra += ` <span class="diverg">Câmeras: <b style="font-family:var(--mono)">${esc(BEST.sku.model)}</b> ${BEST.pct}%${BEST.diverg.length ? ` · divergências: ${esc(BEST.diverg.join(", "))}` : ""}</span>`; const ci = prefs.chosen[active]; if (ci != null) extra += `<span class="chip-chosen">${ICO_OK} ${esc(SKUS[ci].model)}</span>`; }
-  }
-  $("#toSummary").innerHTML = `<span class="to-item-name">${esc(it.nome)}</span>${stChip}${extra}`;
-}
-function renderCta() {
-  const sum = itemSummary(active);
-  const hint = sum.status === "ok" ? "Item pronto para entrar na proposta." : "Há pendências — revise, questione ou descarte antes de prosseguir.";
-  $("#toCta").innerHTML = `<div class="cta-hint">${hint}</div>
-    <button class="btn primary" data-cta="add">Adicionar à proposta</button>
-    <button class="btn" data-cta="question">Questionar / Impugnar</button>
-    <button class="btn danger" data-cta="discard">Descartar item</button>`;
-}
 
 /* ---------- Mecânica: matriz (produto) ---------- */
 function buildCols() {
@@ -245,9 +213,9 @@ function renderMatrix() {
 }
 
 /* ---------- Seções colapsáveis (topo do overlay) ---------- */
-const CARET = `<svg class="caret-svg" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`;
+const CARET = `<svg class="caret-svg" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>`;
 function collapsible(title, inner, count, open) {
-  return `<details class="cps"${open ? " open" : ""}><summary>${CARET}<span class="cps-title">${title}</span>${count != null ? `<span class="cps-cnt">${count}</span>` : ""}</summary><div class="cps-body">${inner}</div></details>`;
+  return `<details class="cps"${open ? " open" : ""}><summary><span class="cps-title">${title}</span>${count != null ? `<span class="cps-cnt">${count}</span>` : ""}${CARET}</summary><div class="cps-body">${inner}</div></details>`;
 }
 function tagList(items, note) {
   return `${note ? `<div class="ex-note">${note}</div>` : ""}<div class="tag-list">${items.map(t => `<span class="tag-item">${esc(t)}</span>`).join("")}</div>`;
@@ -256,8 +224,8 @@ function collapsiblesHTML(it) {
   let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true);
   if (it.tipo === "produto") {
     const naoExigidas = [...(SPECS || matrixOf(it)).filter(s => s.exigNa).map(s => s.req), ...CATALOGO_NAO_EDITAL];
-    html += collapsible("Requisitos do edital ainda não analisados", tagList(NAO_ANALISADAS, 'O edital pede, mas a IA ainda não extraiu. Use "+ Adicionar requisito" para incluí-los na comparação.'), NAO_ANALISADAS.length);
-    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, "Itens do seu catálogo que o edital não pede. Não entram no score, mas podem ser diferencial (questionar / impugnar)."), naoExigidas.length);
+    html += collapsible("Requisitos do edital ainda não analisados", tagList(NAO_ANALISADAS, 'O edital pede, mas a IA ainda não extraiu. Use "+ Adicionar requisito" para incluí-los na comparação.'), null);
+    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, "Itens do seu catálogo que o edital não pede. Não entram no score, mas podem ser diferencial (questionar / impugnar)."), null);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
@@ -306,7 +274,7 @@ function toggleStatus(ri, ci) {
   const cc = SPECS[ri].cells[ci];
   cc.st = cc.st === "ne" ? "ok" : cc.st === "ok" ? "no" : "ne";
   if (cc.st === "ne") cc.v = "—"; if (!cc.c) cc.c = "alta";
-  recompute(); renderMatrix(); renderSummary();
+  recompute(); renderMatrix();
 }
 function addReq() {
   SPECS.push({ req: "Novo requisito", exig: "", exigNa: false, added: true, origem: { doc: "Inserido manualmente", pag: "—" }, cells: SKUS.map(() => ({ st: "ne", v: "—" })) });
@@ -315,7 +283,7 @@ function addReq() {
   if (nameEl) { nameEl.focus(); document.getSelection().selectAllChildren(nameEl); }
 }
 const CL_CYCLE = { ok: "no", no: "parcial", parcial: "ne", ne: "ok" };
-function toggleClStatus(sec, ri) { const r = currentChecklists[sec][ri]; r.st = CL_CYCLE[r.st] || "ok"; renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec); renderSummary(); }
+function toggleClStatus(sec, ri) { const r = currentChecklists[sec][ri]; r.st = CL_CYCLE[r.st] || "ok"; renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec); }
 function addClReq(sec) { currentChecklists[sec].push({ req: "Novo requisito", exig: "", modulo: "—", st: "ne", c: null, just: "—", origem: { doc: "Inserido manualmente", pag: "—" } }); renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec); }
 
 /* ============================================================
@@ -325,9 +293,6 @@ function wire() {
   $("#filterTabs").addEventListener("click", e => { const b = e.target.closest("[data-filter]"); if (b) { statusFilter = b.dataset.filter; prefs.filter = statusFilter; savePrefs(); renderGrid(); } });
   $("#cardGrid").addEventListener("click", e => { const c = e.target.closest("[data-item]"); if (c) openTable(+c.dataset.item); });
 
-  const diffBtn = $("#diffToggle"), confBtn = $("#confToggle"), ov = $("#tableOverlay");
-  diffBtn.onclick = () => { const on = !diffBtn.classList.contains("on"); diffBtn.classList.toggle("on", on); ov.classList.toggle("diff-only", on); prefs.diff = on; savePrefs(); };
-  confBtn.onclick = () => { const on = !confBtn.classList.contains("on"); confBtn.classList.toggle("on", on); ov.classList.toggle("show-conf", on); prefs.conf = on; savePrefs(); };
   $("#toClose").onclick = closeTable;
   $("#toExport").onclick = () => toast("Exportando análise (PDF · planilha · resumo técnico)…");
   $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
@@ -344,20 +309,15 @@ function wire() {
   tb.addEventListener("click", e => {
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
     const tg = e.target.closest("[data-toggle]"); if (tg) { toggleStatus(+tg.dataset.ri, +tg.dataset.ci); return; }
-    const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); renderSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${SKUS[i].model}` : "Seleção removida"); return; }
+    const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${SKUS[i].model}` : "Seleção removida"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { openOriginSpec(SPECS[+or.dataset.origin]); return; }
-    const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); renderSummary(); toast(`Requisito removido: "${nm}"`); return; }
+    const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     if (e.target.closest("#addReq")) { addReq(); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); toggleClStatus(s, r); return; }
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
     const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
     const ac = e.target.closest("[data-addcl]"); if (ac) { addClReq(+ac.dataset.addcl); return; }
-  });
-  $("#toCta").addEventListener("click", e => {
-    const b = e.target.closest("[data-cta]"); if (!b) return;
-    const m = { add: "✓ Item adicionado à proposta", question: "Abrindo fluxo de questionamento / impugnação…", discard: "Item descartado" };
-    toast(m[b.dataset.cta] || "Ação");
   });
   tb.addEventListener("focusout", e => { const el = e.target.closest("[data-edit]"); if (el) commitEdit(el); });
   tb.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("[data-edit]")) { e.preventDefault(); e.target.blur(); } });
@@ -394,7 +354,6 @@ function hidePopover() { $("#fontePopover").hidden = true; pendingText = null; p
 function saveEditSheet() {
   if (SPECS) { recompute(); if ($("#matrixHost")) renderMatrix(); }
   else currentChecklists.forEach((c, i) => renderChecklist($("#clHost-" + i), c, i));
-  renderSummary();
   $("#editSheet").hidden = true; hidePopover();
   toast("Análise de compatibilidade atualizada com os novos dados");
 }
