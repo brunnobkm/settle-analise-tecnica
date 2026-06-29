@@ -82,7 +82,7 @@ ITEMS.forEach(it => { const q = parseFloat(it.quantidade) || 1, fmt = n => "R$ "
 function renderStats(ofType) {
   const total = ofType.length;
   const atend = ofType.filter(x => itemSummary(x.i).status === "ok").length;
-  const nao = total - atend, pct = total ? Math.round(atend / total * 100) : 0;
+  const nao = total - atend;
   const I = {
     target: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="3"/><circle cx="8" cy="8" r="0.6" fill="currentColor"/></svg>`,
     layers: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 2l6 3-6 3-6-3 6-3z"/><path d="M2 8l6 3 6-3"/></svg>`,
@@ -90,8 +90,8 @@ function renderStats(ofType) {
     cross: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`,
   };
   const cards = [
-    { ico: "brand", svg: I.target, n: pct + "%", label: "Aderência do edital" },
-    { ico: "", svg: I.layers, n: total, label: "Itens analisados" },
+    { ico: "brand", svg: I.target, n: total, label: "Itens com correspondência" },
+    { ico: "", svg: I.layers, n: total, label: "Itens com análise técnica" },
     { ico: "ok", svg: I.check, n: atend, label: "Itens atendidos" },
     { ico: "bad", svg: I.cross, n: nao, label: "Itens não atendidos" },
   ];
