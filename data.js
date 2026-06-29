@@ -148,7 +148,15 @@ const ITEMS = [
     checklist: SOFTWARE_VMS },
 ];
 
-/* Requisitos que a IA identificou no edital, mas não conseguiu extrair o valor exigido.
-   Entram como linhas na tabela com placeholder na coluna "Valor requerido". */
-const NAO_ANALISADAS = ["WDR (faixa dinâmica)","Estabilização eletrônica de imagem","Filtro mecânico IR-Cut","Garantia mínima (meses)","Certificação Anatel"];
+/* Requisitos que a IA identificou no edital, mas não conseguiu extrair o VALOR EXIGIDO.
+   O valor de cada SKU (catálogo do cliente) nós temos; o que falta é a exigência do edital
+   para fazer o match. Por isso a coluna "Valor requerido" fica com placeholder e as células
+   dos produtos mostram o valor + ícone de "sem correspondência". vals segue a ordem de SKUS. */
+const NAO_ANALISADAS = [
+  { req: "WDR (faixa dinâmica)",                vals: ["120 dB", "120 dB", "120 dB", "120 dB", "140 dB", "100 dB", "120 dB"] },
+  { req: "Estabilização eletrônica de imagem",  vals: ["Sim", "Sim", "Não", "Sim", "Sim", "Não", "Sim"] },
+  { req: "Filtro mecânico IR-Cut",              vals: ["Sim", "Sim", "Sim", "Sim", "Sim", "Sim", "Sim"] },
+  { req: "Garantia mínima",                     vals: ["36 meses", "36 meses", "24 meses", "36 meses", "36 meses", "12 meses", "24 meses"] },
+  { req: "Certificação Anatel",                 vals: ["Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado"] },
+];
 const CATALOGO_NAO_EDITAL = ["Zoom digital 16×","Microfone embutido","Sirene integrada"];
