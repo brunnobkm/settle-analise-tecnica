@@ -126,7 +126,6 @@ function renderGrid() {
   }).join("");
   $("#cardGrid").innerHTML = html || `<div style="grid-column:1/-1;color:var(--muted-foreground);padding:24px;text-align:center">Nenhum item neste filtro.</div>`;
   [...$("#filterTabs").children].forEach(b => b.classList.toggle("active", b.dataset.filter === statusFilter));
-  [...$("#subTabs").children].forEach(b => b.classList.toggle("active", b.dataset.tipo === tipoFilter));
 }
 
 /* ============================================================
@@ -305,11 +304,8 @@ function addClReq(sec) { currentChecklists[sec].push({ req: "Novo requisito", ex
    Wire
    ============================================================ */
 function wire() {
-  $("#subTabs").addEventListener("click", e => { const b = e.target.closest("[data-tipo]"); if (b) { tipoFilter = b.dataset.tipo; prefs.tipo = tipoFilter; savePrefs(); renderGrid(); } });
   $("#filterTabs").addEventListener("click", e => { const b = e.target.closest("[data-filter]"); if (b) { statusFilter = b.dataset.filter; prefs.filter = statusFilter; savePrefs(); renderGrid(); } });
   $("#cardGrid").addEventListener("click", e => { const c = e.target.closest("[data-item]"); if (c) openTable(+c.dataset.item); });
-  $("#exportBtn").onclick = () => toast("Exportando análise (PDF · planilha · resumo técnico)…");
-  $("#page").addEventListener("click", e => { const a = e.target.closest("[data-act]"); if (a) toast(a.dataset.act === "conclude" ? "Análise concluída" : "Revisão da IA solicitada"); });
 
   const diffBtn = $("#diffToggle"), confBtn = $("#confToggle"), ov = $("#tableOverlay");
   diffBtn.onclick = () => { const on = !diffBtn.classList.contains("on"); diffBtn.classList.toggle("on", on); ov.classList.toggle("diff-only", on); prefs.diff = on; savePrefs(); };

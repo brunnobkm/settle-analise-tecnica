@@ -56,29 +56,15 @@
       </div>
 
       <div class="module">
-        <!-- Sub-abas: tipo de análise (lente) -->
-        <div class="module-tabs">
-          <div class="seg seg-sm" id="subTabs" role="tablist">
-            <button class="seg-tab" data-tipo="software"><span class="dot-sw"></span>Software</button>
-            <button class="seg-tab active" data-tipo="produto"><span class="dot-pr"></span>Produto</button>
-            <button class="seg-tab" data-tipo="servico"><span class="dot-sv"></span>Serviço</button>
-          </div>
-        </div>
-
         <!-- Resumo do edital (stats) -->
         <div class="stats" id="stats"></div>
 
-        <!-- Filtros + ações -->
+        <!-- Filtros -->
         <div class="filter-row">
           <div class="seg seg-sm" role="tablist" id="filterTabs">
             <button class="seg-tab active" data-filter="all">Todos</button>
             <button class="seg-tab" data-filter="ok">Atende</button>
             <button class="seg-tab" data-filter="no">Não atende</button>
-          </div>
-          <div class="filter-actions">
-            <button class="act-btn" data-act="conclude"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 8.5l3 3 6-7"/></svg> Concluir análise</button>
-            <button class="act-btn" id="exportBtn"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v8M5 8l3 3 3-3M3 13h10"/></svg> Exportar</button>
-            <button class="act-btn brand" data-act="revise"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l1.3 3.2L12.5 6.5 9.3 7.8 8 11 6.7 7.8 3.5 6.5 6.7 5.2z"/></svg> Revisar</button>
           </div>
         </div>
 
@@ -148,6 +134,6 @@
   <div class="toast" id="toast"></div>
 
   <script src="data.js?v=10"></script>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>
