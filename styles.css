@@ -134,10 +134,11 @@ button { font-family: inherit; cursor: pointer; }
 .ic-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ic-meta { font-size: 13px; }
 .ic-meta b { font-weight: 600; }
-.ic-vals { font-size: 13px; color: var(--foreground); }
+.ic-vals { font-size: 12.5px; color: var(--foreground); margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border); }
+.ic-vals b { font-weight: 600; }
 .ic-vals .mut { color: var(--muted-foreground); }
-.ic-desc { font-size: 13px; color: var(--muted-foreground); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.ic-title { font-size: 14px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ic-desc { font-size: 12.5px; color: var(--muted-foreground); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ic-title { font-size: 14px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ic-answer { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--brand-600); margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border); }
 .ic-answer .star { color: var(--success); }
 .ic-best { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--brand-600); margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--border); }
@@ -163,7 +164,7 @@ button { font-family: inherit; cursor: pointer; }
 .module-tabs { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 
 /* ---------- Stat cards ---------- */
-.stats { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-bottom: 16px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
 .stat { border: 1px solid var(--border); border-radius: var(--r-box); padding: 14px; background: var(--card); min-height: 104px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
 .stat-top { display: flex; align-items: center; gap: 10px; }
 .stat-ico { width: 30px; height: 30px; border-radius: var(--r-field); display: grid; place-items: center; flex-shrink: 0; background: var(--muted); color: var(--muted-foreground); }

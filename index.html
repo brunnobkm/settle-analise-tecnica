@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
   <!-- Sidebar -->
@@ -56,6 +56,18 @@
       </div>
 
       <div class="module">
+        <!-- Sub-abas: tipo de análise (lente) -->
+        <div class="module-tabs">
+          <div class="seg seg-sm" id="subTabs" role="tablist">
+            <button class="seg-tab" data-tipo="software"><span class="dot-sw"></span>Software</button>
+            <button class="seg-tab active" data-tipo="produto"><span class="dot-pr"></span>Produto</button>
+            <button class="seg-tab" data-tipo="servico"><span class="dot-sv"></span>Serviço</button>
+          </div>
+        </div>
+
+        <!-- Resumo do edital (stats) -->
+        <div class="stats" id="stats"></div>
+
         <!-- Filtros + ações -->
         <div class="filter-row">
           <div class="seg seg-sm" role="tablist" id="filterTabs">
@@ -135,7 +147,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="data.js?v=9"></script>
-  <script src="app.js?v=9"></script>
+  <script src="data.js?v=10"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

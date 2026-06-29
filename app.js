@@ -62,6 +62,7 @@ let prefs = (() => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } 
 const savePrefs = () => localStorage.setItem(LS, JSON.stringify(prefs));
 prefs.chosen = prefs.chosen || {};
 let statusFilter = prefs.filter || "all";
+let tipoFilter = prefs.tipo || "produto";
 let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeMatrixHolder = null;
 let currentChecklists = [];
 let colW = prefs.colW || {};
@@ -72,32 +73,54 @@ let renderPending = false;
 const scheduleRender = () => { if (!renderPending) { renderPending = true; requestAnimationFrame(() => { renderPending = false; renderMatrix(); }); } };
 function recompute() { STATE = scoresFor(SPECS); RANKED = rankFor(STATE); ORDER = RANKED.map(s => s.i); BEST = RANKED[0]; window.SCORES = STATE; }
 
+/* valores do item (a partir do preço unitário) */
+ITEMS.forEach(it => { const q = parseFloat(it.quantidade) || 1, fmt = n => "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2 }); it.valorUnitario = it.precoUnit ? { v: fmt(it.precoUnit) } : { v: "—" }; it.valorTotal = it.precoUnit ? { v: fmt(it.precoUnit * q) } : { v: "—" }; });
+
 /* ============================================================
-   Grid de cards (filtrado por tipo + status)
+   Resumo do edital (stats) + grid de cards
    ============================================================ */
+function renderStats(ofType) {
+  const total = ofType.length;
+  const atend = ofType.filter(x => itemSummary(x.i).status === "ok").length;
+  const nao = total - atend, pct = total ? Math.round(atend / total * 100) : 0;
+  const I = {
+    target: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="3"/><circle cx="8" cy="8" r="0.6" fill="currentColor"/></svg>`,
+    layers: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 2l6 3-6 3-6-3 6-3z"/><path d="M2 8l6 3 6-3"/></svg>`,
+    check: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`,
+    cross: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`,
+  };
+  const cards = [
+    { ico: "brand", svg: I.target, n: pct + "%", label: "Aderência do edital" },
+    { ico: "", svg: I.layers, n: total, label: "Itens analisados" },
+    { ico: "ok", svg: I.check, n: atend, label: "Itens atendidos" },
+    { ico: "bad", svg: I.cross, n: nao, label: "Itens não atendidos" },
+  ];
+  $("#stats").innerHTML = cards.map(c => `<div class="stat" data-tip="${c.label}"><div class="stat-top"><div class="stat-ico ${c.ico}">${c.svg}</div><div class="stat-n">${c.n}</div></div><div class="stat-label">${c.label}</div></div>`).join("");
+}
 function renderGrid() {
   $("#crumbId").textContent = `Edital ${EDITAL.numero}`;
-  const html = ITEMS.map((it, i) => {
+  const ofType = ITEMS.map((it, i) => ({ it, i })).filter(x => x.it.tipo === tipoFilter);
+  renderStats(ofType);
+  const html = ofType.map(({ it, i }) => {
     const sum = itemSummary(i);
     if (statusFilter !== "all" && sum.status !== statusFilter) return "";
     const chosenIdx = prefs.chosen[i];
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">${ICO_OK} Atende</span>`
       : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">${ICO_NO} Não atende</span>`;
-    const chosenBadge = (sum.kind === "produto" && chosenIdx != null) ? `<span class="badge brand">${ICO_OK} Produto selecionado</span>` : "";
-    let answer;
-    if (sum.kind === "produto") answer = `<span class="star">★</span> Recomendação: <span style="font-family:var(--mono)">${esc(sum.best.sku.model)}</span> — atende ${sum.best.pct}%`;
-    else if (sum.kind === "check") answer = `<span class="star">✓</span> Você atende ${sum.ok} de ${sum.total} exigências`;
-    else answer = sum.secs.map(s => `${s.ok ? "✓" : "✗"} ${TIPO_LABEL[s.tipo].toLowerCase()}`).join(" · ");
+    const secondBadge = (sum.kind === "produto")
+      ? ((chosenIdx != null) ? `<span class="badge brand">${ICO_OK} Produto selecionado</span>` : `<span class="badge soft">${SKUS.length} produtos analisados</span>`)
+      : `<span class="badge soft">${it.checklist.length} requisitos</span>`;
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges">${statusBadge}${chosenBadge}</div>
-      <div class="ic-title">${esc(it.nome)}</div>
-      <div class="ic-meta"><b>Quantidade:</b> ${esc(it.quantidade)}</div>
-      <div class="ic-answer" data-tip="Resultado da nossa análise">${answer}</div>
+      <div class="ic-badges">${statusBadge}${secondBadge}</div>
+      <div class="ic-title">${esc(it.titulo)}</div>
+      <div class="ic-desc">${esc(it.nome)}</div>
+      <div class="ic-vals"><b>Quantidade:</b> ${esc(it.quantidade)} &nbsp;·&nbsp; <b>Valor unit.:</b> <span style="font-family:var(--mono)">${esc(it.valorUnitario.v)}</span> &nbsp;·&nbsp; <b>Total:</b> <span style="font-family:var(--mono)">${esc(it.valorTotal.v)}</span></div>
     </div>`;
   }).join("");
   $("#cardGrid").innerHTML = html || `<div style="grid-column:1/-1;color:var(--muted-foreground);padding:24px;text-align:center">Nenhum item neste filtro.</div>`;
   [...$("#filterTabs").children].forEach(b => b.classList.toggle("active", b.dataset.filter === statusFilter));
+  [...$("#subTabs").children].forEach(b => b.classList.toggle("active", b.dataset.tipo === tipoFilter));
 }
 
 /* ============================================================
@@ -276,6 +299,7 @@ function addClReq(sec) { currentChecklists[sec].push({ req: "Novo requisito", ex
    Wire
    ============================================================ */
 function wire() {
+  $("#subTabs").addEventListener("click", e => { const b = e.target.closest("[data-tipo]"); if (b) { tipoFilter = b.dataset.tipo; prefs.tipo = tipoFilter; savePrefs(); renderGrid(); } });
   $("#filterTabs").addEventListener("click", e => { const b = e.target.closest("[data-filter]"); if (b) { statusFilter = b.dataset.filter; prefs.filter = statusFilter; savePrefs(); renderGrid(); } });
   $("#cardGrid").addEventListener("click", e => { const c = e.target.closest("[data-item]"); if (c) openTable(+c.dataset.item); });
   $("#exportBtn").onclick = () => toast("Exportando análise (PDF · planilha · resumo técnico)…");

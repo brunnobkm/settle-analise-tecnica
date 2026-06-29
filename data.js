@@ -116,34 +116,36 @@ const SOFTWARE_VMS = [
   cl("Armazenamento em nuvem", "Opcional", "Storage", "ok", "media", "Oferece gravação em nuvem como opção contratável.", 26, "<mark>Armazenamento em nuvem</mark> opcional."),
 ];
 
-/* itens do edital — cada um com um TIPO (a lente) e a mecânica correspondente */
+/* itens do edital — TIPO (a lente) + mecânica. titulo = "o que é o item" em linguagem clara; nome = descrição completa. */
 const ITEMS = [
   // ---- PRODUTO (mecânica: comparar & escolher SKU) ----
-  { tipo: "produto", nome: "Câmera de segurança — Fornecimento de 80 câmeras, modelo LPR (leitura de placas)", quantidade: "80",
+  { tipo: "produto", titulo: "Câmeras LPR (leitura de placas)",
+    nome: "Câmera de segurança: fornecimento de 80 câmeras, modelo LPR (leitura de placas), para o anel viário, conforme Termo de Referência.",
+    quantidade: "80", precoUnit: 2980,
     resumoTR: "Aquisição de 80 câmeras IP tipo bullet com leitura de placas (LPR) para o anel viário. Você precisa indicar, do seu catálogo, qual SKU atende às especificações e a que preço.",
     overrides: [] },
-  { tipo: "produto", nome: "Câmera de segurança — Fornecimento de 100 câmeras, modelo Speed Dome", quantidade: "100",
+  { tipo: "produto", titulo: "Câmeras Speed Dome (PTZ)",
+    nome: "Câmera de segurança: fornecimento de 100 câmeras, modelo Speed Dome (PTZ), para monitoramento ativo.",
+    quantidade: "100", precoUnit: 4150,
     resumoTR: "Aquisição de 100 câmeras Speed Dome (PTZ) para pontos de monitoramento ativo. Escolha o SKU do catálogo que melhor atende.",
     overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
-  { tipo: "produto", nome: "Câmera de segurança — Fornecimento de 100 câmeras, modelo Bullet", quantidade: "100",
+  { tipo: "produto", titulo: "Câmeras Bullet (fixas)",
+    nome: "Câmera de segurança: fornecimento de 100 câmeras, modelo Bullet fixa, para vigilância perimetral.",
+    quantidade: "100", precoUnit: 1890,
     resumoTR: "Aquisição de 100 câmeras bullet fixas para vigilância perimetral. Escolha o SKU do catálogo que melhor atende.",
     overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
   // ---- SERVIÇO (mecânica: atende / não atende) ----
-  { tipo: "servico", nome: "Serviço de instalação, configuração e operação assistida do sistema", quantidade: "1",
-    resumoTR: "Contratação da empresa que vai instalar as câmeras, lançar a rede, integrar ao software e operar o sistema. Aqui não há escolha de SKU — você só precisa confirmar se consegue cumprir cada exigência do serviço.",
+  { tipo: "servico", titulo: "Instalação e operação do sistema",
+    nome: "Serviço de instalação, configuração e operação assistida do sistema de videomonitoramento.",
+    quantidade: "1", precoUnit: 320000,
+    resumoTR: "Contratação da empresa que vai instalar as câmeras, lançar a rede, integrar ao software e operar o sistema. Aqui não há escolha de SKU, você só confirma se consegue cumprir cada exigência do serviço.",
     checklist: SERVICO_INSTALL },
   // ---- SOFTWARE (software simples ≈ atende / não) ----
-  { tipo: "software", nome: "Licença de software de gestão de vídeo (VMS) com LPR e cerco virtual", quantidade: "1",
-    resumoTR: "Licenciamento do software que centraliza as câmeras, faz leitura de placas e cerco virtual. Software simples (não exige a análise técnica complexa) — confirme se a sua solução atende a cada funcionalidade exigida.",
+  { tipo: "software", titulo: "Software de gestão de vídeo (VMS)",
+    nome: "Licença de software de gestão de vídeo (VMS) com leitura de placas (LPR) e cerco virtual.",
+    quantidade: "1", precoUnit: 145000,
+    resumoTR: "Licenciamento do software que centraliza as câmeras, faz leitura de placas e cerco virtual. Software simples (não exige a análise complexa), confirme se a sua solução atende a cada funcionalidade exigida.",
     checklist: SOFTWARE_VMS },
-  // ---- SOLUÇÃO (mistura: produto + serviço + software, em seções) ----
-  { tipo: "solucao", nome: "Solução completa de videomonitoramento (fornecimento + instalação + software)", quantidade: "1",
-    resumoTR: "Item único que mistura tudo: fornecer as câmeras, instalar/operar e licenciar o software. A análise se quebra em três frentes — produto (escolher SKU), serviço (atende/não) e software (atende/não).",
-    sections: [
-      { tipo: "produto", titulo: "Câmeras (fornecimento)", overrides: [] },
-      { tipo: "servico", titulo: "Instalação e operação", checklist: SERVICO_INSTALL },
-      { tipo: "software", titulo: "Software de monitoramento (VMS)", checklist: SOFTWARE_VMS },
-    ] },
 ];
 
 const NAO_ANALISADAS = ["Estabilização eletrônica de imagem","WDR 120 dB","Day/Night (ICR)","Compensação de luz de fundo (BLC)","Máscara de privacidade","ROI","Anti-flicker","Suporte ONVIF Perfil S/G/T","Streaming triplo","Watermark digital","Filtro IR-Cut","Detecção de violação (tamper)","Garantia mínima de 36 meses","Instalação e configuração","Treinamento operacional","Suporte técnico nacional","Certificação Anatel","Manual em português"];
