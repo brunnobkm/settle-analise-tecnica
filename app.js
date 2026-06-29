@@ -234,7 +234,7 @@ function collapsiblesHTML(it) {
   let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true);
   if (it.tipo === "produto") {
     const naoExigidas = [...(SPECS || matrixOf(it)).filter(s => s.exigNa).map(s => s.req), ...CATALOGO_NAO_EDITAL];
-    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, "Itens do seu catálogo que o edital não pede."), null);
+    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, ""), null);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
