@@ -387,6 +387,10 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 440px; max-width: 92vw; background: #fff; box-shadow: -8px 0 30px rgba(0,0,0,.12); z-index: 27; transform: translateX(100%); transition: transform .22s ease; display: flex; flex-direction: column; }
 .drawer:not([hidden]) { transform: translateX(0); }
 .drawer[hidden] { display: flex; pointer-events: none; }
+/* split view: a sidebar divide a tela (empurra o conteúdo, sem backdrop) */
+.table-overlay { transition: padding-right .22s ease; }
+.table-overlay.sidebar-open { padding-right: 440px; }
+.drawer { border-left: 1px solid var(--border); box-shadow: -4px 0 18px rgba(0,0,0,.06); }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
 .drawer-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
 .drawer-close { border: 0; background: transparent; color: var(--muted-foreground); width: 30px; height: 30px; border-radius: var(--r-md); display: grid; place-items: center; }

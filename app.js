@@ -266,9 +266,9 @@ function openOriginSpec(spec, ri) {
   extractRi = null; pendingExtract = null;
   $("#drawerHead").textContent = "Visualização do arquivo";
   $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>Visualização do arquivo</span></div>`;
-  $("#drawerOverlay").hidden = false; $("#drawer").hidden = false;
+  $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
 }
-const closeOrigin = () => { $("#drawerOverlay").hidden = true; $("#drawer").hidden = true; extractRi = null; pendingExtract = null; };
+const closeOrigin = () => { $("#drawer").hidden = true; $("#tableOverlay").classList.remove("sidebar-open"); extractRi = null; pendingExtract = null; };
 
 let toastT;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
