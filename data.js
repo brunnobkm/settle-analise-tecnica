@@ -49,7 +49,7 @@ const c = (st, v, conf) => ({ st, v, c: conf });
 
 /* requisitos de produto (matriz base) */
 const REQS = [
-  { req: "Resolução", exig: "4 MP (2688×1520)", modulo: "Vídeo",
+  { req: "Resolução", exig: "≥ 4 MP", modulo: "Vídeo",
     origem: { doc: "Termo de Referência", pag: 11, trecho: "As câmeras deverão possuir resolução mínima de <mark>4 MP (2688 × 1520 pixels)</mark>." },
     cells: [c("ok","4 MP","alta"),c("ok","4 MP","alta"),c("no","2 MP","alta"),c("ok","4 MP","alta"),c("ok","8 MP","media"),c("no","2 MP","alta"),c("ok","4 MP","alta")] },
   { req: "Compressão de vídeo", exig: "H.265+", modulo: "Vídeo",

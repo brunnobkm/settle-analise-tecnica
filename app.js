@@ -43,6 +43,19 @@ function scoresFor(specs) {
     return { i, sku, ok, evaluable, ne, pct: evaluable ? Math.round(ok / evaluable * 100) : 0, diverg };
   });
 }
+/* compara o valor do produto com a exigência do edital → atende (ok) / não atende (no) / não avaliável (ne) */
+const numOf = s => { const m = String(s).replace(",", ".").match(/-?\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+const alnum = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+function evalCell(v, req) {
+  const rv = (req == null ? "" : String(req)).trim(), vv = (v == null ? "" : String(v)).trim();
+  if (!rv || !vv || vv === "—") return "ne";
+  const op = rv.match(/(≥|>=|≤|<=|>|<)\s*(-?[\d.,]+)/);
+  if (op) { const r = numOf(op[2]), n = numOf(vv); if (r == null || n == null) return "ne";
+    const o = op[1], ok = (o === "≥" || o === ">=") ? n >= r : (o === "≤" || o === "<=") ? n <= r : (o === ">") ? n > r : n < r; return ok ? "ok" : "no"; }
+  if (/^sim\b/i.test(rv)) return (/\b(n[aã]o|nao)\b/i.test(vv)) ? "no" : "ok";
+  const ar = alnum(rv), av = alnum(vv); if (!ar) return "ne";
+  return (av.includes(ar) || ar.includes(av)) ? "ok" : "no";
+}
 const rankFor = sc => [...sc].sort((a, b) => b.pct - a.pct || a.ne - b.ne || b.ok - a.ok);
 const bestOf = specs => rankFor(scoresFor(specs))[0];
 const isConcordant = spec => new Set(spec.cells.filter(c => c.st === "ok" || c.st === "no").map(c => c.st)).size <= 1;
@@ -180,7 +193,7 @@ function cellTd(cell, ri, ci, exigNa, c) {
   if (exigNa) return `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-val">${esc(cell.v)}</span></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK : cell.st === "no" ? ICO_NO : "";
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}" data-tip="Confiança da IA na extração deste valor"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
-  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><button class="ico-toggle ${cell.st}" data-toggle data-ri="${ri}" data-ci="${ci}" data-tip="Clique para alternar: atende → não atende → não extraído">${icoInner}</button><span class="cell-val editable" data-edit="v" data-ri="${ri}" data-ci="${ci}" contenteditable="true" data-tip="Clique para corrigir o valor extraído">${esc(cell.v)}</span></div>${conf}</td>`;
+  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val editable" data-edit="v" data-ri="${ri}" data-ci="${ci}" contenteditable="true" data-tip="Edite o valor do produto. O sistema recalcula o atendimento automaticamente.">${esc(cell.v)}</span></div>${conf}</td>`;
 }
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
@@ -277,22 +290,25 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.ad
 /* ============================================================
    Edição inline + interações
    ============================================================ */
+const rematchRow = spec => { if (spec.exigNa) return; spec.cells.forEach(cc => cc.st = evalCell(cc.v, spec.exig)); };
 function commitEdit(el) {
-  const ri = +el.dataset.ri, kind = el.dataset.edit, txt = el.textContent.trim();
-  if (kind === "r") SPECS[ri].req = txt || "Requisito";
-  else if (kind === "vr") {
-    if (SPECS[ri].exigNa) return;
-    const wasMissing = SPECS[ri].naoExtraido;
-    if (wasMissing && txt) { SPECS[ri].naoExtraido = false; SPECS[ri].exig = txt; recompute(); renderMatrix(); toast(`Valor informado para "${SPECS[ri].req}" — produtos liberados para comparação`); }
-    else SPECS[ri].exig = txt;
+  const ri = +el.dataset.ri, kind = el.dataset.edit, txt = el.textContent.trim(), spec = SPECS[ri];
+  if (kind === "r") { spec.req = txt || "Requisito"; return; }
+  if (kind === "vr") {
+    if (spec.exigNa) return;
+    const wasMissing = spec.naoExtraido;
+    spec.exig = txt;
+    if (!txt) return;
+    if (wasMissing) spec.naoExtraido = false;
+    rematchRow(spec); recompute(); renderMatrix();
+    toast(wasMissing ? `Valor requerido informado para "${spec.req}" — atendimento recalculado` : `Exigência atualizada — atendimento recalculado`);
+    return;
   }
-  else if (kind === "v") { const cc = SPECS[ri].cells[+el.dataset.ci]; cc.v = txt || "—"; cc.c = "alta"; }
-}
-function toggleStatus(ri, ci) {
-  const cc = SPECS[ri].cells[ci];
-  cc.st = cc.st === "ne" ? "ok" : cc.st === "ok" ? "no" : "ne";
-  if (cc.st === "ne") cc.v = "—"; if (!cc.c) cc.c = "alta";
-  recompute(); renderMatrix();
+  if (kind === "v") {
+    const cc = spec.cells[+el.dataset.ci]; cc.v = txt || "—"; cc.c = "alta";
+    if (!spec.exigNa && spec.exig && !spec.naoExtraido) cc.st = evalCell(cc.v, spec.exig);
+    recompute(); renderMatrix();
+  }
 }
 function addReq() {
   SPECS.push({ req: "Novo requisito", exig: "", exigNa: false, added: true, origem: { doc: "Inserido manualmente", pag: "—" }, cells: SKUS.map(() => ({ st: "ne", v: "—" })) });
@@ -326,7 +342,6 @@ function wire() {
   });
   tb.addEventListener("click", e => {
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
-    const tg = e.target.closest("[data-toggle]"); if (tg) { toggleStatus(+tg.dataset.ri, +tg.dataset.ci); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${SKUS[i].model}` : "Seleção removida"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
