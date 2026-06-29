@@ -208,11 +208,11 @@ function renderMatrix() {
     let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}${nx ? " row-missing" : ""}">`;
     cols.forEach(c => {
       if (c.key === "check") row += `<td class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar requisito"></span></td>`;
-      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head"><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span><button class="req-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu (página e trecho)">${ICO_ARROW}</button></div></td>`;
+      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head"><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span><button class="req-ico${nx ? " warn" : ""}" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Ver de onde a IA extraiu (página e trecho)"}">${nx ? ICO_WARN : ICO_ARROW}</button></div></td>`;
       else if (c.key === "val") row += nx
         ? `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="val-missing editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="A IA identificou esta exigência no edital, mas não conseguiu extrair o valor. Clique para informar o valor requerido.">${ICO_WARN} Valor não extraído</span></td>`
         : `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido">${esc(spec.exig)}</span></td>`;
-      else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button><button class="act-ico" data-origin="${ri}" data-tip="Vincular / ver fonte no edital">${ICO_LINK}</button></div></td>`;
+      else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button><button class="act-ico" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Vincular / ver fonte no edital"}">${ICO_LINK}</button></div></td>`;
       else if (nx) row += `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-muted" data-tip="Sem valor requerido extraído, não é possível comparar este produto">— aguardando valor</span></td>`;
       else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c);
     });
@@ -260,12 +260,26 @@ function renderChecklist(host, clArr, sec) {
 /* ============================================================
    Origem (genérico)
    ============================================================ */
-function openOriginSpec(spec) {
-  const o = spec.origem;
-  $("#drawerBody").innerHTML = `<div class="src-meta">Requisito</div><div style="font-size:16px;font-weight:600;margin-bottom:10px">${esc(spec.req)}${spec.exigNa ? "" : ` <span style="color:var(--muted-foreground);font-weight:500">· exigido: <span style="font-family:var(--mono)">${esc(spec.exig)}</span></span>`}</div><div class="src-doc"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h6l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M10 2v3h3"/></svg> ${esc(o.doc)} ${o.pag !== "—" ? `<span class="src-page-tag">página ${o.pag}</span>` : ""}</div><div class="src-meta" style="margin-bottom:6px">Trecho de onde a informação foi extraída:</div><div class="src-quote">${o.trecho || "Inserido manualmente pelo usuário."}</div><div class="src-conf src-meta">A IA destacou o trecho acima do documento original. Confira a página ${o.pag} do ${esc(o.doc)} para validação manual.</div>`;
+let extractRi = null, pendingExtract = null;
+const FILE_SVG = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h6l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M10 2v3h3"/></svg>`;
+function openOriginSpec(spec, ri) {
+  extractRi = null; pendingExtract = null;
+  if (spec.naoExtraido) {
+    $("#drawerHead").textContent = "Extrair do edital";
+    extractRi = ri;
+    $("#drawerBody").innerHTML = `<div class="src-meta">Requisito</div><div class="origin-req">${esc(spec.req)}</div>
+      <div class="extract-callout">${ICO_WARN}<div><b>Não conseguimos extrair essa informação.</b><br>Selecione um trecho do edital abaixo para extrair o dado.</div></div>
+      <div class="src-doc">${FILE_SVG} ${esc(EDITAL.docNome || "Edital — Termo de Referência")}</div>
+      <div class="extract-doc" id="extractDoc">${esc(EDITAL.docTexto)}</div>
+      <div class="extract-actions" id="extractActions" hidden><div class="extract-sel" id="extractSel"></div><button class="btn primary" id="extractConfirm">Extrair valor deste trecho</button></div>`;
+  } else {
+    $("#drawerHead").textContent = "Origem da extração";
+    const o = spec.origem;
+    $("#drawerBody").innerHTML = `<div class="src-meta">Requisito</div><div style="font-size:16px;font-weight:600;margin-bottom:10px">${esc(spec.req)}${spec.exigNa ? "" : ` <span style="color:var(--muted-foreground);font-weight:500">· exigido: <span style="font-family:var(--mono)">${esc(spec.exig)}</span></span>`}</div><div class="src-doc">${FILE_SVG} ${esc(o.doc)} ${o.pag !== "—" ? `<span class="src-page-tag">página ${o.pag}</span>` : ""}</div><div class="src-meta" style="margin-bottom:6px">Trecho de onde a informação foi extraída:</div><div class="src-quote">${o.trecho || "Inserido manualmente pelo usuário."}</div><div class="src-conf src-meta">A IA destacou o trecho acima do documento original. Confira a página ${o.pag} do ${esc(o.doc)} para validação manual.</div>`;
+  }
   $("#drawerOverlay").hidden = false; $("#drawer").hidden = false;
 }
-const closeOrigin = () => { $("#drawerOverlay").hidden = true; $("#drawer").hidden = true; };
+const closeOrigin = () => { $("#drawerOverlay").hidden = true; $("#drawer").hidden = true; extractRi = null; pendingExtract = null; };
 
 let toastT;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
@@ -324,7 +338,7 @@ function wire() {
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
     const tg = e.target.closest("[data-toggle]"); if (tg) { toggleStatus(+tg.dataset.ri, +tg.dataset.ci); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${SKUS[i].model}` : "Seleção removida"); return; }
-    const or = e.target.closest("[data-origin]"); if (or) { openOriginSpec(SPECS[+or.dataset.origin]); return; }
+    const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     if (e.target.closest("#addReq")) { addReq(); return; }
@@ -337,6 +351,21 @@ function wire() {
   tb.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("[data-edit]")) { e.preventDefault(); e.target.blur(); } });
 
   $("#drawerClose").onclick = closeOrigin; $("#drawerOverlay").onclick = closeOrigin;
+  $("#drawerBody").addEventListener("mouseup", () => {
+    if (extractRi == null) return;
+    const doc = $("#extractDoc"), acts = $("#extractActions"); if (!doc || !acts) return;
+    const sel = window.getSelection(), txt = sel.toString().trim();
+    if (!txt || !doc.contains(sel.anchorNode)) { acts.hidden = true; pendingExtract = null; return; }
+    pendingExtract = txt; $("#extractSel").textContent = `“${txt}”`; acts.hidden = false;
+  });
+  $("#drawerBody").addEventListener("click", e => {
+    if (!e.target.closest("#extractConfirm") || extractRi == null || !pendingExtract) return;
+    const ri = extractRi, val = pendingExtract, nm = SPECS[ri].req;
+    SPECS[ri].naoExtraido = false; SPECS[ri].exig = val;
+    SPECS[ri].origem = { doc: EDITAL.docNome || "Edital — Termo de Referência", pag: "—", trecho: val };
+    recompute(); renderMatrix(); closeOrigin();
+    toast(`Valor extraído para "${nm}" — produtos liberados para comparação`);
+  });
   document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
 }
 

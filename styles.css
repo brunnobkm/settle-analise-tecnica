@@ -383,10 +383,10 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .btn.danger:hover { background: var(--destructive-bg); }
 
 /* ---------- Drawer ---------- */
-.drawer-overlay { position: fixed; inset: 0; background: rgba(10,10,10,.28); opacity: 0; transition: opacity .2s; z-index: 20; }
+.drawer-overlay { position: fixed; inset: 0; background: rgba(10,10,10,.28); opacity: 0; transition: opacity .2s; z-index: 26; }
 .drawer-overlay:not([hidden]) { opacity: 1; }
 .drawer-overlay[hidden] { display: block; pointer-events: none; }
-.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 440px; max-width: 92vw; background: #fff; box-shadow: -8px 0 30px rgba(0,0,0,.12); z-index: 21; transform: translateX(100%); transition: transform .22s ease; display: flex; flex-direction: column; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 440px; max-width: 92vw; background: #fff; box-shadow: -8px 0 30px rgba(0,0,0,.12); z-index: 27; transform: translateX(100%); transition: transform .22s ease; display: flex; flex-direction: column; }
 .drawer:not([hidden]) { transform: translateX(0); }
 .drawer[hidden] { display: flex; pointer-events: none; }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
@@ -400,6 +400,17 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .src-quote { border-left: 3px solid var(--brand); background: var(--muted); padding: 12px 14px; border-radius: 0 var(--r-field) var(--r-field) 0; font-size: 14px; line-height: 1.6; }
 .src-quote mark { background: #FDE9A8; padding: 0 2px; border-radius: 3px; }
 .src-conf { margin-top: 14px; }
+/* drawer: extrair do edital (requisito não extraído) */
+.origin-req { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+.extract-callout { display: flex; gap: 10px; align-items: flex-start; background: var(--warning-bg, #FEF6EC); border: 1px solid #F3D9A8; border-radius: var(--r-field); padding: 12px 14px; font-size: 13px; line-height: 1.5; color: var(--foreground); margin-bottom: 16px; }
+.extract-callout svg { width: 18px; height: 18px; color: var(--warning); flex-shrink: 0; margin-top: 1px; }
+.extract-doc { border: 1px solid var(--border); border-radius: var(--r-field); background: var(--bg-soft); padding: 14px 16px; font-size: 13.5px; line-height: 1.7; white-space: pre-wrap; max-height: 46vh; overflow-y: auto; user-select: text; cursor: text; }
+.extract-doc::selection, .extract-doc *::selection { background: #FDE9A8; }
+.extract-actions { position: sticky; bottom: 0; margin-top: 14px; padding-top: 12px; background: linear-gradient(to top, #fff 70%, transparent); display: flex; flex-direction: column; gap: 10px; }
+.extract-actions[hidden] { display: none; }
+.extract-sel { font-size: 13px; color: var(--foreground); background: #FDF6E6; border: 1px dashed #E5C97B; border-radius: var(--r-md); padding: 8px 10px; max-height: 80px; overflow: auto; }
+.req-ico.warn { color: var(--warning); opacity: 1; border-color: #F3D9A8; }
+.req-ico.warn:hover { background: var(--warning-bg, #FEF6EC); color: var(--warning); }
 
 /* ---------- Selecionar SKU / Produto escolhido ---------- */
 .sku-select { width: 100%; margin-top: 10px; border: 0; background: var(--brand); color: #fff; border-radius: var(--r-md); padding: 7px 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s; }
