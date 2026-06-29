@@ -11,6 +11,8 @@ const ICO_NO = `<svg class="ico no" viewBox="0 0 16 16" fill="none" stroke="curr
 const ICO_ARROW = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11L11 5M6 5h5v5"/></svg>`;
 const ICO_CHAT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h10v7H8l-3 2v-2H3z"/></svg>`;
 const ICO_PLUS = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>`;
+const ICO_TRASH = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8h6l.5-8M6.5 7v3.5M9.5 7v3.5"/></svg>`;
+const ICO_LINK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.7 9.3l2.6-2.6M7 4.6l1-1a2.4 2.4 0 0 1 3.4 3.4l-1 1M9 11.4l-1 1a2.4 2.4 0 0 1-3.4-3.4l1-1"/></svg>`;
 const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 2.5h4l-.8 3.5 2.3 2H4.5l2.3-2L6 2.5z"/><path d="M8 8v5.5"/></svg>`;
 
 const TIPO_LABEL = { produto: "Produto", servico: "Serviço", software: "Software", solucao: "Solução" };
@@ -67,7 +69,7 @@ let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeMatrixHolder 
 let currentChecklists = [];
 let colW = prefs.colW || {};
 let frozen = new Set(prefs.frozen || ["req", "val"]);
-const COLW = k => colW[k] || (k === "req" ? 300 : k === "val" ? 160 : 176);
+const COLW = k => colW[k] || (k === "check" ? 44 : k === "req" ? 300 : k === "val" ? 160 : k === "acoes" ? 84 : 176);
 const saveCols = () => { prefs.colW = colW; prefs.frozen = [...frozen]; savePrefs(); };
 let renderPending = false;
 const scheduleRender = () => { if (!renderPending) { renderPending = true; requestAnimationFrame(() => { renderPending = false; renderMatrix(); }); } };
@@ -141,8 +143,9 @@ function openTable(i) {
   $("#diffToggle").classList.toggle("on", !!prefs.diff);
   $("#confToggle").classList.toggle("on", prefs.conf !== false);
 
-  let body = `<div class="to-resumo"><div class="rs-label">Resumo do Termo de Referência</div><p>${esc(it.resumoTR)}</p></div>`;
-  if (it.tipo === "produto") { activeMatrixHolder = it; SPECS = matrixOf(it); recompute(); body += `<div class="mech-host" id="matrixHost"></div>`; }
+  if (it.tipo === "produto") { activeMatrixHolder = it; SPECS = matrixOf(it); recompute(); }
+  let body = collapsiblesHTML(it);
+  if (it.tipo === "produto") { body += `<div class="mech-host" id="matrixHost"></div>`; }
   else if (it.tipo === "servico" || it.tipo === "software") { currentChecklists = [it.checklist]; body += `<div class="mech-host" id="clHost-0"></div>`; }
   else {
     it.sections.forEach(sec => {
@@ -188,9 +191,9 @@ function renderCta() {
 
 /* ---------- Mecânica: matriz (produto) ---------- */
 function buildCols() {
-  const cols = [{ key: "req" }, { key: "val" }, ...ORDER.map(i => ({ key: "sku-" + i, skuIdx: i }))];
+  const cols = [{ key: "check" }, { key: "req" }, { key: "val" }, ...ORDER.map(i => ({ key: "sku-" + i, skuIdx: i })), { key: "acoes" }];
   let fl = 0;
-  cols.forEach(c => { c.w = COLW(c.key); c.frozen = frozen.has(c.key); });
+  cols.forEach(c => { c.w = COLW(c.key); c.frozen = c.key === "check" || frozen.has(c.key); });
   cols.forEach(c => { if (c.frozen) { c.left = fl; fl += c.w; } });
   const frz = cols.filter(c => c.frozen); if (frz.length) frz[frz.length - 1].edge = true;
   return cols;
@@ -210,16 +213,18 @@ function renderMatrix() {
   const colgroup = `<colgroup>${cols.map(c => `<col data-k="${c.key}" style="width:${c.w}px">`).join("")}</colgroup>`;
   let head = "";
   cols.forEach(c => {
-    if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
+    if (c.key === "check") head += `<th class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar todos"></span></th>`;
+    else if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
     else if (c.key === "val") head += `<th class="col-val${fzCls(c)}"${fzStyle(c)} data-tip="Valor que o edital exige para o requisito">Valor requerido${colCtrls(c)}</th>`;
+    else if (c.key === "acoes") head += `<th class="col-acoes">Ações</th>`;
     else {
       const idx = c.skuIdx, sc = STATE[idx], rank = ORDER.indexOf(idx), best = rank === 0, isChosen = chosenIdx === idx;
       head += `<th class="col-sku${best ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        ${best ? `<div class="best-tag" style="margin:0 0 6px" data-tip="Produto com maior aderência">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
+        ${best ? `<div class="best-tag" data-tip="Produto com maior aderência">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
         <div class="sku-model">${esc(sc.sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do SKU, não é requisito)">${esc(sc.sku.brand)}</div>
-        <div class="sku-score" data-tip="Percentual de requisitos do edital que este produto atende"><span class="score-pct">${sc.pct}%</span><span class="score-bar"><span class="score-fill" style="width:${sc.pct}%"></span></span></div>
-        <div class="score-frac">${sc.ok}/${sc.evaluable} requisitos${sc.ne ? ` · ${sc.ne} não extr.` : ""}</div>
-        <div class="sku-actions"><button class="sku-select" data-choose="${idx}" data-tip="Definir como produto escolhido">${isChosen ? "✓ Selecionado" : "Selecionar"}</button></div>${colCtrls(c)}</th>`;
+        <div class="sku-scoreline" data-tip="Requisitos atendidos e percentual de aderência"><span class="score-frac">${sc.ok}/${sc.evaluable}${sc.ne ? ` · ${sc.ne} n/e` : ""}</span><span class="score-pct">${sc.pct}%</span></div>
+        <div class="score-bar"><span class="score-fill" style="width:${sc.pct}%"></span></div>
+        <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}" data-tip="Definir como produto escolhido">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
   });
   let body = "";
@@ -227,21 +232,34 @@ function renderMatrix() {
     if (spec.exigNa) return;
     let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}">`;
     cols.forEach(c => {
-      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head"><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span><span class="req-icons"><button class="req-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu (página e trecho)">${ICO_ARROW}</button><button class="req-ico" data-question="${ri}" data-tip="Questionar / impugnar este requisito">${ICO_CHAT}</button></span></div></td>`;
+      if (c.key === "check") row += `<td class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar requisito"></span></td>`;
+      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head"><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span><button class="req-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu (página e trecho)">${ICO_ARROW}</button></div></td>`;
       else if (c.key === "val") row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido">${esc(spec.exig)}</span></td>`;
+      else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button><button class="act-ico" data-origin="${ri}" data-tip="Vincular / ver fonte no edital">${ICO_LINK}</button></div></td>`;
       else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c);
     });
     body += row + `</tr>`;
   });
-  const caret = `<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4l4 4-4 4"/></svg>`;
-  const naoExigidas = [...SPECS.filter(s => s.exigNa).map(s => s.req), ...CATALOGO_NAO_EDITAL];
-  const det = (title, items, note) => `<details><summary><span class="caret">${caret}</span>${title} <span class="cnt">(${items.length})</span></summary><div class="ex-body"><div class="ex-note">${note}</div><div class="tag-list">${items.map(t => `<span class="tag-item">${esc(t)}</span>`).join("")}</div></div></details>`;
   host.innerHTML = `<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
-    <div class="add-req" id="addReq" data-tip="Adicionar um requisito que a IA não extraiu">${ICO_PLUS} Adicionar requisito</div>
-    <div class="to-extras">
-      ${det("Requisitos do edital ainda não analisados", NAO_ANALISADAS, 'O edital pede, mas a IA não extraiu. Use "+ Adicionar requisito" para incluí-los.')}
-      ${det("Especificações não exigidas pelo edital", naoExigidas, "Itens do catálogo que o edital não pede. Não entram no score, mas podem ser diferencial estratégico (questionar / impugnar).")}
-    </div>`;
+    <div class="add-req" id="addReq" data-tip="Adicionar um requisito que a IA não extraiu">${ICO_PLUS} Adicionar requisito</div>`;
+}
+
+/* ---------- Seções colapsáveis (topo do overlay) ---------- */
+const CARET = `<svg class="caret-svg" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`;
+function collapsible(title, inner, count, open) {
+  return `<details class="cps"${open ? " open" : ""}><summary>${CARET}<span class="cps-title">${title}</span>${count != null ? `<span class="cps-cnt">${count}</span>` : ""}</summary><div class="cps-body">${inner}</div></details>`;
+}
+function tagList(items, note) {
+  return `${note ? `<div class="ex-note">${note}</div>` : ""}<div class="tag-list">${items.map(t => `<span class="tag-item">${esc(t)}</span>`).join("")}</div>`;
+}
+function collapsiblesHTML(it) {
+  let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true);
+  if (it.tipo === "produto") {
+    const naoExigidas = [...(SPECS || matrixOf(it)).filter(s => s.exigNa).map(s => s.req), ...CATALOGO_NAO_EDITAL];
+    html += collapsible("Requisitos do edital ainda não analisados", tagList(NAO_ANALISADAS, 'O edital pede, mas a IA ainda não extraiu. Use "+ Adicionar requisito" para incluí-los na comparação.'), NAO_ANALISADAS.length);
+    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, "Itens do seu catálogo que o edital não pede. Não entram no score, mas podem ser diferencial (questionar / impugnar)."), naoExigidas.length);
+  }
+  return `<div class="to-collapsibles">${html}</div>`;
 }
 
 /* ---------- Mecânica: checklist (serviço / software) ---------- */
@@ -328,6 +346,7 @@ function wire() {
     const tg = e.target.closest("[data-toggle]"); if (tg) { toggleStatus(+tg.dataset.ri, +tg.dataset.ci); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); renderSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${SKUS[i].model}` : "Seleção removida"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { openOriginSpec(SPECS[+or.dataset.origin]); return; }
+    const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); renderSummary(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     if (e.target.closest("#addReq")) { addReq(); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); toggleClStatus(s, r); return; }
