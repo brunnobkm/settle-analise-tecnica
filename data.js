@@ -148,5 +148,7 @@ const ITEMS = [
     checklist: SOFTWARE_VMS },
 ];
 
-const NAO_ANALISADAS = ["Estabilização eletrônica de imagem","WDR 120 dB","Day/Night (ICR)","Compensação de luz de fundo (BLC)","Máscara de privacidade","ROI","Anti-flicker","Suporte ONVIF Perfil S/G/T","Streaming triplo","Watermark digital","Filtro IR-Cut","Detecção de violação (tamper)","Garantia mínima de 36 meses","Instalação e configuração","Treinamento operacional","Suporte técnico nacional","Certificação Anatel","Manual em português"];
+/* Requisitos que a IA identificou no edital, mas não conseguiu extrair o valor exigido.
+   Entram como linhas na tabela com placeholder na coluna "Valor requerido". */
+const NAO_ANALISADAS = ["WDR (faixa dinâmica)","Estabilização eletrônica de imagem","Filtro mecânico IR-Cut","Garantia mínima (meses)","Certificação Anatel"];
 const CATALOGO_NAO_EDITAL = ["Zoom digital 16×","Microfone embutido","Sirene integrada"];

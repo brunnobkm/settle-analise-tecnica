@@ -13,6 +13,7 @@ const ICO_CHAT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" str
 const ICO_PLUS = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>`;
 const ICO_TRASH = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8h6l.5-8M6.5 7v3.5M9.5 7v3.5"/></svg>`;
 const ICO_LINK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.7 9.3l2.6-2.6M7 4.6l1-1a2.4 2.4 0 0 1 3.4 3.4l-1 1M9 11.4l-1 1a2.4 2.4 0 0 1-3.4-3.4l1-1"/></svg>`;
+const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2l6-11z"/><path d="M8 6.5v3.2"/><path d="M8 11.6v.01"/></svg>`;
 const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 2.5h4l-.8 3.5 2.3 2H4.5l2.3-2L6 2.5z"/><path d="M8 8v5.5"/></svg>`;
 
 const TIPO_LABEL = { produto: "Produto", servico: "Serviço", software: "Software", solucao: "Solução" };
@@ -20,14 +21,19 @@ const tipoChip = t => `<span class="badge tipo-${t}">${TIPO_LABEL[t]}</span>`;
 
 /* ---------- matriz (produto) ---------- */
 function matrixOf(holder) {
-  if (!holder._m) { const s = clone(REQS); (holder.overrides || []).forEach(o => s[o.ri].cells[o.ci] = { st: o.st, v: o.v, c: o.c }); holder._m = s; }
+  if (!holder._m) {
+    const s = clone(REQS); (holder.overrides || []).forEach(o => s[o.ri].cells[o.ci] = { st: o.st, v: o.v, c: o.c });
+    // requisitos identificados no edital cujo valor não foi extraído → entram como linhas com placeholder
+    NAO_ANALISADAS.forEach(req => s.push({ req, exig: "", naoExtraido: true, modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: "A IA identificou a exigência deste requisito no edital, mas não conseguiu extrair o valor automaticamente." }, cells: SKUS.map(() => ({ st: "ne", v: "—" })) }));
+    holder._m = s;
+  }
   return holder._m;
 }
 function scoresFor(specs) {
   return SKUS.map((sku, i) => {
     let ok = 0, evaluable = 0, ne = 0; const diverg = [];
     specs.forEach(spec => {
-      if (spec.exigNa) return;
+      if (spec.exigNa || spec.naoExtraido) return;
       const cell = spec.cells[i];
       if (cell.st === "ok") { ok++; evaluable++; }
       else if (cell.st === "no") { evaluable++; diverg.push(spec.req); }
@@ -198,12 +204,16 @@ function renderMatrix() {
   let body = "";
   SPECS.forEach((spec, ri) => {
     if (spec.exigNa) return;
-    let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}">`;
+    const nx = !!spec.naoExtraido;
+    let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}${nx ? " row-missing" : ""}">`;
     cols.forEach(c => {
       if (c.key === "check") row += `<td class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar requisito"></span></td>`;
       else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head"><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span><button class="req-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu (página e trecho)">${ICO_ARROW}</button></div></td>`;
-      else if (c.key === "val") row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido">${esc(spec.exig)}</span></td>`;
+      else if (c.key === "val") row += nx
+        ? `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="val-missing editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="A IA identificou esta exigência no edital, mas não conseguiu extrair o valor. Clique para informar o valor requerido.">${ICO_WARN} Valor não extraído</span></td>`
+        : `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido">${esc(spec.exig)}</span></td>`;
       else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button><button class="act-ico" data-origin="${ri}" data-tip="Vincular / ver fonte no edital">${ICO_LINK}</button></div></td>`;
+      else if (nx) row += `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-muted" data-tip="Sem valor requerido extraído, não é possível comparar este produto">— aguardando valor</span></td>`;
       else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c);
     });
     body += row + `</tr>`;
@@ -224,8 +234,7 @@ function collapsiblesHTML(it) {
   let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true);
   if (it.tipo === "produto") {
     const naoExigidas = [...(SPECS || matrixOf(it)).filter(s => s.exigNa).map(s => s.req), ...CATALOGO_NAO_EDITAL];
-    html += collapsible("Requisitos do edital ainda não analisados", tagList(NAO_ANALISADAS, 'O edital pede, mas a IA ainda não extraiu. Use "+ Adicionar requisito" para incluí-los na comparação.'), null);
-    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, "Itens do seu catálogo que o edital não pede. Não entram no score, mas podem ser diferencial (questionar / impugnar)."), null);
+    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, "Itens do seu catálogo que o edital não pede."), null);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
@@ -267,7 +276,12 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.ad
 function commitEdit(el) {
   const ri = +el.dataset.ri, kind = el.dataset.edit, txt = el.textContent.trim();
   if (kind === "r") SPECS[ri].req = txt || "Requisito";
-  else if (kind === "vr") { if (!SPECS[ri].exigNa) SPECS[ri].exig = txt; }
+  else if (kind === "vr") {
+    if (SPECS[ri].exigNa) return;
+    const wasMissing = SPECS[ri].naoExtraido;
+    if (wasMissing && txt) { SPECS[ri].naoExtraido = false; SPECS[ri].exig = txt; recompute(); renderMatrix(); toast(`Valor informado para "${SPECS[ri].req}" — produtos liberados para comparação`); }
+    else SPECS[ri].exig = txt;
+  }
   else if (kind === "v") { const cc = SPECS[ri].cells[+el.dataset.ci]; cc.v = txt || "—"; cc.c = "alta"; }
 }
 function toggleStatus(ri, ci) {
