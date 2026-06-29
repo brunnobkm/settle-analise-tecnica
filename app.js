@@ -105,17 +105,23 @@ function renderGrid() {
     const sum = itemSummary(i);
     if (statusFilter !== "all" && sum.status !== statusFilter) return "";
     const chosenIdx = prefs.chosen[i];
-    const statusBadge = sum.status === "ok"
-      ? `<span class="badge ok" data-tip="Você consegue atender este item">${ICO_OK} Atende</span>`
-      : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">${ICO_NO} Não atende</span>`;
-    const secondBadge = (sum.kind === "produto")
-      ? ((chosenIdx != null) ? `<span class="badge brand">${ICO_OK} Produto selecionado</span>` : `<span class="badge soft">${SKUS.length} produtos analisados</span>`)
+    const analyBadge = (sum.kind === "produto")
+      ? `<span class="badge soft" data-tip="Produtos do seu catálogo comparados com este item">${SKUS.length} produtos analisados</span>`
       : `<span class="badge soft">${it.checklist.length} requisitos</span>`;
+    const statusBadge = sum.status === "ok"
+      ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
+      : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
+    const chosenBadge = (sum.kind === "produto" && chosenIdx != null) ? `<span class="badge brand">Produto selecionado</span>` : "";
+    const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
+    const bottom = (sum.kind === "produto")
+      ? `<b>Recomendado:</b> <span style="font-family:var(--mono)">${esc(sum.best.sku.model)}</span> · ${esc(sum.best.sku.brand)}`
+      : `<b>Atende</b> ${sum.ok} de ${sum.total} exigências`;
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges">${statusBadge}${secondBadge}</div>
-      <div class="ic-title">${esc(it.titulo)}</div>
+      <div class="ic-badges">${analyBadge}${statusBadge}${chosenBadge}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
-      <div class="ic-vals"><b>Quantidade:</b> ${esc(it.quantidade)} &nbsp;·&nbsp; <b>Valor unit.:</b> <span style="font-family:var(--mono)">${esc(it.valorUnitario.v)}</span> &nbsp;·&nbsp; <b>Total:</b> <span style="font-family:var(--mono)">${esc(it.valorTotal.v)}</span></div>
+      <div class="ic-line"><b>Quantidade:</b> ${qtyTxt}</div>
+      <div class="ic-line"><b>Valor unitário:</b> <span style="font-family:var(--mono)">${esc(it.valorUnitario.v)}</span> &nbsp;&nbsp; <b>Valor total:</b> <span style="font-family:var(--mono)">${esc(it.valorTotal.v)}</span></div>
+      <div class="ic-reco">${bottom}</div>
     </div>`;
   }).join("");
   $("#cardGrid").innerHTML = html || `<div style="grid-column:1/-1;color:var(--muted-foreground);padding:24px;text-align:center">Nenhum item neste filtro.</div>`;
