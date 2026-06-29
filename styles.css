@@ -414,8 +414,6 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .extract-actions { position: sticky; bottom: 0; margin-top: 14px; padding-top: 12px; background: linear-gradient(to top, #fff 70%, transparent); display: flex; flex-direction: column; gap: 10px; }
 .extract-actions[hidden] { display: none; }
 .extract-sel { font-size: 13px; color: var(--foreground); background: #FDF6E6; border: 1px dashed #E5C97B; border-radius: var(--r-md); padding: 8px 10px; max-height: 80px; overflow: auto; }
-.req-ico.warn { color: var(--warning); opacity: 1; border-color: #F3D9A8; }
-.req-ico.warn:hover { background: var(--warning-bg, #FEF6EC); color: var(--warning); }
 
 /* ---------- Selecionar SKU / Produto escolhido ---------- */
 .sku-select { width: 100%; margin-top: 10px; border: 0; background: var(--brand); color: #fff; border-radius: var(--r-md); padding: 7px 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s; }
