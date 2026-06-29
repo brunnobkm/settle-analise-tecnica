@@ -392,6 +392,9 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .drawer-close { border: 0; background: transparent; color: var(--muted-foreground); width: 30px; height: 30px; border-radius: var(--r-md); display: grid; place-items: center; }
 .drawer-close:hover { background: var(--muted); color: var(--foreground); }
 .drawer-body { padding: 18px; overflow-y: auto; }
+.file-preview-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted-foreground); text-align: center; }
+.file-preview-empty svg { width: 40px; height: 40px; opacity: .55; }
+.file-preview-empty span { font-size: 14px; font-weight: 500; }
 .src-meta { font-size: 13px; color: var(--muted-foreground); margin-bottom: 4px; }
 .src-doc { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--brand-600); margin-bottom: 14px; }
 .src-page-tag { font-size: 11px; font-weight: 600; background: var(--muted); border-radius: var(--r-md); padding: 2px 8px; color: var(--foreground); }

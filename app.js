@@ -264,19 +264,8 @@ let extractRi = null, pendingExtract = null;
 const FILE_SVG = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h6l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M10 2v3h3"/></svg>`;
 function openOriginSpec(spec, ri) {
   extractRi = null; pendingExtract = null;
-  if (spec.naoExtraido) {
-    $("#drawerHead").textContent = "Extrair do edital";
-    extractRi = ri;
-    $("#drawerBody").innerHTML = `<div class="src-meta">Requisito</div><div class="origin-req">${esc(spec.req)}</div>
-      <div class="extract-callout">${ICO_WARN}<div><b>Não conseguimos extrair essa informação.</b><br>Selecione um trecho do edital abaixo para extrair o dado.</div></div>
-      <div class="src-doc">${FILE_SVG} ${esc(EDITAL.docNome || "Edital — Termo de Referência")}</div>
-      <div class="extract-doc" id="extractDoc">${esc(EDITAL.docTexto)}</div>
-      <div class="extract-actions" id="extractActions" hidden><div class="extract-sel" id="extractSel"></div><button class="btn primary" id="extractConfirm">Extrair valor deste trecho</button></div>`;
-  } else {
-    $("#drawerHead").textContent = "Origem da extração";
-    const o = spec.origem;
-    $("#drawerBody").innerHTML = `<div class="src-meta">Requisito</div><div style="font-size:16px;font-weight:600;margin-bottom:10px">${esc(spec.req)}${spec.exigNa ? "" : ` <span style="color:var(--muted-foreground);font-weight:500">· exigido: <span style="font-family:var(--mono)">${esc(spec.exig)}</span></span>`}</div><div class="src-doc">${FILE_SVG} ${esc(o.doc)} ${o.pag !== "—" ? `<span class="src-page-tag">página ${o.pag}</span>` : ""}</div><div class="src-meta" style="margin-bottom:6px">Trecho de onde a informação foi extraída:</div><div class="src-quote">${o.trecho || "Inserido manualmente pelo usuário."}</div><div class="src-conf src-meta">A IA destacou o trecho acima do documento original. Confira a página ${o.pag} do ${esc(o.doc)} para validação manual.</div>`;
-  }
+  $("#drawerHead").textContent = "Visualização do arquivo";
+  $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>Visualização do arquivo</span></div>`;
   $("#drawerOverlay").hidden = false; $("#drawer").hidden = false;
 }
 const closeOrigin = () => { $("#drawerOverlay").hidden = true; $("#drawer").hidden = true; extractRi = null; pendingExtract = null; };
