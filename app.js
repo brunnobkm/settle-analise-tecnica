@@ -110,11 +110,12 @@ function renderStats(ofType) {
     check: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`,
     cross: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`,
   };
+  // Resumo executivo a revisar: por enquanto valores zerados e rótulos "A definir"
   const cards = [
-    { ico: "brand", svg: I.target, n: total, label: "Itens com correspondência" },
-    { ico: "", svg: I.layers, n: total, label: "Itens com análise técnica" },
-    { ico: "ok", svg: I.check, n: atend, label: "Itens atendidos" },
-    { ico: "bad", svg: I.cross, n: nao, label: "Itens não atendidos" },
+    { ico: "brand", svg: I.target, n: 0, label: "A definir" },
+    { ico: "", svg: I.layers, n: 0, label: "A definir" },
+    { ico: "ok", svg: I.check, n: 0, label: "A definir" },
+    { ico: "bad", svg: I.cross, n: 0, label: "A definir" },
   ];
   $("#stats").innerHTML = cards.map(c => `<div class="stat" data-tip="${c.label}"><div class="stat-top"><div class="stat-ico ${c.ico}">${c.svg}</div><div class="stat-n">${c.n}</div></div><div class="stat-label">${c.label}</div></div>`).join("");
 }
