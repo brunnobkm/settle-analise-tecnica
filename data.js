@@ -187,7 +187,8 @@ const ITEMS = [
     quantidade: "80", precoUnit: 2980,
     resumoTR: "Aquisição de 80 câmeras IP com leitura de placas (LPR) para o anel viário. Indique, do seu catálogo, qual SKU atende às especificações e a que preço.",
     componentes: [
-      { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [] },
+      // cenário ATENDE: o SKU recomendado cobre todos os requisitos (override em Detecção facial)
+      { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
     ] },
 
   // 2) PRODUTO + SERVIÇO — câmera bullet + instalação

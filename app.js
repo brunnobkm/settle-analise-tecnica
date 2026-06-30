@@ -142,6 +142,7 @@ function renderGrid() {
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
       <div class="ic-badges">${compBadge}${statusBadge}${chosenBadge}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
+      <div class="ic-divider"></div>
       <div class="ic-line"><b>Quantidade:</b> ${qtyTxt}</div>
       <div class="ic-line"><b>Valor unitário:</b> <span style="font-family:var(--mono)">${esc(it.valorUnitario.v)}</span> &nbsp;&nbsp; <b>Valor total:</b> <span style="font-family:var(--mono)">${esc(it.valorTotal.v)}</span></div>
       <div class="ic-comps">${comps}</div>
