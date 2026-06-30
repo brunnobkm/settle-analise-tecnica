@@ -17,21 +17,19 @@ const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" str
 const ICO_ALERT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.4" stroke-linecap="round"/><path d="M8 11v.01" stroke-linecap="round"/></svg>`;
 const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 2.5h4l-.8 3.5 2.3 2H4.5l2.3-2L6 2.5z"/><path d="M8 8v5.5"/></svg>`;
 
-const TIPO_LABEL = { produto: "Produto", servico: "Serviço", software: "Software", solucao: "Solução" };
-const tipoChip = t => `<span class="badge tipo-${t}">${TIPO_LABEL[t]}</span>`;
-
-/* ---------- matriz (produto) ---------- */
-function matrixOf(holder) {
-  if (!holder._m) {
-    const s = clone(REQS); (holder.overrides || []).forEach(o => s[o.ri].cells[o.ci] = { st: o.st, v: o.v, c: o.c });
+/* ---------- matriz (componente "produto") ----------
+   comp = { mecanica:"produto", skus:[...], reqs:[...], overrides:[], naoAnalisadas:[], catalogoNaoEdital:[] } */
+function matrixOf(comp) {
+  if (!comp._m) {
+    const s = clone(comp.reqs); (comp.overrides || []).forEach(o => s[o.ri].cells[o.ci] = { st: o.st, v: o.v, c: o.c });
     // requisitos identificados no edital cujo valor não foi extraído → entram como linhas com placeholder
-    NAO_ANALISADAS.forEach(n => s.push({ req: n.req, exig: "", naoExtraido: true, modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: "A IA identificou a exigência deste requisito no edital, mas não conseguiu extrair o valor automaticamente." }, cells: SKUS.map((_, i) => ({ st: "nm", v: (n.vals && n.vals[i]) || "—" })) }));
-    holder._m = s;
+    (comp.naoAnalisadas || []).forEach(n => s.push({ req: n.req, exig: "", naoExtraido: true, modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: "A IA identificou a exigência deste requisito no edital, mas não conseguiu extrair o valor automaticamente." }, cells: comp.skus.map((_, i) => ({ st: "nm", v: (n.vals && n.vals[i]) || "—" })) }));
+    comp._m = s;
   }
-  return holder._m;
+  return comp._m;
 }
-function scoresFor(specs) {
-  return SKUS.map((sku, i) => {
+function scoresFor(specs, skus) {
+  return skus.map((sku, i) => {
     let ok = 0, evaluable = 0, ne = 0; const diverg = [];
     specs.forEach(spec => {
       if (spec.exigNa || spec.naoExtraido) return;
@@ -57,7 +55,8 @@ function evalCell(v, req) {
   return (av.includes(ar) || ar.includes(av)) ? "ok" : "no";
 }
 const rankFor = sc => [...sc].sort((a, b) => b.pct - a.pct || a.ne - b.ne || b.ok - a.ok);
-const bestOf = specs => rankFor(scoresFor(specs))[0];
+const bestOf = (specs, skus) => rankFor(scoresFor(specs, skus))[0];
+const prodSummary = comp => { const best = bestOf(matrixOf(comp), comp.skus); return { best, ok: best.diverg.length === 0 }; };
 const isConcordant = spec => new Set(spec.cells.filter(c => c.st === "ok" || c.st === "no").map(c => c.st)).size <= 1;
 
 /* ---------- checklist (serviço / software) ---------- */
@@ -72,20 +71,20 @@ const confBadge = c => c ? `<span class="badge ${c === "alta" ? "ok" : c === "me
 /* ---------- resumo por item (adapta ao tipo) ---------- */
 function itemSummary(i) {
   const it = ITEMS[i];
-  if (it.tipo === "produto") { const best = bestOf(matrixOf(it)); return { kind: "produto", best, status: best.diverg.length === 0 ? "ok" : "no" }; }
-  if (it.tipo === "servico" || it.tipo === "software") { const s = checklistSummary(it.checklist); return { kind: "check", ...s }; }
-  const secs = it.sections.map(sec => sec.tipo === "produto" ? { tipo: "produto", ok: bestOf(matrixOf(sec)).diverg.length === 0 } : { tipo: sec.tipo, ok: checklistSummary(sec.checklist).status === "ok" });
-  return { kind: "solucao", secs, status: secs.every(s => s.ok) ? "ok" : "no" };
+  const comps = it.componentes.map(comp => {
+    if (comp.mecanica === "produto") { const ps = prodSummary(comp); return { mecanica: "produto", rotulo: comp.rotulo, ok: ps.ok, best: ps.best, comp }; }
+    const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, ok: s.status === "ok", ok_n: s.ok, total: s.total, comp };
+  });
+  return { comps, multi: comps.length > 1, status: comps.every(c => c.ok) ? "ok" : "no" };
 }
 
 /* ---------- estado ---------- */
-const LS = "settle-at-prefs-v6";
+const LS = "settle-at-prefs-v7";
 let prefs = (() => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch { return {}; } })();
 const savePrefs = () => localStorage.setItem(LS, JSON.stringify(prefs));
 prefs.chosen = prefs.chosen || {};
 let statusFilter = prefs.filter || "all";
-let tipoFilter = prefs.tipo || "produto";
-let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeMatrixHolder = null;
+let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeComp = null, MX_SKUS = [];
 let currentChecklists = [];
 let colW = prefs.colW || {};
 let frozen = new Set(prefs.frozen || ["req", "val"]);
@@ -93,7 +92,7 @@ const COLW = k => colW[k] || (k === "check" ? 44 : k === "req" ? 300 : k === "va
 const saveCols = () => { prefs.colW = colW; prefs.frozen = [...frozen]; savePrefs(); };
 let renderPending = false;
 const scheduleRender = () => { if (!renderPending) { renderPending = true; requestAnimationFrame(() => { renderPending = false; renderMatrix(); }); } };
-function recompute() { STATE = scoresFor(SPECS); RANKED = rankFor(STATE); ORDER = RANKED.map(s => s.i); BEST = RANKED[0]; window.SCORES = STATE; }
+function recompute() { STATE = scoresFor(SPECS, MX_SKUS); RANKED = rankFor(STATE); ORDER = RANKED.map(s => s.i); BEST = RANKED[0]; window.SCORES = STATE; }
 
 /* valores do item (a partir do preço unitário) */
 ITEMS.forEach(it => { const q = parseFloat(it.quantidade) || 1, fmt = n => "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2 }); it.valorUnitario = it.precoUnit ? { v: fmt(it.precoUnit) } : { v: "—" }; it.valorTotal = it.precoUnit ? { v: fmt(it.precoUnit * q) } : { v: "—" }; });
@@ -121,28 +120,30 @@ function renderStats(ofType) {
 }
 function renderGrid() {
   $("#crumbId").textContent = `Edital ${EDITAL.numero}`;
-  const ofType = ITEMS.map((it, i) => ({ it, i })).filter(x => x.it.tipo === tipoFilter);
-  renderStats(ofType);
-  const html = ofType.map(({ it, i }) => {
+  const all = ITEMS.map((it, i) => ({ it, i }));
+  renderStats(all);
+  const html = all.map(({ it, i }) => {
     const sum = itemSummary(i);
     if (statusFilter !== "all" && sum.status !== statusFilter) return "";
     const chosenIdx = prefs.chosen[i];
-    const analyBadge = (sum.kind === "produto")
-      ? `<span class="badge soft" data-tip="Produtos do seu catálogo comparados com este item">${SKUS.length} produtos analisados</span>`
-      : `<span class="badge soft">${it.checklist.length} requisitos</span>`;
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
       : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
-    const chosenBadge = (sum.kind === "produto" && chosenIdx != null) ? `<span class="badge brand">Produto selecionado</span>` : "";
+    const compBadge = `<span class="badge soft" data-tip="Componentes que formam este item">${sum.comps.length} ${sum.comps.length === 1 ? "componente" : "componentes"}</span>`;
+    const chosenBadge = (chosenIdx != null) ? `<span class="badge brand">Produto selecionado</span>` : "";
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
-    const bottom = (sum.kind === "produto")
-      ? `<b>Recomendado:</b> <span style="font-family:var(--mono)">${esc(sum.best.sku.model)}</span> · ${esc(sum.best.sku.brand)}`
-      : `<b>Atende</b> ${sum.ok} de ${sum.total} exigências`;
+    // "racha" dos componentes: cada componente com ✓ / ✗ + rótulo
+    const comps = sum.comps.map(c => `<span class="ic-comp ${c.ok ? "ok" : "no"}">${c.ok ? ICO_OK : ICO_NO}${esc(c.rotulo)}</span>`).join("");
+    const prod = sum.comps.find(c => c.mecanica === "produto");
+    const bottom = prod
+      ? `<b>Recomendado:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`
+      : `<b>Atende</b> ${sum.comps.filter(c => c.ok).length} de ${sum.comps.length} componentes`;
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges">${analyBadge}${statusBadge}${chosenBadge}</div>
+      <div class="ic-badges">${compBadge}${statusBadge}${chosenBadge}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-line"><b>Quantidade:</b> ${qtyTxt}</div>
       <div class="ic-line"><b>Valor unitário:</b> <span style="font-family:var(--mono)">${esc(it.valorUnitario.v)}</span> &nbsp;&nbsp; <b>Valor total:</b> <span style="font-family:var(--mono)">${esc(it.valorTotal.v)}</span></div>
+      <div class="ic-comps">${comps}</div>
       <div class="ic-reco">${bottom}</div>
     </div>`;
   }).join("");
@@ -155,21 +156,24 @@ function renderGrid() {
    ============================================================ */
 function openTable(i) {
   active = i; const it = ITEMS[i];
-  currentChecklists = []; SPECS = null; BEST = null; activeMatrixHolder = null;
+  currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
   $("#toTitle").textContent = it.titulo || it.nome;
+  const sum = itemSummary(i), multi = it.componentes.length > 1;
 
-  if (it.tipo === "produto") { activeMatrixHolder = it; SPECS = matrixOf(it); recompute(); }
+  // componente produto é processado antes (collapsiblesHTML usa SPECS)
+  const prodComp = it.componentes.find(comp => comp.mecanica === "produto");
+  if (prodComp) { activeComp = prodComp; MX_SKUS = prodComp.skus; SPECS = matrixOf(prodComp); recompute(); }
+
   let body = collapsiblesHTML(it);
-  if (it.tipo === "produto") { body += `<div class="mech-host" id="matrixHost"></div>`; }
-  else if (it.tipo === "servico" || it.tipo === "software") { currentChecklists = [it.checklist]; body += `<div class="mech-host" id="clHost-0"></div>`; }
-  else {
-    it.sections.forEach(sec => {
-      body += `<div class="section-head">${esc(sec.titulo)}</div>`;
-      if (sec.tipo === "produto") { activeMatrixHolder = sec; body += `<div class="mech-host" id="matrixHost"></div>`; }
-      else { const idx = currentChecklists.length; currentChecklists.push(sec.checklist); body += `<div class="mech-host" id="clHost-${idx}"></div>`; }
-    });
-    if (activeMatrixHolder) { SPECS = matrixOf(activeMatrixHolder); recompute(); }
-  }
+  it.componentes.forEach((comp, ci) => {
+    if (multi) {
+      const cs = sum.comps[ci];
+      body += `<div class="comp-head"><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-mec">${comp.mecanica === "produto" ? "comparar produto" : "atende / não atende"}</span></div>`;
+    }
+    if (comp.mecanica === "produto") { body += `<div class="mech-host" id="matrixHost"></div>`; }
+    else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); body += `<div class="mech-host" id="clHost-${idx}"></div>`; }
+  });
+
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
@@ -246,9 +250,10 @@ function tagList(items, note) {
 }
 function collapsiblesHTML(it) {
   let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true);
-  if (it.tipo === "produto") {
-    const naoExigidas = [...(SPECS || matrixOf(it)).filter(s => s.exigNa).map(s => s.req), ...CATALOGO_NAO_EDITAL];
-    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, ""), null);
+  const prodComp = it.componentes.find(comp => comp.mecanica === "produto");
+  if (prodComp) {
+    const naoExigidas = [...matrixOf(prodComp).filter(s => s.exigNa).map(s => s.req), ...(prodComp.catalogoNaoEdital || [])];
+    if (naoExigidas.length) html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, ""), null);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
@@ -311,7 +316,7 @@ function commitEdit(el) {
   }
 }
 function addReq() {
-  SPECS.push({ req: "Novo requisito", exig: "", exigNa: false, added: true, origem: { doc: "Inserido manualmente", pag: "—" }, cells: SKUS.map(() => ({ st: "ne", v: "—" })) });
+  SPECS.push({ req: "Novo requisito", exig: "", exigNa: false, added: true, origem: { doc: "Inserido manualmente", pag: "—" }, cells: MX_SKUS.map(() => ({ st: "ne", v: "—" })) });
   renderMatrix();
   const rows = $("#matrixHost").querySelectorAll("tbody tr"); const nameEl = rows[rows.length - 1]?.querySelector('[data-edit="r"]');
   if (nameEl) { nameEl.focus(); document.getSelection().selectAllChildren(nameEl); }
@@ -342,7 +347,7 @@ function wire() {
   });
   tb.addEventListener("click", e => {
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
-    const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${SKUS[i].model}` : "Seleção removida"); return; }
+    const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }

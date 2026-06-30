@@ -116,42 +116,9 @@ const SOFTWARE_VMS = [
   cl("Armazenamento em nuvem", "Opcional", "Storage", "ok", "media", "Oferece gravação em nuvem como opção contratável.", 26, "<mark>Armazenamento em nuvem</mark> opcional."),
 ];
 
-/* itens do edital — TIPO (a lente) + mecânica. titulo = "o que é o item" em linguagem clara; nome = descrição completa. */
-const ITEMS = [
-  // ---- PRODUTO (mecânica: comparar & escolher SKU) ----
-  { tipo: "produto", titulo: "Câmeras LPR (leitura de placas)",
-    nome: "Câmera de segurança: fornecimento de 80 câmeras, modelo LPR (leitura de placas), para o anel viário, conforme Termo de Referência.",
-    quantidade: "80", precoUnit: 2980,
-    resumoTR: "Aquisição de 80 câmeras IP tipo bullet com leitura de placas (LPR) para o anel viário. Você precisa indicar, do seu catálogo, qual SKU atende às especificações e a que preço.",
-    overrides: [] },
-  { tipo: "produto", titulo: "Câmeras Speed Dome (PTZ)",
-    nome: "Câmera de segurança: fornecimento de 100 câmeras, modelo Speed Dome (PTZ), para monitoramento ativo.",
-    quantidade: "100", precoUnit: 4150,
-    resumoTR: "Aquisição de 100 câmeras Speed Dome (PTZ) para pontos de monitoramento ativo. Escolha o SKU do catálogo que melhor atende.",
-    overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
-  { tipo: "produto", titulo: "Câmeras Bullet (fixas)",
-    nome: "Câmera de segurança: fornecimento de 100 câmeras, modelo Bullet fixa, para vigilância perimetral.",
-    quantidade: "100", precoUnit: 1890,
-    resumoTR: "Aquisição de 100 câmeras bullet fixas para vigilância perimetral. Escolha o SKU do catálogo que melhor atende.",
-    overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
-  // ---- SERVIÇO (mecânica: atende / não atende) ----
-  { tipo: "servico", titulo: "Instalação e operação do sistema",
-    nome: "Serviço de instalação, configuração e operação assistida do sistema de videomonitoramento.",
-    quantidade: "1", precoUnit: 320000,
-    resumoTR: "Contratação da empresa que vai instalar as câmeras, lançar a rede, integrar ao software e operar o sistema. Aqui não há escolha de SKU, você só confirma se consegue cumprir cada exigência do serviço.",
-    checklist: SERVICO_INSTALL },
-  // ---- SOFTWARE (software simples ≈ atende / não) ----
-  { tipo: "software", titulo: "Software de gestão de vídeo (VMS)",
-    nome: "Licença de software de gestão de vídeo (VMS) com leitura de placas (LPR) e cerco virtual.",
-    quantidade: "1", precoUnit: 145000,
-    resumoTR: "Licenciamento do software que centraliza as câmeras, faz leitura de placas e cerco virtual. Software simples (não exige a análise complexa), confirme se a sua solução atende a cada funcionalidade exigida.",
-    checklist: SOFTWARE_VMS },
-];
-
 /* Requisitos que a IA identificou no edital, mas não conseguiu extrair o VALOR EXIGIDO.
    O valor de cada SKU (catálogo do cliente) nós temos; o que falta é a exigência do edital
-   para fazer o match. Por isso a coluna "Valor requerido" fica com placeholder e as células
-   dos produtos mostram o valor + ícone de "sem correspondência". vals segue a ordem de SKUS. */
+   para fazer o match. vals segue a ordem de SKUS. */
 const NAO_ANALISADAS = [
   { req: "WDR (faixa dinâmica)",                vals: ["120 dB", "120 dB", "120 dB", "120 dB", "140 dB", "100 dB", "120 dB"] },
   { req: "Estabilização eletrônica de imagem",  vals: ["Sim", "Sim", "Não", "Sim", "Sim", "Não", "Sim"] },
@@ -160,3 +127,105 @@ const NAO_ANALISADAS = [
   { req: "Certificação Anatel",                 vals: ["Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado"] },
 ];
 const CATALOGO_NAO_EDITAL = ["Zoom digital 16×","Microfone embutido","Sirene integrada"];
+
+/* ============================================================
+   Dataset TI — Firewall (Fortinet) para o caso de COMPOSIÇÃO (caixa + licença + garantia)
+   ============================================================ */
+const SKUS_FW = [
+  { model: "FortiGate-200F", brand: "Fortinet" },
+  { model: "FortiGate-120G", brand: "Fortinet" },
+  { model: "FortiGate-100F", brand: "Fortinet" },
+  { model: "FortiGate-80F",  brand: "Fortinet" },
+];
+const REQS_FW = [
+  { req: "Throughput de Firewall", exig: "≥ 10 Gbps", modulo: "Desempenho",
+    origem: { doc: "Termo de Referência", pag: 31, trecho: "Throughput de firewall de no mínimo <mark>10 Gbps</mark>." },
+    cells: [c("ok","27 Gbps","alta"),c("ok","21 Gbps","alta"),c("ok","20 Gbps","alta"),c("no","10 Gbps","alta")] },
+  { req: "Throughput de Threat Protection", exig: "≥ 1,5 Gbps", modulo: "Desempenho",
+    origem: { doc: "Termo de Referência", pag: 31, trecho: "Throughput de threat protection (IPS+AV+App Ctrl) de no mínimo <mark>1,5 Gbps</mark>." },
+    cells: [c("ok","3 Gbps","alta"),c("ok","2,2 Gbps","alta"),c("no","1 Gbps","alta"),c("no","900 Mbps","alta")] },
+  { req: "Sessões concorrentes", exig: "≥ 1.000.000", modulo: "Capacidade",
+    origem: { doc: "Termo de Referência", pag: 32, trecho: "Suporte a no mínimo <mark>1.000.000 de sessões concorrentes</mark>." },
+    cells: [c("ok","1.500.000","alta"),c("ok","1.100.000","alta"),c("ok","1.000.000","media"),c("no","700.000","alta")] },
+  { req: "Interfaces 1GbE (RJ45)", exig: "≥ 16 portas", modulo: "Interfaces",
+    origem: { doc: "Termo de Referência", pag: 32, trecho: "No mínimo <mark>16 interfaces 1GbE RJ45</mark>." },
+    cells: [c("ok","18 portas","alta"),c("ok","16 portas","alta"),c("no","14 portas","alta"),c("no","10 portas","alta")] },
+  { req: "Túneis VPN IPsec", exig: "≥ 2.000", modulo: "VPN",
+    origem: { doc: "Termo de Referência", pag: 33, trecho: "Suporte a no mínimo <mark>2.000 túneis VPN IPsec</mark> site-to-site." },
+    cells: [c("ok","6.000","alta"),c("ok","2.500","alta"),c("ok","2.000","alta"),c("ne","—","baixa")] },
+  { req: "Alta disponibilidade (HA)", exig: "Sim (ativo/passivo)", modulo: "Disponibilidade",
+    origem: { doc: "Termo de Referência", pag: 33, trecho: "Operação em <mark>alta disponibilidade</mark> ativo/passivo e ativo/ativo." },
+    cells: [c("ok","Sim","alta"),c("ok","Sim","alta"),c("ok","Sim","alta"),c("ok","Sim","media")] },
+  { req: "Interfaces SFP+ 10GbE", exig: "≥ 4 portas", modulo: "Interfaces",
+    origem: { doc: "Termo de Referência", pag: 32, trecho: "No mínimo <mark>4 interfaces SFP+ 10GbE</mark>." },
+    cells: [c("ok","8 portas","alta"),c("ok","4 portas","alta"),c("no","2 portas","alta"),c("no","0 portas","alta")] },
+];
+/* licença e garantia entram como CHECKLIST (atende / não), são part numbers que somam à composição */
+const LICENCA_FW = [
+  cl("Bundle UTP (IPS, AV, Web/DNS, App Ctrl)", "Sim", "Licença", "ok", "alta", "Pacote FortiGuard UTP cobre IPS, antivírus, filtro web/DNS e controle de aplicação.", 34, "Subscrição de segurança com <mark>IPS, antivírus, filtro web e controle de aplicação</mark>."),
+  cl("Subscrição mínima de 36 meses", "36 meses", "Licença", "ok", "alta", "Part number de subscrição de 36 meses disponível.", 34, "Subscrição das funcionalidades de segurança por <mark>36 (trinta e seis) meses</mark>."),
+  cl("Sandbox / proteção avançada (ATP)", "Sim", "Licença", "no", "media", "ATP/Sandbox não incluso no bundle UTP; exige bundle ATP (custo adicional).", 35, "Proteção avançada contra ameaças (<mark>sandbox / ATP</mark>)."),
+];
+const GARANTIA_FW = [
+  cl("Suporte do fabricante 24×7", "FortiCare 24×7", "Garantia", "ok", "alta", "FortiCare Premium 24×7 disponível como part number de serviço.", 36, "Suporte técnico do fabricante <mark>24 horas por dia, 7 dias por semana</mark>."),
+  cl("Troca de hardware (RMA) com envio antecipado", "Sim", "Garantia", "ok", "media", "RMA com Advanced Hardware Replacement incluído no FortiCare.", 36, "Garantia com <mark>troca antecipada de hardware (RMA)</mark>."),
+  cl("Prazo de garantia", "36 meses", "Garantia", "ok", "alta", "Serviço de garantia contratável por 36 meses, alinhado à licença.", 36, "Garantia de <mark>36 meses</mark> para o hardware e serviço."),
+];
+const CATALOGO_NAO_EDITAL_FW = ["Fonte redundante (RPS)", "Módulo Wi-Fi", "FortiToken (MFA)"];
+
+/* ============================================================
+   ITENS do edital — modelo de COMPOSIÇÃO.
+   Um item NÃO tem mais "tipo": ele é uma lista de COMPONENTES. Cada componente tem a sua
+   mecânica: "produto" (comparar/escolher SKU, matriz) ou "checklist" (atende/não atende).
+   Um item da vida real é quase sempre uma composição (ex.: caixa + licença + garantia).
+   titulo = "o que é o item" em linguagem clara; nome = descrição completa.
+   ============================================================ */
+const ITEMS = [
+  // 1) SÓ PRODUTO — compara/escolhe SKU
+  { titulo: "Câmeras LPR (leitura de placas)",
+    nome: "Câmera de segurança: fornecimento de 80 câmeras, modelo LPR (leitura de placas), para o anel viário, conforme Termo de Referência.",
+    quantidade: "80", precoUnit: 2980,
+    resumoTR: "Aquisição de 80 câmeras IP com leitura de placas (LPR) para o anel viário. Indique, do seu catálogo, qual SKU atende às especificações e a que preço.",
+    componentes: [
+      { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [] },
+    ] },
+
+  // 2) PRODUTO + SERVIÇO — câmera bullet + instalação
+  { titulo: "Câmeras Bullet + instalação",
+    nome: "Câmera de segurança bullet fixa (100 unidades) com serviço de instalação, lançamento de rede e integração ao VMS.",
+    quantidade: "100", precoUnit: 2210,
+    resumoTR: "Fornecimento de 100 câmeras bullet fixas mais o serviço de instalação. Item composto: você escolhe o SKU da câmera e confirma se atende às exigências do serviço.",
+    componentes: [
+      { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
+      { mecanica: "checklist", rotulo: "Instalação e operação", lista: SERVICO_INSTALL },
+    ] },
+
+  // 3) COMPOSIÇÃO TI — caixa + licença + garantia (caso dos "99%" do Paulo)
+  { titulo: "Firewall de perímetro (appliance + licença + garantia)",
+    nome: "Solução de firewall de próxima geração (NGFW) para o perímetro: appliance, subscrição de segurança (licença) e serviço de garantia/suporte do fabricante, em part numbers compostos.",
+    quantidade: "2", precoUnit: 86000,
+    resumoTR: "Item de TI composto por três part numbers que somam: o hardware (appliance), a licença de segurança e o serviço de garantia. A análise precisa cobrir os três componentes juntos.",
+    componentes: [
+      { mecanica: "produto", rotulo: "Appliance (hardware)", skus: SKUS_FW, reqs: REQS_FW, catalogoNaoEdital: CATALOGO_NAO_EDITAL_FW, overrides: [] },
+      { mecanica: "checklist", rotulo: "Licença de segurança (subscrição)", lista: LICENCA_FW },
+      { mecanica: "checklist", rotulo: "Garantia e suporte do fabricante", lista: GARANTIA_FW },
+    ] },
+
+  // 4) SÓ SERVIÇO — instalação e operação
+  { titulo: "Instalação e operação do sistema",
+    nome: "Serviço de instalação, configuração e operação assistida do sistema de videomonitoramento.",
+    quantidade: "1", precoUnit: 320000,
+    resumoTR: "Contratação da empresa que instala as câmeras, lança a rede, integra ao software e opera o sistema. Não há escolha de SKU: você confirma se consegue cumprir cada exigência do serviço.",
+    componentes: [
+      { mecanica: "checklist", rotulo: "Serviço de instalação e operação", lista: SERVICO_INSTALL },
+    ] },
+
+  // 5) SÓ SOFTWARE / LICENÇA — VMS
+  { titulo: "Software de gestão de vídeo (VMS)",
+    nome: "Licença de software de gestão de vídeo (VMS) com leitura de placas (LPR) e cerco virtual.",
+    quantidade: "1", precoUnit: 145000,
+    resumoTR: "Licenciamento do software que centraliza as câmeras, faz leitura de placas e cerco virtual. Confirme se a sua solução atende a cada funcionalidade exigida.",
+    componentes: [
+      { mecanica: "checklist", rotulo: "Software de gestão de vídeo (VMS)", lista: SOFTWARE_VMS },
+    ] },
+];
