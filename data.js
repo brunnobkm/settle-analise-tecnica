@@ -229,4 +229,15 @@ const ITEMS = [
     componentes: [
       { mecanica: "checklist", rotulo: "Software de gestão de vídeo (VMS)", lista: SOFTWARE_VMS },
     ] },
+
+  // 6) MISTO COMPLETO — produto + software + serviço num item só (caso "os três em conjunto", Michele)
+  { titulo: "Solução completa de videomonitoramento",
+    nome: "Solução de videomonitoramento em lote único: fornecimento das câmeras (hardware), licença do software de gestão de vídeo (VMS/LPR) e serviço de instalação e operação assistida.",
+    quantidade: "1", precoUnit: 690000,
+    resumoTR: "Item misto: um único lote que reúne produto (câmeras), software (VMS com LPR) e serviço (instalação e operação). A análise cobre os três componentes juntos, cada um com a sua mecânica.",
+    componentes: [
+      { mecanica: "produto", rotulo: "Câmeras (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
+      { mecanica: "checklist", rotulo: "Software de gestão de vídeo (VMS)", lista: SOFTWARE_VMS },
+      { mecanica: "checklist", rotulo: "Instalação e operação", lista: SERVICO_INSTALL },
+    ] },
 ];
