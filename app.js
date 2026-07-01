@@ -130,23 +130,31 @@ function renderGrid() {
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
       : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
-    const compBadge = `<span class="badge soft" data-tip="Componentes que formam este item">${sum.comps.length} ${sum.comps.length === 1 ? "componente" : "componentes"}</span>`;
     const chosenBadge = (chosenIdx != null) ? `<span class="badge brand">Produto selecionado</span>` : "";
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
-    // "racha" dos componentes: cada componente com ✓ / ✗ + rótulo
-    const comps = sum.comps.map(c => `<span class="ic-comp ${c.ok ? "ok" : "no"}">${c.ok ? ICO_OK : ICO_NO}${esc(c.rotulo)}</span>`).join("");
+    // Opção C: card mostra status + o bloqueio em linguagem clara (ou o SKU recomendado quando atende)
     const prod = sum.comps.find(c => c.mecanica === "produto");
-    const bottom = prod
-      ? `<b>Recomendado:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`
-      : `<b>Atende</b> ${sum.comps.filter(c => c.ok).length} de ${sum.comps.length} componentes`;
+    let reco, recoCls = "";
+    if (sum.status === "ok") {
+      reco = prod
+        ? `<b>Recomendado:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`
+        : `Atende todas as exigências do edital`;
+    } else {
+      recoCls = " bad";
+      const phrases = sum.comps.filter(c => !c.ok).map(c => {
+        const reqs = c.mecanica === "produto" ? c.best.diverg : c.comp.lista.filter(r => r.st === "no").map(r => r.req);
+        const shown = reqs.slice(0, 2).map(esc).join(", ") + (reqs.length > 2 ? ` +${reqs.length - 2}` : "");
+        return sum.multi ? `<b>${esc(c.rotulo)}:</b> ${shown}` : shown;
+      });
+      reco = `<b>Pendência:</b> ${phrases.join(" · ")}`;
+    }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges">${compBadge}${statusBadge}${chosenBadge}</div>
+      <div class="ic-badges">${statusBadge}${chosenBadge}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-divider"></div>
       <div class="ic-line"><b>Quantidade:</b> ${qtyTxt}</div>
       <div class="ic-line"><b>Valor unitário:</b> <span style="font-family:var(--mono)">${esc(it.valorUnitario.v)}</span> &nbsp;&nbsp; <b>Valor total:</b> <span style="font-family:var(--mono)">${esc(it.valorTotal.v)}</span></div>
-      <div class="ic-comps">${comps}</div>
-      <div class="ic-reco">${bottom}</div>
+      <div class="ic-reco${recoCls}">${reco}</div>
     </div>`;
   }).join("");
   $("#cardGrid").innerHTML = html || `<div style="grid-column:1/-1;color:var(--muted-foreground);padding:24px;text-align:center">Nenhum item neste filtro.</div>`;
