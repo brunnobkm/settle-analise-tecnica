@@ -468,5 +468,60 @@ function initTooltip() {
   window.addEventListener("scroll", hide, true);
 }
 
+/* ---------- Tour guiado (onboarding do protótipo) ---------- */
+function initTour() {
+  const layer = $("#tourLayer"), hi = $("#tourHi"), pop = $("#tourPop");
+  const ensureGrid = () => { if (!$("#tableOverlay").hidden) closeTable(); if (!$("#drawer").hidden) closeOrigin(); };
+  const MISTO = ITEMS.length - 1; // último item = misto completo (produto + software + serviço)
+  const ensureMisto = () => { if ($("#tableOverlay").hidden || active !== MISTO) openTable(MISTO); };
+  const STEPS = [
+    { before: ensureGrid, title: "Bem-vindo à Análise Técnica", text: "Em cerca de 1 minuto eu mostro como o protótipo transforma o edital em decisão: o que você atende, o que falta e qual produto indicar. Use Próximo para avançar." },
+    { before: ensureGrid, sel: "#stats", title: "Resumo executivo", text: "Os indicadores do edital ficam aqui. Estão como 'A definir' porque vamos redefinir juntos quais números fazem mais sentido." },
+    { before: ensureGrid, sel: "#filterTabs", title: "Filtro por status", text: "Filtre os itens do edital por Atende / Não atende, para focar no que precisa de ação." },
+    { before: ensureGrid, sel: ".item-card", title: "Cada card é um item do edital", text: "O card mostra a descrição do item, quantidade, valores e se você atende. Clicar abre a análise completa." },
+    { before: ensureGrid, sel: ".item-card:nth-child(2) .ic-reco", title: "A pendência aparece na hora", text: "Quando o item não atende, o card já diz o que está travando (a exigência que você não cumpre), sem precisar abrir." },
+    { before: ensureMisto, sel: ".comp-head", title: "Um item pode ter várias seções", text: "Ao abrir, o item se divide em seções (produto, licença, garantia, serviço), cada uma com a sua análise. Item simples tem só uma seção." },
+    { before: ensureMisto, sel: ".best-tag", title: "Comparação de produtos", text: "Na seção de produto, comparamos os SKUs do seu catálogo com a exigência do edital e recomendamos o que mais atende." },
+    { before: ensureMisto, sel: ".val-missing", title: "Valor não extraído", text: "Quando a IA não achou a exigência no edital, marcamos aqui. O ícone ao lado do requisito abre o arquivo para você selecionar o trecho e extrair o valor." },
+    { before: ensureMisto, sel: ".cell-val.editable", title: "Você corrige, o sistema recalcula", text: "O valor de cada produto é editável. Ao alterar, o atendimento (atende / não atende) é recalculado automaticamente pelo sistema." },
+    { before: ensureMisto, sel: ".sku-select", title: "Escolha o produto da proposta", text: "Quando decidir, selecione o SKU que vai para a proposta. É o encerramento do fluxo de análise do item." },
+    { before: ensureGrid, title: "Pronto!", text: "Esse é o fluxo: entender o item, ver o que falta, corrigir e escolher o produto. Você pode refazer o tour quando quiser pelo botão no canto inferior direito." },
+  ];
+  let idx = 0;
+  function place() {
+    const step = STEPS[idx], el = step.sel ? $(step.sel) : null;
+    $("#tourStepLbl").textContent = `Passo ${idx + 1} de ${STEPS.length}`;
+    $("#tourTitle").textContent = step.title;
+    $("#tourText").textContent = step.text;
+    $("#tourPrev").disabled = idx === 0;
+    $("#tourNext").textContent = idx === STEPS.length - 1 ? "Concluir" : "Próximo";
+    if (el) {
+      el.scrollIntoView({ block: "center", inline: "center" });
+      requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect(), pad = 6;
+        hi.style.display = "block";
+        hi.style.top = (r.top - pad) + "px"; hi.style.left = (r.left - pad) + "px";
+        hi.style.width = (r.width + pad * 2) + "px"; hi.style.height = (r.height + pad * 2) + "px";
+        const pw = pop.offsetWidth || 330, ph = pop.offsetHeight || 170;
+        let top = r.bottom + 12; if (top + ph > innerHeight - 12) top = Math.max(12, r.top - ph - 12);
+        let left = Math.max(12, Math.min(r.left, innerWidth - pw - 12));
+        pop.style.top = top + "px"; pop.style.left = left + "px";
+      });
+    } else {
+      hi.style.display = "none";
+      const pw = pop.offsetWidth || 330, ph = pop.offsetHeight || 170;
+      pop.style.top = (innerHeight / 2 - ph / 2) + "px"; pop.style.left = (innerWidth / 2 - pw / 2) + "px";
+    }
+  }
+  function show(i) { idx = Math.max(0, Math.min(STEPS.length - 1, i)); const s = STEPS[idx]; if (s.before) s.before(); layer.hidden = false; place(); }
+  function end() { layer.hidden = true; if (!$("#tableOverlay").hidden) closeTable(); }
+  $("#tourFab").onclick = () => show(0);
+  $("#tourSkip").onclick = end;
+  $("#tourPrev").onclick = () => { if (idx > 0) show(idx - 1); };
+  $("#tourNext").onclick = () => { if (idx >= STEPS.length - 1) end(); else show(idx + 1); };
+  window.addEventListener("resize", () => { if (!layer.hidden) place(); });
+  document.addEventListener("keydown", e => { if (!layer.hidden) { if (e.key === "Escape") end(); else if (e.key === "ArrowRight") $("#tourNext").click(); else if (e.key === "ArrowLeft") $("#tourPrev").click(); } });
+}
+
 /* boot */
-renderGrid(); wire(); initEditSheet(); initTooltip();
+renderGrid(); wire(); initEditSheet(); initTooltip(); initTour();
