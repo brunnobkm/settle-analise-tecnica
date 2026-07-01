@@ -155,7 +155,7 @@ button { font-family: inherit; cursor: pointer; }
 .item-card:hover { border-color: #D4D4D4; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
 .item-card.selected { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
 .ic-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.badge.seg { background: #F1F5F9; color: #475569; border: 1px dashed #CBD5E1; font-weight: 600; }
+.badge.seg { background: #0A0A0A; color: #FFFFFF; border: 0; font-weight: 600; }
 .ic-meta { font-size: 13px; }
 .ic-meta b { font-weight: 600; }
 .ic-vals { font-size: 12.5px; color: var(--foreground); margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border); }
