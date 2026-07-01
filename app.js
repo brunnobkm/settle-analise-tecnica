@@ -140,13 +140,20 @@ function renderGrid() {
         ? `<b>Recomendado:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`
         : `Atende todas as exigências do edital`;
     } else {
-      recoCls = " bad";
-      const phrases = sum.comps.filter(c => !c.ok).map(c => {
-        const reqs = c.mecanica === "produto" ? c.best.diverg : c.comp.lista.filter(r => r.st === "no").map(r => r.req);
-        const shown = reqs.slice(0, 2).map(esc).join(", ") + (reqs.length > 2 ? ` +${reqs.length - 2}` : "");
-        return sum.multi ? `<b>${esc(c.rotulo)}:</b> ${shown}` : shown;
-      });
-      reco = `<b>Pendência:</b> ${phrases.join(" · ")}`;
+      // escalável: número agregado (atende X de Y), ancorado no melhor produto. O detalhe por produto/requisito fica na tabela. O selo "Não atende" já carrega o veredito, então a linha fica neutra.
+      const fails = sum.comps.filter(c => !c.ok);
+      if (!sum.multi && fails.length === 1) {
+        const f = fails[0];
+        reco = f.mecanica === "produto"
+          ? `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(f.best.sku.model)}</span> · atende ${f.best.ok} de ${f.best.evaluable} requisitos`
+          : `Atende ${f.ok_n} de ${f.total} exigências`;
+      } else {
+        reco = `<b>Pendências:</b> ` + fails.map(f => {
+          const at = f.mecanica === "produto" ? f.best.ok : f.ok_n;
+          const tot = f.mecanica === "produto" ? f.best.evaluable : f.total;
+          return `${esc(f.rotulo)} ${at}/${tot}`;
+        }).join(" · ");
+      }
     }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
       <div class="ic-badges">${statusBadge}${chosenBadge}</div>
@@ -479,7 +486,7 @@ function initTour() {
     { before: ensureGrid, sel: "#stats", title: "Resumo executivo", text: "Os indicadores do edital ficam aqui. Estão como 'A definir' porque vamos redefinir juntos quais números fazem mais sentido." },
     { before: ensureGrid, sel: "#filterTabs", title: "Filtro por status", text: "Filtre os itens do edital por Atende / Não atende, para focar no que precisa de ação." },
     { before: ensureGrid, sel: ".item-card", title: "Cada card é um item do edital", text: "O card mostra a descrição do item, quantidade, valores e se você atende. Clicar abre a análise completa." },
-    { before: ensureGrid, sel: ".item-card:nth-child(2) .ic-reco", title: "A pendência aparece na hora", text: "Quando o item não atende, o card já diz o que está travando (a exigência que você não cumpre), sem precisar abrir." },
+    { before: ensureGrid, sel: ".item-card:nth-child(2) .ic-reco", title: "O quanto você atende, sem abrir", text: "Quando o item não atende, o card mostra o quanto o melhor produto atende (ex.: 385 de 400 requisitos), sem listar tudo. O detalhe por produto e por requisito fica na tabela, ao abrir." },
     { before: ensureMisto, sel: ".comp-head", title: "Um item pode ter várias seções", text: "Ao abrir, o item se divide em seções (produto, licença, garantia, serviço), cada uma com a sua análise. Item simples tem só uma seção." },
     { before: ensureMisto, sel: ".best-tag", title: "Comparação de produtos", text: "Na seção de produto, comparamos os SKUs do seu catálogo com a exigência do edital e recomendamos o que mais atende." },
     { before: ensureMisto, sel: ".val-missing", title: "Valor não extraído", text: "Quando a IA não achou a exigência no edital, marcamos aqui. O ícone ao lado do requisito abre o arquivo para você selecionar o trecho e extrair o valor." },
