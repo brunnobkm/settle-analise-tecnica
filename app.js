@@ -127,6 +127,12 @@ function renderGrid() {
     const sum = itemSummary(i);
     if (statusFilter !== "all" && sum.status !== statusFilter) return "";
     const chosenIdx = prefs.chosen[i];
+    // badge de apoio (fictícia) só para entender o tipo do item durante a validação
+    const TIPO_LBL = { produto: "Produto", servico: "Serviço", software: "Software" };
+    const tipos = [...new Set(it.componentes.map(c => c.mecanica === "produto" ? "produto" : (/software|vms|licen/i.test(c.rotulo) ? "software" : "servico")))];
+    const segLabel = tipos.length > 1 ? "Misto" : TIPO_LBL[tipos[0]];
+    const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
+    const segBadge = `<span class="badge seg" data-tip="${esc(segTip)}">${esc(segLabel)}</span>`;
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
       : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
@@ -156,7 +162,7 @@ function renderGrid() {
       }
     }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges">${statusBadge}${chosenBadge}</div>
+      <div class="ic-badges">${segBadge}${statusBadge}${chosenBadge}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-divider"></div>
       <div class="ic-line"><b>Quantidade:</b> ${qtyTxt}</div>
