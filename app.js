@@ -145,7 +145,7 @@ function renderGrid() {
       if (!sum.multi && fails.length === 1) {
         const f = fails[0];
         reco = f.mecanica === "produto"
-          ? `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(f.best.sku.model)}</span> · atende ${f.best.ok} de ${f.best.evaluable} requisitos`
+          ? `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(f.best.sku.model)}</span> · atende ${f.best.pct}% (${f.best.ok}/${f.best.evaluable})`
           : `Atende ${f.ok_n} de ${f.total} exigências`;
       } else {
         reco = `<b>Pendências:</b> ` + fails.map(f => {
@@ -486,13 +486,14 @@ function initTour() {
     { before: ensureGrid, sel: "#stats", title: "Resumo executivo", text: "Os indicadores do edital ficam aqui. Estão como 'A definir' porque vamos redefinir juntos quais números fazem mais sentido." },
     { before: ensureGrid, sel: "#filterTabs", title: "Filtro por status", text: "Filtre os itens do edital por Atende / Não atende, para focar no que precisa de ação." },
     { before: ensureGrid, sel: ".item-card", title: "Cada card é um item do edital", text: "O card mostra a descrição do item, quantidade, valores e se você atende. Clicar abre a análise completa." },
-    { before: ensureGrid, sel: ".item-card:nth-child(2) .ic-reco", title: "O quanto você atende, sem abrir", text: "Quando o item não atende, o card mostra o quanto o melhor produto atende (ex.: 385 de 400 requisitos), sem listar tudo. O detalhe por produto e por requisito fica na tabela, ao abrir." },
+    { before: ensureGrid, sel: ".item-card:first-child .ic-reco", title: "O quanto você atende, sem abrir", text: "Quando o item não atende, o card mostra o quanto o melhor produto atende em percentual (ex.: 93%), sem listar requisitos. Isso escala para 4 ou 400 exigências. O detalhe por produto e por requisito fica na tabela." },
     { before: ensureMisto, sel: ".comp-head", title: "Um item pode ter várias seções", text: "Ao abrir, o item se divide em seções (produto, licença, garantia, serviço), cada uma com a sua análise. Item simples tem só uma seção." },
     { before: ensureMisto, sel: ".best-tag", title: "Comparação de produtos", text: "Na seção de produto, comparamos os SKUs do seu catálogo com a exigência do edital e recomendamos o que mais atende." },
     { before: ensureMisto, sel: ".val-missing", title: "Valor não extraído", text: "Quando a IA não achou a exigência no edital, marcamos aqui. O ícone ao lado do requisito abre o arquivo para você selecionar o trecho e extrair o valor." },
-    { before: ensureMisto, sel: ".cell-val.editable", title: "Você corrige, o sistema recalcula", text: "O valor de cada produto é editável. Ao alterar, o atendimento (atende / não atende) é recalculado automaticamente pelo sistema." },
+    { before: ensureMisto, sel: "th.col-val", title: "Corrija a extração do edital", text: "Esta coluna é a exigência que a IA extraiu do EDITAL. Se ela leu errado, você corrige o valor requerido e o atendimento de todos os produtos é recalculado. Os valores dos seus produtos vêm do seu catálogo, não se corrigem aqui." },
+    { before: ensureMisto, sel: ".dt-wrap", title: "Software e serviço: atende / não", text: "Nas seções que não são de produto (software, serviço, licença, garantia) não há comparação de SKU: para cada exigência do edital você confirma se atende ou não." },
     { before: ensureMisto, sel: ".sku-select", title: "Escolha o produto da proposta", text: "Quando decidir, selecione o SKU que vai para a proposta. É o encerramento do fluxo de análise do item." },
-    { before: ensureGrid, title: "Pronto!", text: "Esse é o fluxo: entender o item, ver o que falta, corrigir e escolher o produto. Você pode refazer o tour quando quiser pelo botão no canto inferior direito." },
+    { before: ensureGrid, title: "Pronto!", text: "Esse é o fluxo: entender o item, ver o que falta, corrigir a extração e escolher o produto. Você pode refazer o tour quando quiser pelo botão no canto inferior direito." },
   ];
   let idx = 0;
   function place() {

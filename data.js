@@ -102,9 +102,9 @@ const SERVICO_INSTALL = [
   cl("Instalação física e fixação das câmeras", "Conforme TR", "Instalação", "ok", "alta", "Empresa possui equipe e equipamentos para instalação em postes e fachadas.", 18, "Compreende a <mark>instalação física</mark> dos equipamentos em postes e fachadas."),
   cl("Lançamento de infraestrutura de rede", "Cabo óptico / UTP CAT6", "Rede", "ok", "alta", "Atende ao lançamento de fibra e UTP conforme projeto.", 19, "<mark>Lançamento de infraestrutura</mark> de rede óptica e metálica."),
   cl("Configuração e integração ao VMS", "Sim", "Configuração", "ok", "media", "Equipe certificada na integração ao software de gestão de vídeo.", 19, "Configuração e <mark>integração ao VMS</mark>."),
-  cl("Operação assistida 24×7", "24×7 por 12 meses", "Operação", "no", "alta", "Empresa oferece operação assistida em horário comercial; não cobre 24×7.", 20, "<mark>Operação assistida 24 horas</mark>, 7 dias por semana, por 12 meses."),
+  cl("Operação assistida 24×7", "24×7 por 12 meses", "Operação", "ok", "alta", "Empresa oferece operação assistida 24×7 com equipe em regime de plantão.", 20, "<mark>Operação assistida 24 horas</mark>, 7 dias por semana, por 12 meses."),
   cl("Equipe técnica certificada", "Certificação do fabricante", "Equipe", "ok", "media", "Equipe possui certificação do fabricante das câmeras.", 21, "Equipe <mark>técnica certificada</mark> pelo fabricante."),
-  cl("Garantia e manutenção corretiva", "36 meses", "Garantia", "parcial", "media", "Garantia padrão de 24 meses; 36 meses disponível com custo adicional.", 22, "<mark>Garantia e manutenção corretiva</mark> por 36 meses."),
+  cl("Garantia e manutenção corretiva", "36 meses", "Garantia", "ok", "alta", "Garantia e manutenção corretiva de 36 meses inclusas na proposta.", 22, "<mark>Garantia e manutenção corretiva</mark> por 36 meses."),
 ];
 /* checklist de SOFTWARE (software simples ≈ atende / não) */
 const SOFTWARE_VMS = [
@@ -187,8 +187,8 @@ const ITEMS = [
     quantidade: "80", precoUnit: 2980,
     resumoTR: "Aquisição de 80 câmeras IP com leitura de placas (LPR) para o anel viário. Indique, do seu catálogo, qual SKU atende às especificações e a que preço.",
     componentes: [
-      // cenário ATENDE: o SKU recomendado cobre todos os requisitos (override em Detecção facial)
-      { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
+      // cenário NÃO ATENDE (produto): o melhor produto não cobre 1 requisito (Detecção facial) → card mostra a aderência agregada
+      { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [] },
     ] },
 
   // 2) PRODUTO + SERVIÇO — câmera bullet + instalação
