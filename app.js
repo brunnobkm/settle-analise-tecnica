@@ -67,6 +67,10 @@ function joinUnit(core, unidade) {
   return core + unitSep(unidade) + unidade;
 }
 const unitTag = unidade => unidade ? `<span class="unit-fixed" data-tip="Unidade de medida do requisito (fixa, não editável)">${esc(unitSep(unidade) + unidade)}</span>` : "";
+/* operador da exigência (≥, ≤, >, <, =) também é FIXO, vem do edital: só o número é editável */
+const OP_RE = /^\s*(≥|≤|>=|<=|>|<|=)\s*/;
+const splitOp = value => { const m = String(value == null ? "" : value).match(OP_RE); return m ? { op: m[1], rest: String(value).slice(m[0].length) } : { op: "", rest: String(value == null ? "" : value) }; };
+const opTag = op => op ? `<span class="op-fixed" data-tip="Operador da exigência (fixo, vem do edital)">${esc(op)} </span>` : "";
 const rankFor = sc => [...sc].sort((a, b) => b.pct - a.pct || a.ne - b.ne || b.ok - a.ok);
 const bestOf = (specs, skus) => rankFor(scoresFor(specs, skus))[0];
 const prodSummary = comp => { const best = bestOf(matrixOf(comp), comp.skus); return { best, ok: best.diverg.length === 0 }; };
@@ -265,7 +269,7 @@ function renderMatrix() {
       else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head"><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span><button class="req-ico" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Ver de onde a IA extraiu (página e trecho)"}">${ICO_ARROW}</button></div></td>`;
       else if (c.key === "val") row += nx
         ? `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="val-missing editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="A IA identificou esta exigência no edital, mas não conseguiu extrair o valor. Clique para informar o valor requerido.">Valor não extraído</span></td>`
-        : `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido. A unidade é fixa.">${esc(splitUnit(spec.exig, spec.unidade))}</span>${unitTag(spec.unidade)}</td>`;
+        : `<td class="col-val${fzCls(c)}"${fzStyle(c)}>${opTag(splitOp(spec.exig).op)}<span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido. O operador e a unidade são fixos.">${esc(splitUnit(splitOp(spec.exig).rest, spec.unidade))}</span>${unitTag(spec.unidade)}</td>`;
       else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button><button class="act-ico" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Vincular / ver fonte no edital"}">${ICO_LINK}</button></div></td>`;
       else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do produto disponível, mas ainda sem correspondência: não conseguimos extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
       else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c, spec.unidade);
@@ -339,7 +343,9 @@ function commitEdit(el) {
     if (spec.exigNa) return;
     const wasMissing = spec.naoExtraido;
     if (!txt) { if (!wasMissing) spec.exig = ""; return; }
-    spec.exig = joinUnit(txt, spec.unidade); // unidade fixa: só o valor digitado muda
+    const op = wasMissing ? "" : splitOp(spec.exig).op; // operador fixo, preservado do edital
+    const numVal = joinUnit(txt, spec.unidade); // unidade fixa: só o número digitado muda
+    spec.exig = op ? op + " " + numVal : numVal;
     if (wasMissing) spec.naoExtraido = false;
     rematchRow(spec); recompute(); renderMatrix();
     toast(wasMissing ? `Valor requerido informado para "${spec.req}" — atendimento recalculado` : `Exigência atualizada — atendimento recalculado`);

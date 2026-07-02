@@ -344,8 +344,8 @@ td.cell { padding: 12px 14px; }
 .ico.ok { color: var(--success); } .ico.no { color: var(--destructive); }
 .cell-val { font-family: var(--mono); font-size: 13px; }
 /* unidade de medida fixa (não editável), sufixo do valor */
-.unit-fixed { font-family: var(--mono); font-size: 13px; color: var(--muted-foreground); white-space: pre; user-select: none; cursor: default; }
-.col-val .unit-fixed { font-size: 14px; }
+.unit-fixed, .op-fixed { font-family: var(--mono); font-size: 13px; color: var(--muted-foreground); white-space: pre; user-select: none; cursor: default; }
+.col-val .unit-fixed, .col-val .op-fixed { font-size: 14px; }
 .conf { display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 11px; font-weight: 600; }
 .conf .dot { width: 7px; height: 7px; border-radius: var(--r-full); }
 .conf.alta { color: var(--success); } .conf.alta .dot { background: var(--success); }
