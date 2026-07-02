@@ -11,6 +11,7 @@ const ICO_NO = `<svg class="ico no" viewBox="0 0 16 16" fill="none" stroke="curr
 const ICO_ARROW = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11L11 5M6 5h5v5"/></svg>`;
 const ICO_CHAT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h10v7H8l-3 2v-2H3z"/></svg>`;
 const ICO_PLUS = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>`;
+const ICO_CARET = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
 const ICO_TRASH = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8h6l.5-8M6.5 7v3.5M9.5 7v3.5"/></svg>`;
 const ICO_LINK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.7 9.3l2.6-2.6M7 4.6l1-1a2.4 2.4 0 0 1 3.4 3.4l-1 1M9 11.4l-1 1a2.4 2.4 0 0 1-3.4-3.4l1-1"/></svg>`;
 const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2l6-11z"/><path d="M8 6.5v3.2"/><path d="M8 11.6v.01"/></svg>`;
@@ -93,6 +94,16 @@ function itemSummary(i) {
     const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, ok: s.status === "ok", ok_n: s.ok, total: s.total, comp };
   });
   return { comps, multi: comps.length > 1, status: comps.every(c => c.ok) ? "ok" : "no" };
+}
+/* resumo compacto de uma seção (para o cabeçalho do accordion) */
+function secSummary(cs) {
+  const mono = m => `<span style="font-family:var(--mono)">${esc(m)}</span>`;
+  if (cs.mecanica === "produto") {
+    return cs.ok
+      ? `<b>Recomendado:</b> ${mono(cs.best.sku.model)} · atende ${cs.best.pct}%`
+      : `Melhor produto atende ${cs.best.pct}% (${cs.best.ok}/${cs.best.evaluable})`;
+  }
+  return `Atende ${cs.ok_n} de ${cs.total} exigências`;
 }
 
 /* ---------- estado ---------- */
@@ -220,12 +231,17 @@ function openTable(i) {
 
   let body = collapsiblesHTML(it);
   it.componentes.forEach((comp, ci) => {
+    let hostHTML;
+    if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; }
+    else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); hostHTML = `<div class="mech-host" id="clHost-${idx}"></div>`; }
     if (multi) {
       const cs = sum.comps[ci];
-      body += `<div class="comp-head"><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-mec">${comp.mecanica === "produto" ? "comparar produto" : "atende / não atende"}</span></div>`;
+      // abre por padrão a seção de produto (a decisão principal) e qualquer seção com pendência; recolhe as que já atendem
+      const open = (cs.mecanica === "produto" || !cs.ok) ? " open" : "";
+      body += `<details class="comp-acc"${open}><summary class="comp-head"><span class="comp-caret">${ICO_CARET}</span><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span></summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+    } else {
+      body += hostHTML;
     }
-    if (comp.mecanica === "produto") { body += `<div class="mech-host" id="matrixHost"></div>`; }
-    else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); body += `<div class="mech-host" id="clHost-${idx}"></div>`; }
   });
 
   $("#toBody").innerHTML = body;
