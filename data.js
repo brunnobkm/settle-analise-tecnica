@@ -129,6 +129,22 @@ const NAO_ANALISADAS = [
 const CATALOGO_NAO_EDITAL = ["Zoom digital 16×","Microfone embutido","Sirene integrada"];
 
 /* ============================================================
+   CATÁLOGO de especificações (vocabulário controlado).
+   Regra da Alice: um requisito do edital só entra na comparação se estiver no catálogo.
+   Cada spec define nome, unidade, domínio (numero/lista/booleano), operador e o valor dos SKUs
+   (que vêm do catálogo do cliente). Aqui só as specs que o usuário pode ADICIONAR (não estão na matriz base).
+   valsPorSku segue a ordem de SKUS (câmera). ============================================================ */
+const CATALOGO_SPECS = [
+  { nome: "Alimentação", unidade: "V", dominio: "numero", operador: "=", trecho: "As câmeras deverão ser alimentadas em 24V.", valorEdital: "24", valsPorSku: ["12","12","12","24","12","12","12"] },
+  { nome: "Compensação de luz de fundo (BLC)", unidade: "", dominio: "booleano", trecho: "Deverá possuir compensação de luz de fundo (BLC).", valorEdital: "Sim", valsPorSku: ["Sim","Sim","Não","Sim","Sim","Não","Sim"] },
+  { nome: "Máscara de privacidade", unidade: "", dominio: "booleano", trecho: "Suporte a máscara de privacidade configurável.", valorEdital: "Sim", valsPorSku: ["Sim","Sim","Sim","Sim","Sim","Não","Sim"] },
+  { nome: "Perfis de streaming simultâneos", unidade: "perfis", dominio: "numero", operador: "≥", trecho: "No mínimo 3 perfis de streaming simultâneos.", valorEdital: "3", valsPorSku: ["3","3","2","3","3","2","3"] },
+  { nome: "Suporte ONVIF (Perfil S)", unidade: "", dominio: "booleano", trecho: "Compatibilidade com ONVIF Perfil S.", valorEdital: "Sim", valsPorSku: ["Sim","Sim","Sim","Sim","Sim","Sim","Sim"] },
+  { nome: "Adaptador de montagem", unidade: "", dominio: "lista", opcoes: ["Suporte de teto","Suporte de parede","Suporte de poste"], trecho: "Fornecimento com suporte de poste.", valorEdital: "Suporte de poste", valsPorSku: ["Suporte de parede","Suporte de parede","Suporte de poste","Suporte de teto","Suporte de poste","Suporte de parede","Suporte de poste"] },
+  { nome: "Temperatura de cor ajustável", unidade: "", dominio: "booleano", trecho: "Ajuste de temperatura de cor (balanço de branco).", valorEdital: "Sim", valsPorSku: ["Sim","Sim","Sim","Sim","Sim","Sim","Não"] },
+];
+
+/* ============================================================
    Dataset TI — Firewall (Fortinet) para o caso de COMPOSIÇÃO (caixa + licença + garantia)
    ============================================================ */
 const SKUS_FW = [

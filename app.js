@@ -47,9 +47,9 @@ const alnum = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
 function evalCell(v, req) {
   const rv = (req == null ? "" : String(req)).trim(), vv = (v == null ? "" : String(v)).trim();
   if (!rv || !vv || vv === "—") return "ne";
-  const op = rv.match(/(≥|>=|≤|<=|>|<)\s*(-?[\d.,]+)/);
+  const op = rv.match(/(≥|>=|≤|<=|>|<|=)\s*(-?[\d.,]+)/);
   if (op) { const r = numOf(op[2]), n = numOf(vv); if (r == null || n == null) return "ne";
-    const o = op[1], ok = (o === "≥" || o === ">=") ? n >= r : (o === "≤" || o === "<=") ? n <= r : (o === ">") ? n > r : n < r; return ok ? "ok" : "no"; }
+    const o = op[1], ok = (o === "=") ? n === r : (o === "≥" || o === ">=") ? n >= r : (o === "≤" || o === "<=") ? n <= r : (o === ">") ? n > r : n < r; return ok ? "ok" : "no"; }
   if (/^sim\b/i.test(rv)) return (/\b(n[aã]o|nao)\b/i.test(vv)) ? "no" : "ok";
   const ar = alnum(rv), av = alnum(vv); if (!ar) return "ne";
   return (av.includes(ar) || ar.includes(av)) ? "ok" : "no";
@@ -103,6 +103,9 @@ prefs.chosen = prefs.chosen || {};
 let statusFilter = prefs.filter || "all";
 let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeComp = null, MX_SKUS = [];
 let currentChecklists = [];
+let editMode = false; // "Editar informações do edital": só nele a exigência é editável e o "Adicionar" aparece
+function setEditMode(on) { editMode = on; $("#toEdit").classList.toggle("active", on); $("#toEdit").setAttribute("data-tip", on ? "Concluir edição do edital" : "Editar informações do edital (habilita corrigir exigências e adicionar requisitos)"); $("#tableOverlay").classList.toggle("edit-mode", on); if ($("#matrixHost")) renderMatrix(); }
+const toggleEditMode = () => setEditMode(!editMode);
 let colW = prefs.colW || {};
 let frozen = new Set(prefs.frozen || ["req", "val"]);
 const COLW = k => colW[k] || (k === "check" ? 44 : k === "req" ? 300 : k === "val" ? 160 : k === "acoes" ? 84 : 176);
@@ -197,6 +200,7 @@ function renderGrid() {
 function openTable(i) {
   active = i; const it = ITEMS[i];
   currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
+  editMode = false; $("#toEdit").classList.remove("active"); $("#tableOverlay").classList.remove("edit-mode");
   $("#toTitle").textContent = it.titulo || it.nome;
   const sum = itemSummary(i), multi = it.componentes.length > 1;
 
@@ -237,7 +241,7 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
   if (exigNa) return `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-val">${esc(cell.v)}</span></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK : cell.st === "no" ? ICO_NO : "";
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}" data-tip="Confiança da IA na extração deste valor"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
-  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val editable" data-edit="v" data-ri="${ri}" data-ci="${ci}" contenteditable="true" data-tip="Edite o valor do produto. A unidade é fixa; o sistema recalcula o atendimento automaticamente.">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div>${conf}</td>`;
+  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val" data-tip="Valor do produto (vem do seu catálogo, somente leitura). Só a exigência do edital é editável.">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div>${conf}</td>`;
 }
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
@@ -266,10 +270,17 @@ function renderMatrix() {
     let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}${nx ? " row-missing" : ""}">`;
     cols.forEach(c => {
       if (c.key === "check") row += `<td class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar requisito"></span></td>`;
-      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head"><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span><button class="req-ico" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Ver de onde a IA extraiu (página e trecho)"}">${ICO_ARROW}</button></div></td>`;
-      else if (c.key === "val") row += nx
-        ? `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="val-missing editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="A IA identificou esta exigência no edital, mas não conseguiu extrair o valor. Clique para informar o valor requerido.">Valor não extraído</span></td>`
-        : `<td class="col-val${fzCls(c)}"${fzStyle(c)}>${opTag(splitOp(spec.exig).op)}<span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido. O operador e a unidade são fixos.">${esc(splitUnit(splitOp(spec.exig).rest, spec.unidade))}</span>${unitTag(spec.unidade)}</td>`;
+      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head">${editMode ? `<span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span>` : `<span class="req-name">${esc(spec.req)}</span>`}<button class="req-ico" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Ver de onde a IA extraiu (página e trecho)"}">${ICO_ARROW}</button></div></td>`;
+      else if (c.key === "val") {
+        const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
+        row += nx
+          ? (editMode
+            ? `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="val-missing editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="A IA identificou esta exigência no edital, mas não conseguiu extrair o valor. Clique para informar o valor requerido.">Valor não extraído</span></td>`
+            : `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="val-missing" data-tip="A IA não conseguiu extrair o valor. Entre em Editar informações do edital para informar.">Valor não extraído</span></td>`)
+          : (editMode
+            ? `<td class="col-val${fzCls(c)}"${fzStyle(c)}>${vrOp}<span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Corrija o valor exigido pelo edital. O operador e a unidade são fixos.">${vrCore}</span>${vrUnit}</td>`
+            : `<td class="col-val${fzCls(c)}"${fzStyle(c)}>${vrOp}<span data-tip="Exigência do edital. Entre em Editar informações do edital para alterar.">${vrCore}</span>${vrUnit}</td>`);
+      }
       else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button><button class="act-ico" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Vincular / ver fonte no edital"}">${ICO_LINK}</button></div></td>`;
       else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do produto disponível, mas ainda sem correspondência: não conseguimos extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
       else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c, spec.unidade);
@@ -277,7 +288,7 @@ function renderMatrix() {
     body += row + `</tr>`;
   });
   host.innerHTML = `<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
-    <div class="add-req" id="addReq" data-tip="Adicionar um requisito que a IA não extraiu">${ICO_PLUS} Adicionar requisito</div>`;
+    ${editMode ? `<div class="add-req" id="addReq" data-tip="Adicionar um requisito do edital a partir do catálogo">${ICO_PLUS} Adicionar requisito</div>` : ""}`;
 }
 
 /* ---------- Seções colapsáveis (topo do overlay) ---------- */
@@ -357,12 +368,48 @@ function commitEdit(el) {
     recompute(); renderMatrix();
   }
 }
-function addReq() {
-  SPECS.push({ req: "Novo requisito", exig: "", exigNa: false, added: true, origem: { doc: "Inserido manualmente", pag: "—" }, cells: MX_SKUS.map(() => ({ st: "ne", v: "—" })) });
-  renderMatrix();
-  const rows = $("#matrixHost").querySelectorAll("tbody tr"); const nameEl = rows[rows.length - 1]?.querySelector('[data-edit="r"]');
-  if (nameEl) { nameEl.focus(); document.getSelection().selectAllChildren(nameEl); }
+/* ---------- Adicionar requisito do edital (a partir do catálogo) ---------- */
+let addSpec = null, addTrecho = null;
+function openAddModal() {
+  addSpec = null; addTrecho = null;
+  $("#amSearch").value = ""; renderCatalog("");
+  $("#amStep2").hidden = true; $("#amStep3").hidden = true; $("#amSel").hidden = true; $("#amAdd").disabled = true;
+  $("#amDoc").textContent = EDITAL.docTexto;
+  $("#amDocHint").textContent = "Selecione no edital o trecho que comprova a exigência.";
+  $("#addModal").hidden = false;
 }
+function catalogAvailable() { const existing = new Set(SPECS.map(s => s.req.toLowerCase())); return CATALOGO_SPECS.filter(s => !existing.has(s.nome.toLowerCase())); }
+function renderCatalog(term) {
+  const t = term.trim().toLowerCase(), list = catalogAvailable().filter(s => !t || s.nome.toLowerCase().includes(t));
+  $("#amCatalog").innerHTML = list.map(s => `<button class="am-cat-item${addSpec && addSpec.nome === s.nome ? " sel" : ""}" data-cat="${esc(s.nome)}"><span>${esc(s.nome)}</span><span class="am-cat-tag">${s.unidade ? esc(s.unidade) : (s.dominio === "lista" ? "lista" : s.dominio === "booleano" ? "sim/não" : "número")}</span></button>`).join("") || `<div class="am-empty">Nenhuma especificação do catálogo corresponde.</div>`;
+  $("#amNotfound").hidden = !(t && list.length === 0);
+  $("#amTerm").textContent = term.trim();
+}
+function pickSpec(nome) {
+  addSpec = catalogAvailable().find(s => s.nome === nome); if (!addSpec) return;
+  renderCatalog($("#amSearch").value);
+  $("#amStep2").hidden = false; $("#amStep3").hidden = false;
+  renderAddValue(); updateAddEnabled();
+}
+function renderAddValue() {
+  const s = addSpec; let inp;
+  if (s.dominio === "lista") inp = `<select id="amValInput" class="am-input">${s.opcoes.map(o => `<option${o === s.valorEdital ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  else if (s.dominio === "booleano") inp = `<select id="amValInput" class="am-input"><option${s.valorEdital === "Sim" ? " selected" : ""}>Sim</option><option${s.valorEdital === "Não" ? " selected" : ""}>Não</option></select>`;
+  else inp = `<div class="am-num"><span class="am-op">${esc(s.operador || "")}</span><input id="amValInput" class="am-input am-num-input" value="${esc(s.valorEdital)}"><span class="am-unit-fixed">${s.unidade ? esc(unitSep(s.unidade) + s.unidade) : ""}</span></div>`;
+  $("#amValue").innerHTML = `<div class="am-hint">A IA sugere o valor a partir do trecho selecionado. Confirme ou ajuste (operador e unidade são fixos, vêm do catálogo).</div>${inp}`;
+}
+function updateAddEnabled() { $("#amAdd").disabled = !(addSpec && addTrecho); }
+function confirmAddReq() {
+  if (!addSpec || !addTrecho) return;
+  const s = addSpec, vi = $("#amValInput"), raw = String(vi.value != null ? vi.value : vi.textContent).trim();
+  const exigFull = s.dominio === "numero" ? ((s.operador ? s.operador + " " : "") + joinUnit(raw, s.unidade)) : raw;
+  const cells = s.valsPorSku.map(v => ({ st: evalCell(v, exigFull), v, c: "alta" }));
+  SPECS.push({ req: s.nome, exig: exigFull, unidade: s.unidade, added: true, origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: addTrecho }, cells });
+  recompute(); renderMatrix();
+  $("#addModal").hidden = true;
+  toast(`Requisito adicionado do catálogo: "${s.nome}"`);
+}
+function requestCatalog() { $("#addModal").hidden = true; toast(`Pedido enviado ao time de catálogo: "${$("#amSearch").value.trim()}"`); }
 const CL_CYCLE = { ok: "no", no: "parcial", parcial: "ne", ne: "ok" };
 function toggleClStatus(sec, ri) { const r = currentChecklists[sec][ri]; r.st = CL_CYCLE[r.st] || "ok"; renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec); }
 function addClReq(sec) { currentChecklists[sec].push({ req: "Novo requisito", exig: "", modulo: "—", st: "ne", c: null, just: "—", origem: { doc: "Inserido manualmente", pag: "—" } }); renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec); }
@@ -393,7 +440,7 @@ function wire() {
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
-    if (e.target.closest("#addReq")) { addReq(); return; }
+    if (e.target.closest("#addReq")) { openAddModal(); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); toggleClStatus(s, r); return; }
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
     const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
@@ -453,7 +500,7 @@ function saveEditSheet() {
   toast("Análise de compatibilidade atualizada com os novos dados");
 }
 function initEditSheet() {
-  $("#toEdit").onclick = openEditSheet;
+  $("#toEdit").onclick = toggleEditMode;
   $("#esClose").onclick = () => { $("#editSheet").hidden = true; hidePopover(); };
   $("#esSave").onclick = saveEditSheet;
   $("#esFields").addEventListener("input", e => { const el = e.target.closest("[data-eival]"); if (el) editList[+el.dataset.eival].exig = el.value; });
@@ -481,6 +528,23 @@ function initEditSheet() {
     window.getSelection().removeAllRanges(); hidePopover();
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#editSheet").hidden) { $("#editSheet").hidden = true; hidePopover(); } });
+}
+
+/* ---------- Adicionar requisito: wiring do modal ---------- */
+function initAddModal() {
+  const close = () => { $("#addModal").hidden = true; };
+  $("#amClose").onclick = close; $("#amCancel").onclick = close; $("#addOverlay").onclick = close;
+  $("#amSearch").addEventListener("input", e => { addSpec = null; $("#amStep2").hidden = true; $("#amStep3").hidden = true; renderCatalog(e.target.value); updateAddEnabled(); });
+  $("#amCatalog").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (b) pickSpec(b.dataset.cat); });
+  $("#amRequest").onclick = requestCatalog;
+  $("#amAdd").onclick = confirmAddReq;
+  $("#amValue").addEventListener("input", updateAddEnabled);
+  $("#amDoc").addEventListener("mouseup", () => {
+    const sel = window.getSelection(), txt = sel.toString().trim();
+    if (!txt || !$("#amDoc").contains(sel.anchorNode)) return;
+    addTrecho = txt; $("#amSelText").textContent = txt; $("#amSel").hidden = false; updateAddEnabled();
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#addModal").hidden) close(); });
 }
 
 /* ---------- tooltip próprio ---------- */
@@ -557,4 +621,4 @@ function initTour() {
 }
 
 /* boot */
-renderGrid(); wire(); initEditSheet(); initTooltip(); initTour();
+renderGrid(); wire(); initEditSheet(); initAddModal(); initTooltip(); initTour();
