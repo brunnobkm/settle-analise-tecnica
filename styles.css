@@ -326,6 +326,11 @@ td.col-req { padding: 12px 16px; }
 .req-head .req-ico { opacity: 0; flex-shrink: 0; }
 .col-req:hover .req-head .req-ico, .req-head .req-ico:focus { opacity: 1; }
 .req-name { font-weight: 500; }
+/* origem da extração vive na coluna Valor requerido, ao lado do valor */
+.val-head { display: flex; align-items: center; gap: 6px; }
+.val-head .val-text { flex: 1; min-width: 0; }
+.val-head .val-ico { opacity: 0; flex-shrink: 0; }
+.col-val:hover .val-head .val-ico, .val-head .val-ico:focus { opacity: 1; }
 .req-exig { color: var(--muted-foreground); font-size: 12px; margin-top: 2px; }
 .req-exig .val { font-family: var(--mono); color: var(--foreground); }
 .req-origin { margin-top: 6px; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--brand-600); background: transparent; border: 0; padding: 0; font-weight: 600; }
