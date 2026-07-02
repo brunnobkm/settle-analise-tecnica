@@ -23,7 +23,7 @@ function matrixOf(comp) {
   if (!comp._m) {
     const s = clone(comp.reqs); (comp.overrides || []).forEach(o => s[o.ri].cells[o.ci] = { st: o.st, v: o.v, c: o.c });
     // requisitos identificados no edital cujo valor não foi extraído → entram como linhas com placeholder
-    (comp.naoAnalisadas || []).forEach(n => s.push({ req: n.req, exig: "", naoExtraido: true, modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: "A IA identificou a exigência deste requisito no edital, mas não conseguiu extrair o valor automaticamente." }, cells: comp.skus.map((_, i) => ({ st: "nm", v: (n.vals && n.vals[i]) || "—" })) }));
+    (comp.naoAnalisadas || []).forEach(n => s.push({ req: n.req, exig: "", unidade: n.unidade || "", naoExtraido: true, modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: "A IA identificou a exigência deste requisito no edital, mas não conseguiu extrair o valor automaticamente." }, cells: comp.skus.map((_, i) => ({ st: "nm", v: (n.vals && n.vals[i]) || "—" })) }));
     comp._m = s;
   }
   return comp._m;
@@ -54,6 +54,19 @@ function evalCell(v, req) {
   const ar = alnum(rv), av = alnum(vv); if (!ar) return "ne";
   return (av.includes(ar) || ar.includes(av)) ? "ok" : "no";
 }
+/* unidade de medida FIXA do requisito: só o valor é editável, a unidade é um sufixo que não muda */
+const unitSep = u => (u === "°" || u === "%") ? "" : " ";
+function splitUnit(value, unidade) {
+  if (!unidade || value == null || value === "—") return value == null ? "" : String(value);
+  const re = new RegExp("\\s*" + unidade.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*$");
+  return String(value).replace(re, "").replace(/\s+$/, "");
+}
+function joinUnit(core, unidade) {
+  core = String(core).trim();
+  if (!unidade || core === "" || core === "—") return core || "—";
+  return core + unitSep(unidade) + unidade;
+}
+const unitTag = unidade => unidade ? `<span class="unit-fixed" data-tip="Unidade de medida do requisito (fixa, não editável)">${esc(unitSep(unidade) + unidade)}</span>` : "";
 const rankFor = sc => [...sc].sort((a, b) => b.pct - a.pct || a.ne - b.ne || b.ok - a.ok);
 const bestOf = (specs, skus) => rankFor(scoresFor(specs, skus))[0];
 const prodSummary = comp => { const best = bestOf(matrixOf(comp), comp.skus); return { best, ok: best.diverg.length === 0 }; };
@@ -216,11 +229,11 @@ function buildCols() {
 const fzCls = c => c.frozen ? ` frozen${c.edge ? " frozen-edge" : ""}` : "";
 const fzStyle = c => c.frozen ? ` style="left:${c.left}px"` : "";
 const colCtrls = c => `<button class="col-pin ${c.frozen ? "on" : ""}" data-pin="${c.key}" data-tip="${c.frozen ? "Descongelar coluna" : "Congelar coluna (fixa ao rolar)"}">${PIN_SVG}</button><span class="col-resize" data-resize="${c.key}" data-tip="Arraste para redimensionar a largura"></span>`;
-function cellTd(cell, ri, ci, exigNa, c) {
+function cellTd(cell, ri, ci, exigNa, c, unidade) {
   if (exigNa) return `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-val">${esc(cell.v)}</span></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK : cell.st === "no" ? ICO_NO : "";
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}" data-tip="Confiança da IA na extração deste valor"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
-  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val editable" data-edit="v" data-ri="${ri}" data-ci="${ci}" contenteditable="true" data-tip="Edite o valor do produto. O sistema recalcula o atendimento automaticamente.">${esc(cell.v)}</span></div>${conf}</td>`;
+  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val editable" data-edit="v" data-ri="${ri}" data-ci="${ci}" contenteditable="true" data-tip="Edite o valor do produto. A unidade é fixa; o sistema recalcula o atendimento automaticamente.">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div>${conf}</td>`;
 }
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
@@ -252,10 +265,10 @@ function renderMatrix() {
       else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><div class="req-head"><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span><button class="req-ico" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Ver de onde a IA extraiu (página e trecho)"}">${ICO_ARROW}</button></div></td>`;
       else if (c.key === "val") row += nx
         ? `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="val-missing editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="A IA identificou esta exigência no edital, mas não conseguiu extrair o valor. Clique para informar o valor requerido.">Valor não extraído</span></td>`
-        : `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido">${esc(spec.exig)}</span></td>`;
+        : `<td class="col-val${fzCls(c)}"${fzStyle(c)}><span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido. A unidade é fixa.">${esc(splitUnit(spec.exig, spec.unidade))}</span>${unitTag(spec.unidade)}</td>`;
       else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button><button class="act-ico" data-origin="${ri}" data-tip="${nx ? "Não conseguimos extrair essa informação. Selecione um trecho para extrair o dado." : "Vincular / ver fonte no edital"}">${ICO_LINK}</button></div></td>`;
-      else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do produto disponível, mas ainda sem correspondência: não conseguimos extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(spec.cells[c.skuIdx].v)}</span></div></td>`;
-      else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c);
+      else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do produto disponível, mas ainda sem correspondência: não conseguimos extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
+      else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c, spec.unidade);
     });
     body += row + `</tr>`;
   });
@@ -325,15 +338,15 @@ function commitEdit(el) {
   if (kind === "vr") {
     if (spec.exigNa) return;
     const wasMissing = spec.naoExtraido;
-    spec.exig = txt;
-    if (!txt) return;
+    if (!txt) { if (!wasMissing) spec.exig = ""; return; }
+    spec.exig = joinUnit(txt, spec.unidade); // unidade fixa: só o valor digitado muda
     if (wasMissing) spec.naoExtraido = false;
     rematchRow(spec); recompute(); renderMatrix();
     toast(wasMissing ? `Valor requerido informado para "${spec.req}" — atendimento recalculado` : `Exigência atualizada — atendimento recalculado`);
     return;
   }
   if (kind === "v") {
-    const cc = spec.cells[+el.dataset.ci]; cc.v = txt || "—"; cc.c = "alta";
+    const cc = spec.cells[+el.dataset.ci]; cc.v = joinUnit(txt, spec.unidade); cc.c = "alta";
     if (!spec.exigNa && spec.exig && !spec.naoExtraido) cc.st = evalCell(cc.v, spec.exig);
     recompute(); renderMatrix();
   }

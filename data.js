@@ -49,22 +49,22 @@ const c = (st, v, conf) => ({ st, v, c: conf });
 
 /* requisitos de produto (matriz base) */
 const REQS = [
-  { req: "Resolução", exig: "≥ 4 MP", modulo: "Vídeo",
+  { req: "Resolução", exig: "≥ 4 MP", unidade: "MP", modulo: "Vídeo",
     origem: { doc: "Termo de Referência", pag: 11, trecho: "As câmeras deverão possuir resolução mínima de <mark>4 MP (2688 × 1520 pixels)</mark>." },
     cells: [c("ok","4 MP","alta"),c("ok","4 MP","alta"),c("no","2 MP","alta"),c("ok","4 MP","alta"),c("ok","8 MP","media"),c("no","2 MP","alta"),c("ok","4 MP","alta")] },
   { req: "Compressão de vídeo", exig: "H.265+", modulo: "Vídeo",
     origem: { doc: "Termo de Referência", pag: 11, trecho: "Suporte a compressão <mark>H.265+</mark> / H.265 / H.264." },
     cells: [c("ok","H.265+","alta"),c("ok","H.265+","alta"),c("ok","H.265+","media"),c("ok","H.265+","alta"),c("ok","H.265+","alta"),c("ok","H.265+","alta"),c("ok","H.265+","media")] },
-  { req: "Distância focal", exig: "2.8 mm", modulo: "Óptica",
+  { req: "Distância focal", exig: "2.8 mm", unidade: "mm", modulo: "Óptica",
     origem: { doc: "Termo de Referência", pag: 12, trecho: "Lente fixa de <mark>2,8 mm</mark>, F2.0 ou inferior." },
     cells: [c("ok","2.8 mm","alta"),c("ok","2.8 mm","alta"),c("no","3.6 mm","alta"),c("ok","2.8 mm","alta"),c("no","3.6 mm","alta"),c("no","3.6 mm","alta"),c("ok","2.8 mm","alta")] },
-  { req: "Abertura horizontal (FOV)", exig: "≥ 100°", modulo: "Óptica",
+  { req: "Abertura horizontal (FOV)", exig: "≥ 100°", unidade: "°", modulo: "Óptica",
     origem: { doc: "Termo de Referência", pag: 12, trecho: "Campo de visão horizontal de no mínimo <mark>100°</mark>." },
     cells: [c("ok","103°","alta"),c("ok","103°","alta"),c("no","87°","alta"),c("ok","105°","media"),c("ok","102°","alta"),c("no","85°","alta"),c("no","98°","media")] },
-  { req: "Sensibilidade noturna (colorido)", exig: "≤ 0,005 Lux", modulo: "Óptica",
+  { req: "Sensibilidade noturna (colorido)", exig: "≤ 0,005 Lux", unidade: "Lux", modulo: "Óptica",
     origem: { doc: "Termo de Referência", pag: 12, trecho: "Sensibilidade em modo colorido de no máximo <mark>0,005 Lux</mark>." },
     cells: [c("ok","0,003 Lux","alta"),c("ok","0,005 Lux","media"),c("no","0,01 Lux","media"),c("ok","0,0005 Lux","baixa"),c("ok","0,003 Lux","alta"),c("no","0,02 Lux","media"),c("ne","—","baixa")] },
-  { req: "Alcance do infravermelho (IR)", exig: "≥ 30 m", modulo: "Visão noturna",
+  { req: "Alcance do infravermelho (IR)", exig: "≥ 30 m", unidade: "m", modulo: "Visão noturna",
     origem: { doc: "Termo de Referência", pag: 13, trecho: "Iluminação infravermelha com alcance mínimo de <mark>30 metros</mark>." },
     cells: [c("ok","30 m","alta"),c("ok","30 m","alta"),c("ok","30 m","alta"),c("ok","40 m","alta"),c("ok","30 m","alta"),c("ok","32 m","alta"),c("ok","30 m","media")] },
   { req: "Análise inteligente embarcada", exig: "Sim", modulo: "Inteligência",
@@ -120,10 +120,10 @@ const SOFTWARE_VMS = [
    O valor de cada SKU (catálogo do cliente) nós temos; o que falta é a exigência do edital
    para fazer o match. vals segue a ordem de SKUS. */
 const NAO_ANALISADAS = [
-  { req: "WDR (faixa dinâmica)",                vals: ["120 dB", "120 dB", "120 dB", "120 dB", "140 dB", "100 dB", "120 dB"] },
+  { req: "WDR (faixa dinâmica)",                unidade: "dB", vals: ["120 dB", "120 dB", "120 dB", "120 dB", "140 dB", "100 dB", "120 dB"] },
   { req: "Estabilização eletrônica de imagem",  vals: ["Sim", "Sim", "Não", "Sim", "Sim", "Não", "Sim"] },
   { req: "Filtro mecânico IR-Cut",              vals: ["Sim", "Sim", "Sim", "Sim", "Sim", "Sim", "Sim"] },
-  { req: "Garantia mínima",                     vals: ["36 meses", "36 meses", "24 meses", "36 meses", "36 meses", "12 meses", "24 meses"] },
+  { req: "Garantia mínima",                     unidade: "meses", vals: ["36 meses", "36 meses", "24 meses", "36 meses", "36 meses", "12 meses", "24 meses"] },
   { req: "Certificação Anatel",                 vals: ["Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado"] },
 ];
 const CATALOGO_NAO_EDITAL = ["Zoom digital 16×","Microfone embutido","Sirene integrada"];
@@ -138,7 +138,7 @@ const SKUS_FW = [
   { model: "FortiGate-80F",  brand: "Fortinet" },
 ];
 const REQS_FW = [
-  { req: "Throughput de Firewall", exig: "≥ 10 Gbps", modulo: "Desempenho",
+  { req: "Throughput de Firewall", exig: "≥ 10 Gbps", unidade: "Gbps", modulo: "Desempenho",
     origem: { doc: "Termo de Referência", pag: 31, trecho: "Throughput de firewall de no mínimo <mark>10 Gbps</mark>." },
     cells: [c("ok","27 Gbps","alta"),c("ok","21 Gbps","alta"),c("ok","20 Gbps","alta"),c("no","10 Gbps","alta")] },
   { req: "Throughput de Threat Protection", exig: "≥ 1,5 Gbps", modulo: "Desempenho",
@@ -147,7 +147,7 @@ const REQS_FW = [
   { req: "Sessões concorrentes", exig: "≥ 1.000.000", modulo: "Capacidade",
     origem: { doc: "Termo de Referência", pag: 32, trecho: "Suporte a no mínimo <mark>1.000.000 de sessões concorrentes</mark>." },
     cells: [c("ok","1.500.000","alta"),c("ok","1.100.000","alta"),c("ok","1.000.000","media"),c("no","700.000","alta")] },
-  { req: "Interfaces 1GbE (RJ45)", exig: "≥ 16 portas", modulo: "Interfaces",
+  { req: "Interfaces 1GbE (RJ45)", exig: "≥ 16 portas", unidade: "portas", modulo: "Interfaces",
     origem: { doc: "Termo de Referência", pag: 32, trecho: "No mínimo <mark>16 interfaces 1GbE RJ45</mark>." },
     cells: [c("ok","18 portas","alta"),c("ok","16 portas","alta"),c("no","14 portas","alta"),c("no","10 portas","alta")] },
   { req: "Túneis VPN IPsec", exig: "≥ 2.000", modulo: "VPN",
@@ -156,7 +156,7 @@ const REQS_FW = [
   { req: "Alta disponibilidade (HA)", exig: "Sim (ativo/passivo)", modulo: "Disponibilidade",
     origem: { doc: "Termo de Referência", pag: 33, trecho: "Operação em <mark>alta disponibilidade</mark> ativo/passivo e ativo/ativo." },
     cells: [c("ok","Sim","alta"),c("ok","Sim","alta"),c("ok","Sim","alta"),c("ok","Sim","media")] },
-  { req: "Interfaces SFP+ 10GbE", exig: "≥ 4 portas", modulo: "Interfaces",
+  { req: "Interfaces SFP+ 10GbE", exig: "≥ 4 portas", unidade: "portas", modulo: "Interfaces",
     origem: { doc: "Termo de Referência", pag: 32, trecho: "No mínimo <mark>4 interfaces SFP+ 10GbE</mark>." },
     cells: [c("ok","8 portas","alta"),c("ok","4 portas","alta"),c("no","2 portas","alta"),c("no","0 portas","alta")] },
 ];
