@@ -321,16 +321,17 @@ function renderChecklist(host, clArr, sec) {
   const rows = clArr.map((r, ri) => {
     const st = CL_ST[r.st] || CL_ST.ne;
     return `<tr>
-      <td class="c-check"><span class="cbox"></span></td>
-      <td class="c-req"><div class="req-name">${esc(r.req)}</div><div class="req-exig">Exigido: <span class="val">${esc(r.exig)}</span></div><div class="cl-actions"><button class="req-origin" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu (página e trecho)">${ICO_ARROW} Ver no edital · p.${r.origem.pag}</button><button class="req-origin" data-clquestion="${sec}:${ri}" data-tip="Questionar / impugnar este requisito">${ICO_CHAT} Questionar</button></div></td>
-      <td><span class="badge soft">${esc(r.modulo || "—")}</span></td>
-      <td><button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para alternar o status">${st.ico}${st.label}</button></td>
-      <td>${confBadge(r.c)}</td>
-      <td class="c-just">${esc(r.just || "—")}</td>
-      <td><span class="badge soft with-avatar">Selecionar</span></td>
+      <td class="col-check"><span class="cbox" data-tip="Selecionar requisito"></span></td>
+      <td class="col-req"><span class="req-name">${esc(r.req)}</span></td>
+      <td class="col-val"><div class="val-head"><span class="val-text">${esc(r.exig || "—")}</span><button class="req-ico val-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button></div></td>
+      <td class="col-meta"><span class="badge soft">${esc(r.modulo || "—")}</span></td>
+      <td class="col-meta"><button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para alternar o status">${st.ico}${st.label}</button></td>
+      <td class="col-meta">${confBadge(r.c)}</td>
+      <td class="col-meta c-just">${esc(r.just || "—")}</td>
+      <td class="col-meta"><span class="badge soft with-avatar">Selecionar</span></td>
     </tr>`;
   }).join("");
-  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="c-check"><span class="cbox"></span></th><th class="c-req">Requisito</th><th>Módulo</th><th>Status</th><th>Confiança IA</th><th class="c-just">Justificativa IA</th><th>Responsável</th></tr></thead><tbody>${rows}</tbody></table><div class="dt-foot" data-addcl="${sec}">${ICO_PLUS} Adicionar requisito</div></div>`;
+  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-check"><span class="cbox" data-tip="Selecionar todos"></span></th><th class="col-req">Requisito</th><th class="col-val">Valor requerido</th><th class="col-meta">Módulo</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Responsável</th></tr></thead><tbody>${rows}</tbody></table><div class="dt-foot" data-addcl="${sec}">${ICO_PLUS} Adicionar requisito</div></div>`;
 }
 
 /* ============================================================
