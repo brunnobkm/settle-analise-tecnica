@@ -172,7 +172,7 @@ function renderGrid() {
     // badge de apoio (fictícia) só para entender o tipo do item durante a validação
     const TIPO_LBL = { produto: "Produto", servico: "Serviço", software: "Software" };
     const tipos = [...new Set(it.componentes.map(c => c.mecanica === "produto" ? "produto" : (/software|vms|licen/i.test(c.rotulo) ? "software" : "servico")))];
-    const segLabel = tipos.length > 1 ? "Misto" : TIPO_LBL[tipos[0]];
+    const segLabel = tipos.length > 1 ? `Misto ("${tipos.map(t => TIPO_LBL[t]).join(" + ")}")` : TIPO_LBL[tipos[0]];
     const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
     const segBadge = `<span class="badge seg" data-tip="${esc(segTip)}">${esc(segLabel)}</span>`;
     const statusBadge = sum.status === "ok"
