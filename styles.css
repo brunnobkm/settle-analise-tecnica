@@ -127,12 +127,12 @@ button { font-family: inherit; cursor: pointer; }
 .cps-body .tag-item { font-size: 12px; color: var(--foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 3px 9px; }
 .section-head { display: flex; align-items: center; gap: 10px; padding: 18px 20px 4px; font-size: 14px; font-weight: 600; }
 /* cabeçalho de cada componente do item (composição) */
-/* seções do item misto = accordion (details/summary nativo) */
-.comp-acc { border-top: 1px solid var(--border); }
-.comp-acc:first-of-type { border-top: 0; }
-.comp-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px; cursor: pointer; list-style: none; user-select: none; }
+/* seções do item misto = accordion em card (mesmo visual do collapse .cps) */
+.to-sections { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+.comp-acc { border: 1px solid var(--border); border-radius: var(--r-box); background: #FFF; }
+.comp-head { display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 52px; box-sizing: border-box; cursor: pointer; list-style: none; user-select: none; }
 .comp-head::-webkit-details-marker { display: none; }
-.comp-head:hover { background: var(--muted); }
+.comp-acc[open] > .comp-head { border-bottom: 1px solid var(--border); }
 .comp-caret { display: grid; place-items: center; width: 18px; height: 18px; color: var(--muted-foreground); flex-shrink: 0; transition: transform .15s; }
 .comp-acc[open] .comp-caret { transform: rotate(90deg); }
 .comp-caret svg { width: 14px; height: 14px; }
@@ -143,7 +143,11 @@ button { font-family: inherit; cursor: pointer; }
 .comp-rotulo { font-size: 15px; font-weight: 600; color: var(--foreground); }
 .comp-sum { margin-left: auto; font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comp-sum b { color: var(--foreground); font-weight: 600; }
-.comp-acc-body { padding: 0 20px 20px; }
+.comp-acc-body { padding: 16px; }
+/* tabela rola DENTRO do card (a borda do card é a moldura) */
+.to-body .comp-acc-body .table-wrap { overflow: auto; max-height: 60vh; border: 0; border-radius: 0; }
+.comp-acc-body .dt-wrap { border: 0; border-radius: 0; max-height: 60vh; }
+.comp-acc-body .add-req { border-top: 0; padding-top: 12px; }
 .mech-host { position: relative; }
 .clickable-badge { border: 0; cursor: pointer; font-family: inherit; }
 .clickable-badge:hover { filter: brightness(.96); box-shadow: 0 0 0 3px rgba(0,0,0,.04); }

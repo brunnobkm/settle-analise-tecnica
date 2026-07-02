@@ -229,7 +229,7 @@ function openTable(i) {
   const prodComp = it.componentes.find(comp => comp.mecanica === "produto");
   if (prodComp) { activeComp = prodComp; MX_SKUS = prodComp.skus; SPECS = matrixOf(prodComp); recompute(); }
 
-  let body = collapsiblesHTML(it);
+  let body = collapsiblesHTML(it), secs = "";
   it.componentes.forEach((comp, ci) => {
     let hostHTML;
     if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; }
@@ -238,11 +238,12 @@ function openTable(i) {
       const cs = sum.comps[ci];
       // abre por padrão a seção de produto (a decisão principal) e qualquer seção com pendência; recolhe as que já atendem
       const open = (cs.mecanica === "produto" || !cs.ok) ? " open" : "";
-      body += `<details class="comp-acc"${open}><summary class="comp-head"><span class="comp-caret">${ICO_CARET}</span><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span></summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+      secs += `<details class="comp-acc"${open}><summary class="comp-head"><span class="comp-caret">${ICO_CARET}</span><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span></summary><div class="comp-acc-body">${hostHTML}</div></details>`;
     } else {
-      body += hostHTML;
+      secs += hostHTML;
     }
   });
+  body += multi ? `<div class="to-sections">${secs}</div>` : secs;
 
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();
