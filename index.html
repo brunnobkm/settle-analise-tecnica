@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=33" />
+  <link rel="stylesheet" href="styles.css?v=34" />
 </head>
 <body>
   <!-- Sidebar -->
@@ -79,7 +79,7 @@
     <header class="to-head">
       <div class="to-title" id="toTitle">Tabela</div>
       <div class="to-actions">
-        <button class="nb-iconbtn" id="toEditMode" data-tip="Editar informações do edital (edição inline das exigências e adicionar requisito)"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h8M2 8h5M2 12h4"/><path d="M12.5 8l1.8 1.8-4 4-1.8.2.2-1.8z"/></svg></button>
+        <button class="to-update" id="toUpdate" data-tip="Analisa o item de novo e a IA tenta extrair os dados que faltam, sem você preencher um por um"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.5 2.5V5H11"/></svg> Atualizar informações</button>
         <button class="nb-iconbtn" id="toEdit" title="Editar informações: revisar as especificações lado a lado com o edital e vincular a fonte"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2.5l2.5 2.5L6 12.5 3 13l.5-3z"/></svg></button>
         <button class="nb-iconbtn" id="toShare" title="Compartilhar link desta análise (para validação por engenharia, fornecedor ou gestor)"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="4" r="2"/><circle cx="4" cy="8" r="2"/><circle cx="12" cy="12" r="2"/><path d="M5.7 7l4.6-2.2M5.7 9l4.6 2.2"/></svg></button>
         <button class="nb-iconbtn" id="toExport" title="Exportar a análise (PDF, planilha ou resumo técnico)"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v8M5 8l3 3 3-3M3 13h10"/></svg></button>
@@ -161,6 +161,14 @@
     </footer>
   </div>
 
+  <!-- Alerta: edição direta na célula (1ª vez) -->
+  <div class="warn-overlay" id="warnOverlay" hidden></div>
+  <div class="warn-modal" id="warnModal" hidden>
+    <h3>Editar direto na célula?</h3>
+    <p>Este valor foi <b>extraído do edital</b>. Se você editar direto na célula, ele deixa de ficar <b>vinculado ao trecho de origem</b> no documento. Tudo bem para correções rápidas; para revisar em lote, use o botão <b>"Atualizar informações"</b>.</p>
+    <div class="warn-actions"><button class="btn" id="warnCancel">Cancelar</button><button class="btn primary" id="warnOk">Editar mesmo assim</button></div>
+  </div>
+
   <!-- Tour guiado -->
   <button class="tour-fab" id="tourFab" data-tip="Fazer um tour guiado para entender o protótipo">
     <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.5"/><path d="M8 8a2 2 0 1 1 2.6 1.9c-.6.2-.9.6-.9 1.2v.4"/><path d="M10 14v.01"/></svg>
@@ -176,7 +184,7 @@
     </div>
   </div>
 
-  <script src="data.js?v=19"></script>
-  <script src="app.js?v=39"></script>
+  <script src="data.js?v=20"></script>
+  <script src="app.js?v=40"></script>
 </body>
 </html>

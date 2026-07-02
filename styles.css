@@ -618,3 +618,17 @@ td.cell.na-cell { background: #FFF; }
 .am-num-input { width: 120px; }
 .am-unit-fixed { font-family: var(--mono); font-size: 14px; color: var(--muted-foreground); }
 .am-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border); }
+
+/* Botão "Atualizar informações" (header do overlay) */
+.to-update { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: #FFF; color: var(--foreground); border-radius: var(--r-field); padding: 6px 12px; font-size: 13px; font-weight: 600; }
+.to-update:hover { background: var(--muted); }
+.to-update svg { width: 14px; height: 14px; }
+
+/* Alerta de edição direta na célula (1ª vez) */
+.warn-overlay { position: fixed; inset: 0; background: rgba(10,10,10,.4); z-index: 96; }
+.warn-overlay[hidden] { display: none; }
+.warn-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 440px; max-width: 92vw; background: #fff; border-radius: var(--r-box); box-shadow: 0 24px 70px rgba(0,0,0,.32); z-index: 97; padding: 22px 22px 18px; }
+.warn-modal[hidden] { display: none; }
+.warn-modal h3 { margin: 0 0 10px; font-size: 16px; font-weight: 600; }
+.warn-modal p { margin: 0 0 18px; font-size: 13.5px; color: var(--foreground); line-height: 1.6; }
+.warn-actions { display: flex; justify-content: flex-end; gap: 10px; }

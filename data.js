@@ -120,11 +120,11 @@ const SOFTWARE_VMS = [
    O valor de cada SKU (catálogo do cliente) nós temos; o que falta é a exigência do edital
    para fazer o match. vals segue a ordem de SKUS. */
 const NAO_ANALISADAS = [
-  { req: "WDR (faixa dinâmica)",                unidade: "dB", vals: ["120 dB", "120 dB", "120 dB", "120 dB", "140 dB", "100 dB", "120 dB"] },
-  { req: "Estabilização eletrônica de imagem",  vals: ["Sim", "Sim", "Não", "Sim", "Sim", "Não", "Sim"] },
-  { req: "Filtro mecânico IR-Cut",              vals: ["Sim", "Sim", "Sim", "Sim", "Sim", "Sim", "Sim"] },
-  { req: "Garantia mínima",                     unidade: "meses", vals: ["36 meses", "36 meses", "24 meses", "36 meses", "36 meses", "12 meses", "24 meses"] },
-  { req: "Certificação Anatel",                 vals: ["Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado"] },
+  { req: "WDR (faixa dinâmica)",                unidade: "dB", valorEdital: "≥ 120 dB", trecho: "Faixa dinâmica (WDR) de no mínimo 120 dB.", vals: ["120 dB", "120 dB", "120 dB", "120 dB", "140 dB", "100 dB", "120 dB"] },
+  { req: "Estabilização eletrônica de imagem",  valorEdital: "Sim", trecho: "Deverá possuir estabilização eletrônica de imagem.", vals: ["Sim", "Sim", "Não", "Sim", "Sim", "Não", "Sim"] },
+  { req: "Filtro mecânico IR-Cut",              valorEdital: "Sim", trecho: "Filtro mecânico de corte de infravermelho (IR-Cut).", vals: ["Sim", "Sim", "Sim", "Sim", "Sim", "Sim", "Sim"] },
+  { req: "Garantia mínima",                     unidade: "meses", valorEdital: "36 meses", trecho: "Garantia mínima de 36 (trinta e seis) meses.", vals: ["36 meses", "36 meses", "24 meses", "36 meses", "36 meses", "12 meses", "24 meses"] },
+  { req: "Certificação Anatel",                 valorEdital: "Homologado", trecho: "Equipamentos homologados pela Anatel.", vals: ["Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado"] },
 ];
 const CATALOGO_NAO_EDITAL = ["Zoom digital 16×","Microfone embutido","Sirene integrada"];
 
