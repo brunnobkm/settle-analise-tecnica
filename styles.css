@@ -504,42 +504,6 @@ td.cell.na-cell { background: #FFF; }
 .add-req:hover { background: var(--muted); }
 .add-req svg { width: 15px; height: 15px; }
 
-/* ---------- Editar informações (lado a lado com o edital) ---------- */
-.edit-sheet { position: fixed; inset: 0; z-index: 28; background: var(--background); display: flex; }
-.edit-sheet[hidden] { display: none; }
-.es-panel { flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; }
-.es-left { border-right: 1px solid var(--border); }
-.es-right { background: var(--bg-soft); }
-.es-head { height: 64px; flex-shrink: 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; gap: 12px; }
-.es-title { font-size: 16px; font-weight: 600; }
-.es-head-actions { display: flex; align-items: center; gap: 10px; }
-.es-hint { font-size: 12px; color: var(--muted-foreground); }
-.es-body { flex: 1; min-height: 0; overflow: auto; padding: 18px 20px; }
-.es-intro { margin: 0 0 18px; font-size: 13px; color: var(--muted-foreground); line-height: 1.55; }
-.es-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--muted-foreground); margin: 18px 0 10px; }
-.es-desc { font-size: 13px; line-height: 1.55; color: var(--foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-field); padding: 12px 14px; }
-.es-field { padding: 12px; border: 1px solid var(--border); border-radius: var(--r-field); margin-bottom: 10px; transition: border-color .12s, box-shadow .12s; }
-.es-field.active { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
-.es-field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; }
-.es-field .inp { width: 100%; border: 1px solid var(--input); border-radius: var(--r-md); padding: 8px 10px; font-size: 13px; font-family: var(--mono); }
-.es-field .inp:focus { outline: 2px solid var(--brand-100); border-color: var(--brand); }
-.es-link { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted-foreground); font-size: 12px; font-weight: 600; padding: 0; cursor: pointer; }
-.es-link:hover { color: var(--brand-600); }
-.es-link.linked { color: var(--brand-600); }
-.es-link svg { width: 13px; height: 13px; }
-/* documento do edital */
-.es-doc { font-size: 13px; line-height: 1.7; color: var(--foreground); white-space: pre-wrap; user-select: text; cursor: text; }
-.es-doc mark { background: #FDE9A8; border-radius: 3px; padding: 0 2px; }
-.es-doc mark.bound { background: var(--brand-100); box-shadow: inset 0 -2px 0 var(--brand); }
-/* popover de seleção */
-.fonte-popover { position: fixed; z-index: 32; background: var(--primary); color: #fff; border-radius: var(--r-field); padding: 6px; display: flex; align-items: center; gap: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.28); }
-.fonte-popover[hidden] { display: none; }
-.fp-label { font-size: 12px; font-weight: 500; padding: 0 6px; }
-.fp-btn { border: 0; border-radius: var(--r-md); padding: 5px 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,.15); color: #fff; cursor: pointer; }
-.fp-btn:hover { background: rgba(255,255,255,.25); }
-.fp-btn.primary { background: var(--brand); }
-.fp-btn.primary:hover { background: var(--brand-600); }
-
 /* ---------- Tooltip ---------- */
 .tt { position: fixed; z-index: 60; background: #18181B; color: #FFF; font-size: 12px; line-height: 1.4; font-weight: 500; padding: 7px 10px; border-radius: var(--r-md); max-width: 280px; box-shadow: 0 6px 20px rgba(0,0,0,.22); pointer-events: none; opacity: 0; transition: opacity .12s; }
 .tt.show { opacity: 1; }
