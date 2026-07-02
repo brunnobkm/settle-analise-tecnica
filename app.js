@@ -104,7 +104,7 @@ let statusFilter = prefs.filter || "all";
 let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeComp = null, MX_SKUS = [];
 let currentChecklists = [];
 let editMode = false; // "Editar informações do edital": só nele a exigência é editável e o "Adicionar" aparece
-function setEditMode(on) { editMode = on; $("#toEdit").classList.toggle("active", on); $("#toEdit").setAttribute("data-tip", on ? "Concluir edição do edital" : "Editar informações do edital (habilita corrigir exigências e adicionar requisitos)"); $("#tableOverlay").classList.toggle("edit-mode", on); if ($("#matrixHost")) renderMatrix(); }
+function setEditMode(on) { editMode = on; $("#toEditMode").classList.toggle("active", on); $("#toEditMode").setAttribute("data-tip", on ? "Concluir edição do edital" : "Editar informações do edital (edição inline das exigências e adicionar requisito)"); $("#tableOverlay").classList.toggle("edit-mode", on); if ($("#matrixHost")) renderMatrix(); }
 const toggleEditMode = () => setEditMode(!editMode);
 let colW = prefs.colW || {};
 let frozen = new Set(prefs.frozen || ["req", "val"]);
@@ -200,7 +200,7 @@ function renderGrid() {
 function openTable(i) {
   active = i; const it = ITEMS[i];
   currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
-  editMode = false; $("#toEdit").classList.remove("active"); $("#tableOverlay").classList.remove("edit-mode");
+  editMode = false; $("#toEditMode").classList.remove("active"); $("#tableOverlay").classList.remove("edit-mode");
   $("#toTitle").textContent = it.titulo || it.nome;
   const sum = itemSummary(i), multi = it.componentes.length > 1;
 
@@ -422,6 +422,7 @@ function wire() {
   $("#cardGrid").addEventListener("click", e => { const c = e.target.closest("[data-item]"); if (c) openTable(+c.dataset.item); });
 
   $("#toClose").onclick = closeTable;
+  $("#toEditMode").onclick = toggleEditMode;
   $("#toExport").onclick = () => toast("Exportando análise (PDF · planilha · resumo técnico)…");
   $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
 
@@ -500,7 +501,7 @@ function saveEditSheet() {
   toast("Análise de compatibilidade atualizada com os novos dados");
 }
 function initEditSheet() {
-  $("#toEdit").onclick = toggleEditMode;
+  $("#toEdit").onclick = openEditSheet;
   $("#esClose").onclick = () => { $("#editSheet").hidden = true; hidePopover(); };
   $("#esSave").onclick = saveEditSheet;
   $("#esFields").addEventListener("input", e => { const el = e.target.closest("[data-eival]"); if (el) editList[+el.dataset.eival].exig = el.value; });
