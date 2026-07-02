@@ -133,9 +133,8 @@ button { font-family: inherit; cursor: pointer; }
 .comp-head { display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 52px; box-sizing: border-box; cursor: pointer; list-style: none; user-select: none; }
 .comp-head::-webkit-details-marker { display: none; }
 .comp-acc[open] > .comp-head { border-bottom: 1px solid var(--border); }
-.comp-caret { display: grid; place-items: center; width: 18px; height: 18px; color: var(--muted-foreground); flex-shrink: 0; transition: transform .15s; }
-.comp-acc[open] .comp-caret { transform: rotate(90deg); }
-.comp-caret svg { width: 14px; height: 14px; }
+.comp-head .caret-svg { color: var(--muted-foreground); transition: transform .15s; flex-shrink: 0; }
+.comp-acc:not([open]) > .comp-head .caret-svg { transform: rotate(180deg); }
 .comp-dot { display: grid; place-items: center; width: 22px; height: 22px; border-radius: var(--r-full); flex-shrink: 0; }
 .comp-dot svg { width: 14px; height: 14px; }
 .comp-dot.ok { color: var(--success); background: var(--success-bg); }
