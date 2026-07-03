@@ -240,10 +240,11 @@ function openTable(i) {
       const open = (cs.mecanica === "produto" || !cs.ok) ? " open" : "";
       secs += `<details class="comp-acc"${open}><summary class="comp-head"><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span>${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
     } else {
-      secs += hostHTML;
+      // seção única: mesmo card, sem accordion
+      secs += `<div class="comp-card"><div class="comp-acc-body">${hostHTML}</div></div>`;
     }
   });
-  body += multi ? `<div class="to-sections">${secs}</div>` : secs;
+  body += `<div class="to-sections">${secs}</div>`;
 
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();

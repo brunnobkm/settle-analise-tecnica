@@ -129,7 +129,7 @@ button { font-family: inherit; cursor: pointer; }
 /* cabeçalho de cada componente do item (composição) */
 /* seções do item misto = accordion em card (mesmo visual do collapse .cps) */
 .to-sections { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
-.comp-acc { border: 1px solid var(--border); border-radius: var(--r-box); background: #FFF; }
+.comp-acc, .comp-card { border: 1px solid var(--border); border-radius: var(--r-box); background: #FFF; }
 .comp-head { display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 52px; box-sizing: border-box; cursor: pointer; list-style: none; user-select: none; }
 .comp-head::-webkit-details-marker { display: none; }
 .comp-acc[open] > .comp-head { border-bottom: 1px solid var(--border); }
