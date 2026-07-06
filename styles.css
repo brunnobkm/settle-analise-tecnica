@@ -159,10 +159,10 @@ button { font-family: inherit; cursor: pointer; }
 .filter-actions { display: inline-flex; align-items: center; gap: 2px; background: var(--secondary); border-radius: var(--r-field); padding: 3px; }
 
 /* ---------- Grid de cards de itens ---------- */
-.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.card-grid { display: flex; flex-direction: column; gap: 10px; }
 .item-card {
   border: 1px solid var(--border); border-radius: var(--r-box); background: var(--card);
-  padding: 14px 16px; cursor: pointer; transition: box-shadow .15s, border-color .15s; min-height: 150px;
+  padding: 14px 16px; cursor: pointer; transition: box-shadow .15s, border-color .15s;
   display: flex; flex-direction: column; gap: 8px;
 }
 .item-card:hover { border-color: #D4D4D4; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
@@ -174,7 +174,11 @@ button { font-family: inherit; cursor: pointer; }
 .ic-vals { font-size: 12.5px; color: var(--foreground); margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border); }
 .ic-vals b { font-weight: 600; }
 .ic-vals .mut { color: var(--muted-foreground); }
-.ic-desc { font-size: 13.5px; font-weight: 500; color: var(--foreground); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ic-desc { font-size: 13.5px; font-weight: 500; color: var(--foreground); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* lista (1 coluna): metadados numa linha só */
+.ic-metaline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 24px; font-size: 12.5px; color: var(--foreground); padding-top: 8px; border-top: 1px dashed var(--border); }
+.ic-metaline b { font-weight: 600; }
+.ic-metaline .mono { font-family: var(--mono); }
 .ic-divider { height: 1px; background: var(--border); margin: 2px 0; }
 .ic-line { font-size: 12.5px; color: var(--foreground); }
 .ic-line b { font-weight: 600; }
