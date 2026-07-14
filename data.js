@@ -35,14 +35,15 @@ Contratação de empresa especializada para fornecimento de equipamentos de vide
 };
 
 /* catálogo de SKUs (produto) */
+// preco/estoque/origem do SKU; datasheet reservado para link futuro (ainda não exibido)
 const SKUS = [
-  { model: "DS-2CD2143G2-I",  brand: "Hikvision" },
-  { model: "DS-2CD2043G2-IU", brand: "Hikvision" },
-  { model: "VIP-3230-B-IA",   brand: "Intelbras" },
-  { model: "IPC-HFW2431S-S2", brand: "Dahua" },
-  { model: "DS-2CD2086G2-IU", brand: "Hikvision" },
-  { model: "VIP-1230-B",      brand: "Intelbras" },
-  { model: "IPC-HDW1431S",    brand: "Dahua" },
+  { model: "DS-2CD2143G2-I",  brand: "Hikvision", preco: 1890, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2143g2-i.pdf" },
+  { model: "DS-2CD2043G2-IU", brand: "Hikvision", preco: 1650, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2043g2-iu.pdf" },
+  { model: "VIP-3230-B-IA",   brand: "Intelbras", preco: 1420, estoque: false, origem: "catalogo", datasheet: "vip-3230-b-ia.pdf" },
+  { model: "IPC-HFW2431S-S2", brand: "Dahua",     preco: 1290, estoque: true,  origem: "internet", datasheet: null },
+  { model: "DS-2CD2086G2-IU", brand: "Hikvision", preco: 2350, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2086g2-iu.pdf" },
+  { model: "VIP-1230-B",      brand: "Intelbras", preco: 980,  estoque: false, origem: "internet", datasheet: null },
+  { model: "IPC-HDW1431S",    brand: "Dahua",     preco: 1150, estoque: true,  origem: "catalogo", datasheet: "ipc-hdw1431s.pdf" },
 ];
 
 const c = (st, v, conf) => ({ st, v, c: conf });
@@ -148,10 +149,10 @@ const CATALOGO_SPECS = [
    Dataset TI — Firewall (Fortinet) para o caso de COMPOSIÇÃO (caixa + licença + garantia)
    ============================================================ */
 const SKUS_FW = [
-  { model: "FortiGate-200F", brand: "Fortinet" },
-  { model: "FortiGate-120G", brand: "Fortinet" },
-  { model: "FortiGate-100F", brand: "Fortinet" },
-  { model: "FortiGate-80F",  brand: "Fortinet" },
+  { model: "FortiGate-200F", brand: "Fortinet", preco: 42000, estoque: true,  origem: "catalogo", datasheet: "fortigate-200f.pdf" },
+  { model: "FortiGate-120G", brand: "Fortinet", preco: 31000, estoque: true,  origem: "catalogo", datasheet: "fortigate-120g.pdf" },
+  { model: "FortiGate-100F", brand: "Fortinet", preco: 24000, estoque: false, origem: "catalogo", datasheet: "fortigate-100f.pdf" },
+  { model: "FortiGate-80F",  brand: "Fortinet", preco: 15000, estoque: true,  origem: "internet", datasheet: null },
 ];
 const REQS_FW = [
   { req: "Throughput de Firewall", exig: "≥ 10 Gbps", unidade: "Gbps", modulo: "Desempenho",
@@ -200,7 +201,7 @@ const ITEMS = [
   // 1) SÓ PRODUTO — compara/escolhe SKU
   { titulo: "Câmeras LPR (leitura de placas)",
     nome: "Câmera de segurança: fornecimento de 80 câmeras, modelo LPR (leitura de placas), para o anel viário, conforme Termo de Referência.",
-    quantidade: "80", precoUnit: 2980,
+    quantidade: "80", precoUnit: 2980, unidadeMedida: "unidade",
     resumoTR: "Aquisição de 80 câmeras IP com leitura de placas (LPR) para o anel viário. Indique, do seu catálogo, qual SKU atende às especificações e a que preço.",
     componentes: [
       // cenário NÃO ATENDE (produto): o melhor produto não cobre 1 requisito (Detecção facial) → card mostra a aderência agregada
@@ -210,7 +211,7 @@ const ITEMS = [
   // 2) PRODUTO + SERVIÇO — câmera bullet + instalação
   { titulo: "Câmeras Bullet + instalação",
     nome: "Câmera de segurança bullet fixa (100 unidades) com serviço de instalação, lançamento de rede e integração ao VMS.",
-    quantidade: "100", precoUnit: 2210,
+    quantidade: "100", precoUnit: 2210, unidadeMedida: "unidade",
     resumoTR: "Fornecimento de 100 câmeras bullet fixas mais o serviço de instalação. Item composto: você escolhe o SKU da câmera e confirma se atende às exigências do serviço.",
     componentes: [
       { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
@@ -220,7 +221,7 @@ const ITEMS = [
   // 3) COMPOSIÇÃO TI — caixa + licença + garantia (caso dos "99%" do Paulo)
   { titulo: "Firewall de perímetro (appliance + licença + garantia)",
     nome: "Solução de firewall de próxima geração (NGFW) para o perímetro: appliance, subscrição de segurança (licença) e serviço de garantia/suporte do fabricante, em part numbers compostos.",
-    quantidade: "2", precoUnit: 86000,
+    quantidade: "2", precoUnit: 86000, unidadeMedida: "unidade",
     resumoTR: "Item de TI composto por três part numbers que somam: o hardware (appliance), a licença de segurança e o serviço de garantia. A análise precisa cobrir os três componentes juntos.",
     componentes: [
       { mecanica: "produto", rotulo: "Appliance (hardware)", skus: SKUS_FW, reqs: REQS_FW, catalogoNaoEdital: CATALOGO_NAO_EDITAL_FW, overrides: [] },
@@ -231,7 +232,7 @@ const ITEMS = [
   // 4) SÓ SERVIÇO — instalação e operação
   { titulo: "Instalação e operação do sistema",
     nome: "Serviço de instalação, configuração e operação assistida do sistema de videomonitoramento.",
-    quantidade: "1", precoUnit: 320000,
+    quantidade: "1", precoUnit: 320000, unidadeMedida: "serviço",
     resumoTR: "Contratação da empresa que instala as câmeras, lança a rede, integra ao software e opera o sistema. Não há escolha de SKU: você confirma se consegue cumprir cada exigência do serviço.",
     componentes: [
       { mecanica: "checklist", rotulo: "Serviço de instalação e operação", lista: SERVICO_INSTALL },
@@ -240,7 +241,7 @@ const ITEMS = [
   // 5) SÓ SOFTWARE / LICENÇA — VMS
   { titulo: "Software de gestão de vídeo (VMS)",
     nome: "Licença de software de gestão de vídeo (VMS) com leitura de placas (LPR) e cerco virtual.",
-    quantidade: "1", precoUnit: 145000,
+    quantidade: "1", precoUnit: 145000, unidadeMedida: "licença",
     resumoTR: "Licenciamento do software que centraliza as câmeras, faz leitura de placas e cerco virtual. Confirme se a sua solução atende a cada funcionalidade exigida.",
     componentes: [
       { mecanica: "checklist", rotulo: "Software de gestão de vídeo (VMS)", lista: SOFTWARE_VMS },
@@ -249,7 +250,7 @@ const ITEMS = [
   // 6) MISTO COMPLETO — produto + software + serviço num item só (caso "os três em conjunto", Michele)
   { titulo: "Solução completa de videomonitoramento",
     nome: "Solução de videomonitoramento em lote único: fornecimento das câmeras (hardware), licença do software de gestão de vídeo (VMS/LPR) e serviço de instalação e operação assistida.",
-    quantidade: "1", precoUnit: 690000,
+    quantidade: "1", precoUnit: 690000, unidadeMedida: "lote",
     resumoTR: "Item misto: um único lote que reúne produto (câmeras), software (VMS com LPR) e serviço (instalação e operação). A análise cobre os três componentes juntos, cada um com a sua mecânica.",
     componentes: [
       { mecanica: "produto", rotulo: "Câmeras (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },

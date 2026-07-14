@@ -12,6 +12,8 @@ const ICO_ARROW = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" st
 const ICO_CHAT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h10v7H8l-3 2v-2H3z"/></svg>`;
 const ICO_PLUS = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>`;
 const ICO_CARET = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
+const ICO_CHEV_L = `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>`;
+const ICO_CHEV_R = `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
 const ICO_TRASH = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8h6l.5-8M6.5 7v3.5M9.5 7v3.5"/></svg>`;
 const ICO_LINK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.7 9.3l2.6-2.6M7 4.6l1-1a2.4 2.4 0 0 1 3.4 3.4l-1 1M9 11.4l-1 1a2.4 2.4 0 0 1-3.4-3.4l1-1"/></svg>`;
 const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2l6-11z"/><path d="M8 6.5v3.2"/><path d="M8 11.6v.01"/></svg>`;
@@ -137,7 +139,8 @@ const scheduleRender = () => { if (!renderPending) { renderPending = true; reque
 function recompute() { STATE = scoresFor(SPECS, MX_SKUS); RANKED = rankFor(STATE); ORDER = RANKED.map(s => s.i); BEST = RANKED[0]; window.SCORES = STATE; }
 
 /* valores do item (a partir do preço unitário) */
-ITEMS.forEach(it => { const q = parseFloat(it.quantidade) || 1, fmt = n => "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2 }); it.valorUnitario = it.precoUnit ? { v: fmt(it.precoUnit) } : { v: "—" }; it.valorTotal = it.precoUnit ? { v: fmt(it.precoUnit * q) } : { v: "—" }; });
+const fmtBRL = n => "R$ " + Number(n).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+ITEMS.forEach(it => { const q = parseFloat(it.quantidade) || 1; it.valorUnitario = it.precoUnit ? { v: fmtBRL(it.precoUnit) } : { v: "—" }; it.valorTotal = it.precoUnit ? { v: fmtBRL(it.precoUnit * q) } : { v: "—" }; });
 
 /* ============================================================
    Resumo do edital (stats) + grid de cards
@@ -251,15 +254,43 @@ function openTable(i) {
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
+  renderNav(); renderItemSummary();
   $("#tableOverlay").hidden = false;
 }
 const closeTable = () => { $("#tableOverlay").hidden = true; active = null; renderGrid(); };
+/* itens visíveis segundo o filtro ativo (para a navegação Anterior/Próximo) */
+function visibleItemsIdx() { return ITEMS.map((_, i) => i).filter(i => statusFilter === "all" || itemSummary(i).status === statusFilter); }
+function renderNav() {
+  const nav = $("#toNav"); if (!nav) return;
+  const list = visibleItemsIdx(), pos = list.indexOf(active);
+  if (pos === -1 || list.length <= 1) { nav.innerHTML = ""; return; }
+  const hasPrev = pos > 0, hasNext = pos < list.length - 1;
+  nav.innerHTML = `<button class="to-navbtn" data-nav="prev"${hasPrev ? "" : " disabled"} data-tip="Item anterior">${ICO_CHEV_L}</button>
+    <span class="to-navcount">Item ${pos + 1} de ${list.length}</span>
+    <button class="to-navbtn" data-nav="next"${hasNext ? "" : " disabled"} data-tip="Próximo item">${ICO_CHEV_R}</button>`;
+}
+function renderItemSummary() {
+  const el = $("#toSummary"); if (!el || active == null) return;
+  const it = ITEMS[active];
+  const prod = it.componentes.find(c => c.mecanica === "produto");
+  const chosenIdx = prefs.chosen[active];
+  const chosen = (prod && chosenIdx != null && MX_SKUS[chosenIdx]) ? MX_SKUS[chosenIdx] : null;
+  const chosenChip = chosen
+    ? `<span class="ts-chosen" data-tip="Produto definido para a proposta">✓ Produto escolhido: <b>${esc(chosen.model)}</b> · ${esc(chosen.brand)}</span>`
+    : (prod ? `<span class="ts-chosen none" data-tip="Selecione um SKU na tabela para definir o produto da proposta">Nenhum produto escolhido</span>` : "");
+  el.innerHTML = `<div class="ts-metas">
+      <span><b>Quantidade:</b> ${esc(it.quantidade)}</span>
+      <span><b>Unidade de medida:</b> ${esc(it.unidadeMedida || "unidade")}</span>
+      <span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span>
+      <span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span>
+    </div>${chosenChip}`;
+}
 
 /* ---------- Mecânica: matriz (produto) ---------- */
-function buildCols() {
-  const cols = [{ key: "check" }, { key: "req" }, { key: "val" }, ...ORDER.map(i => ({ key: "sku-" + i, skuIdx: i })), { key: "acoes" }];
+function buildCols(order) {
+  const cols = [{ key: "req" }, { key: "val" }, ...order.map(i => ({ key: "sku-" + i, skuIdx: i })), { key: "acoes" }];
   let fl = 0;
-  cols.forEach(c => { c.w = COLW(c.key); c.frozen = c.key === "check" || frozen.has(c.key); });
+  cols.forEach(c => { c.w = COLW(c.key); c.frozen = frozen.has(c.key); });
   cols.forEach(c => { if (c.frozen) { c.left = fl; fl += c.w; } });
   const frz = cols.filter(c => c.frozen); if (frz.length) frz[frz.length - 1].edge = true;
   return cols;
@@ -275,22 +306,38 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
 }
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
-  const cols = buildCols(), chosenIdx = prefs.chosen[active], totalW = cols.reduce((s, c) => s + c.w, 0);
+  const chosenIdx = prefs.chosen[active];
+  // ocultar quem não atende: esconde SKUs que não atendem 100% dos requisitos
+  const pctOf = i => (STATE.find(s => s.i === i) || {}).pct || 0;
+  const hideNoMatch = !!prefs.hideNoMatch;
+  const fullOrder = ORDER, matchOrder = ORDER.filter(i => pctOf(i) === 100);
+  const shownOrder = (hideNoMatch && matchOrder.length) ? matchOrder : ORDER;
+  const hiddenCount = fullOrder.length - shownOrder.length;
+  const cols = buildCols(shownOrder), totalW = cols.reduce((s, c) => s + c.w, 0);
   const colgroup = `<colgroup>${cols.map(c => `<col data-k="${c.key}" style="width:${c.w}px">`).join("")}</colgroup>`;
   let head = "";
   cols.forEach(c => {
-    if (c.key === "check") head += `<th class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar todos"></span></th>`;
-    else if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
+    if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
     else if (c.key === "val") head += `<th class="col-val${fzCls(c)}"${fzStyle(c)} data-tip="Valor que o edital exige para o requisito">Valor requerido${colCtrls(c)}</th>`;
     else if (c.key === "acoes") head += `<th class="col-acoes">Ações</th>`;
     else {
       const idx = c.skuIdx, sc = STATE[idx], rank = ORDER.indexOf(idx), best = rank === 0, isChosen = chosenIdx === idx;
+      const sku = sc.sku;
+      const estoqueBadge = sku.estoque
+        ? `<span class="sku-tag ok" data-tip="Disponível no estoque">Em estoque</span>`
+        : `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar/terceirizar">Sem estoque</span>`;
+      const origemBadge = sku.origem === "internet"
+        ? `<span class="sku-tag net" data-tip="SKU encontrado na internet (não é do seu catálogo)">Internet</span>`
+        : `<span class="sku-tag cat" data-tip="SKU do seu catálogo">Catálogo</span>`;
+      const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do SKU">${esc(fmtBRL(sku.preco))}</div>` : "";
       head += `<th class="col-sku${best ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        ${best ? `<div class="best-tag" data-tip="Produto com maior aderência">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
-        <div class="sku-model">${esc(sc.sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do SKU, não é requisito)">${esc(sc.sku.brand)}</div>
+        ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : best ? `<div class="best-tag" data-tip="Produto com maior aderência">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
+        <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do SKU, não é requisito)">${esc(sku.brand)}</div>
+        ${precoLine}
+        <div class="sku-tags">${estoqueBadge}${origemBadge}</div>
         <div class="sku-scoreline" data-tip="Requisitos atendidos e percentual de aderência"><span class="score-frac">${sc.ok}/${sc.evaluable}${sc.ne ? ` · ${sc.ne} n/e` : ""}</span><span class="score-pct">${sc.pct}%</span></div>
         <div class="score-bar"><span class="score-fill" style="width:${sc.pct}%"></span></div>
-        <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}" data-tip="Definir como produto escolhido">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
+        <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}" data-tip="${isChosen ? "Remover seleção" : "Definir como produto escolhido para a proposta"}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
   });
   let body = "";
@@ -299,8 +346,7 @@ function renderMatrix() {
     const nx = !!spec.naoExtraido;
     let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}${nx ? " row-missing" : ""}">`;
     cols.forEach(c => {
-      if (c.key === "check") row += `<td class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar requisito"></span></td>`;
-      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span></td>`;
+      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span></td>`;
       else if (c.key === "val") {
         const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
         row += nx
@@ -313,7 +359,9 @@ function renderMatrix() {
     });
     body += row + `</tr>`;
   });
-  host.innerHTML = `<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
+  const noneNote = (hideNoMatch && !matchOrder.length) ? `<span class="mx-note">Nenhum produto atende 100% — mostrando todos.</span>` : "";
+  const toolbar = `<div class="mx-toolbar"><button class="mx-toggle${hideNoMatch ? " on" : ""}" data-hidenomatch data-tip="Esconde os produtos que não atendem 100% dos requisitos, para focar na análise"><span class="mx-switch"></span>Ocultar quem não atende${hideNoMatch && hiddenCount ? ` · ${hiddenCount} oculto${hiddenCount > 1 ? "s" : ""}` : ""}</button>${noneNote}</div>`;
+  host.innerHTML = `${toolbar}<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
     <div class="add-req" id="addReq" data-tip="Adicionar um requisito do edital a partir do catálogo">${ICO_PLUS} Adicionar requisito</div>`;
 }
 
@@ -341,7 +389,6 @@ function renderChecklist(host, clArr, sec) {
   const rows = clArr.map((r, ri) => {
     const st = CL_ST[r.st] || CL_ST.ne;
     return `<tr>
-      <td class="col-check"><span class="cbox" data-tip="Selecionar requisito"></span></td>
       <td class="col-req"><span class="req-name">${esc(r.req)}</span></td>
       <td class="col-val"><div class="val-head"><span class="val-text">${esc(r.exig || "—")}</span><button class="req-ico val-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button></div></td>
       <td class="col-meta"><span class="badge soft">${esc(r.modulo || "—")}</span></td>
@@ -351,7 +398,7 @@ function renderChecklist(host, clArr, sec) {
       <td class="col-meta"><span class="badge soft with-avatar">Selecionar</span></td>
     </tr>`;
   }).join("");
-  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-check"><span class="cbox" data-tip="Selecionar todos"></span></th><th class="col-req">Requisito</th><th class="col-val">Valor requerido</th><th class="col-meta">Módulo</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Responsável</th></tr></thead><tbody>${rows}</tbody></table><div class="dt-foot" data-addcl="${sec}">${ICO_PLUS} Adicionar requisito</div></div>`;
+  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-val">Valor requerido</th><th class="col-meta">Módulo</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Responsável</th></tr></thead><tbody>${rows}</tbody></table><div class="dt-foot" data-addcl="${sec}">${ICO_PLUS} Adicionar requisito</div></div>`;
 }
 
 /* ============================================================
@@ -454,6 +501,12 @@ function wire() {
   $("#cardGrid").addEventListener("click", e => { const c = e.target.closest("[data-item]"); if (c) openTable(+c.dataset.item); });
 
   $("#toClose").onclick = closeTable;
+  $("#toNav").addEventListener("click", e => {
+    const b = e.target.closest("[data-nav]"); if (!b || b.disabled) return;
+    const list = visibleItemsIdx(), pos = list.indexOf(active);
+    const target = b.dataset.nav === "prev" ? list[pos - 1] : list[pos + 1];
+    if (target != null) openTable(target);
+  });
   $("#toUpdate").onclick = updateInfo;
   $("#toExport").onclick = () => toast("Exportando análise (PDF · planilha · resumo técnico)…");
   $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
@@ -469,7 +522,8 @@ function wire() {
   });
   tb.addEventListener("click", e => {
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
-    const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
+    const hnm = e.target.closest("[data-hidenomatch]"); if (hnm) { prefs.hideNoMatch = !prefs.hideNoMatch; savePrefs(); renderMatrix(); return; }
+    const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); renderItemSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }

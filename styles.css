@@ -199,7 +199,21 @@ button { font-family: inherit; cursor: pointer; }
 .to-head { height: 64px; flex-shrink: 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
 .to-title { font-size: 16px; font-weight: 600; }
 .to-actions { display: flex; align-items: center; gap: 8px; }
-.to-summary { flex-shrink: 0; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--bg-soft); }
+/* navegação Anterior/Próximo entre itens */
+.to-nav { display: flex; align-items: center; gap: 4px; margin-right: 6px; }
+.to-nav:empty { display: none; }
+.to-navbtn { width: 30px; height: 30px; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-field); color: var(--foreground); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.to-navbtn:hover:not(:disabled) { background: var(--muted); }
+.to-navbtn:disabled { color: #C4C4C4; cursor: default; }
+.to-navcount { font-size: 12.5px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; padding: 0 4px; white-space: nowrap; }
+/* resumo do item + produto escolhido */
+.to-summary { flex-shrink: 0; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; background: var(--bg-soft); }
+.to-summary:empty { display: none; }
+.ts-metas { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 12.5px; color: var(--foreground); }
+.ts-metas b { font-weight: 600; }
+.ts-chosen { font-size: 12.5px; font-weight: 600; color: var(--brand-600); background: var(--brand-100); border: 1px solid var(--brand); border-radius: var(--r-full); padding: 3px 12px; white-space: nowrap; }
+.ts-chosen.none { color: var(--muted-foreground); background: var(--muted); border-color: var(--border); font-weight: 500; }
+.mono { font-family: var(--mono); }
 .to-body { flex: 1; min-height: 0; overflow: auto; padding: 0; }
 .to-cta { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-soft); }
 .to-cta .cta-hint { flex: 1; min-width: 200px; font-size: 13px; color: var(--muted-foreground); }
@@ -324,6 +338,27 @@ th.col-sku.best { background: var(--success-bg); }
 .score-fill { height: 100%; border-radius: var(--r-full); background: #171717; }
 .best .score-fill { background: var(--success); }
 .best-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--r-full); background: var(--success-bg); color: var(--success); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+.chosen-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--r-full); background: var(--brand); color: #FFF; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+/* preço / estoque / origem do SKU */
+.sku-preco { font-family: var(--mono); font-size: 13px; font-weight: 700; margin-top: 8px; }
+.sku-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.sku-tag { font-size: 10px; font-weight: 600; border-radius: var(--r-full); padding: 1px 7px; border: 1px solid transparent; white-space: nowrap; }
+.sku-tag.ok { color: var(--success); background: var(--success-bg); }
+.sku-tag.warn { color: var(--warning); background: var(--warning-bg); }
+.sku-tag.cat { color: var(--secondary-foreground); background: var(--muted); }
+.sku-tag.net { color: var(--muted-foreground); background: #FFF; border-color: var(--border); }
+/* coluna do produto escolhido: destaque forte */
+th.col-sku.chosen { background: var(--brand-100); box-shadow: inset 0 0 0 2px var(--brand); }
+.cmp tbody td.chosen-col { background: var(--brand-050, #EAF7F8); }
+/* barra da matriz: ocultar quem não atende */
+.mx-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.mx-toggle { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-full); padding: 5px 12px 5px 6px; font-size: 12.5px; font-weight: 600; color: var(--foreground); cursor: pointer; }
+.mx-toggle .mx-switch { width: 30px; height: 18px; border-radius: var(--r-full); background: #D4D4D4; position: relative; flex-shrink: 0; transition: background .15s; }
+.mx-toggle .mx-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #FFF; transition: transform .15s; }
+.mx-toggle.on { border-color: var(--brand); color: var(--brand-600); }
+.mx-toggle.on .mx-switch { background: var(--brand); }
+.mx-toggle.on .mx-switch::after { transform: translateX(12px); }
+.mx-note { font-size: 12px; color: var(--muted-foreground); }
 /* coluna checkbox + ações */
 th.col-check, td.col-check { padding: 12px; text-align: center; background: var(--muted); }
 td.col-check { background: #FFF; }
@@ -462,7 +497,7 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 /* ---------- Selecionar SKU / Produto escolhido ---------- */
 .sku-select { width: 100%; margin-top: 10px; border: 0; background: var(--brand); color: #fff; border-radius: var(--r-md); padding: 7px 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s; }
 .sku-select:hover { background: var(--brand-600); }
-.sku-select.on { background: var(--success); }
+.sku-select.on { background: var(--brand); }
 th.col-sku.chosen { background: var(--brand-100); box-shadow: inset 0 2px 0 var(--brand); }
 .chosen-tag { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 10.5px; font-weight: 700; color: var(--brand-600); text-transform: uppercase; letter-spacing: .4px; }
 .chip-chosen { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--r-full); background: var(--brand-100); color: var(--brand-600); }
@@ -514,7 +549,8 @@ th.col-sku.chosen { background: var(--brand-100); box-shadow: inset 0 2px 0 var(
 .editable { cursor: text; border-radius: var(--r-sm); padding: 1px 3px; margin: -1px -3px; outline: none; }
 .editable:hover { background: #F0F0EF; box-shadow: inset 0 0 0 1px var(--border); }
 .editable:focus { background: #FFF; box-shadow: 0 0 0 2px var(--brand-100); }
-td.col-val .editable { font-family: var(--mono); font-size: 14px; }
+td.col-val .editable { font-family: var(--mono); font-size: 14px; border-bottom: 1px dashed #C4C4C4; }
+td.col-val:hover .editable { border-bottom-color: var(--brand); }
 .cell-val { font-family: var(--mono); font-size: 14px; }
 .cell-val.txt { font-family: inherit; }
 .req-exig, .conf { font-size: 12px; }
