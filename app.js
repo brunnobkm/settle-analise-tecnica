@@ -669,4 +669,11 @@ function initTour() {
 }
 
 /* boot */
+// demo: pré-seleciona um produto num item que ATENDE, para ilustrar melhor o "produto escolhido"
+if (!prefs.seededChosen) {
+  const DEMO_ITEM = 1; // Câmeras Bullet + instalação (status Atende, tem componente produto)
+  const pc = ITEMS[DEMO_ITEM].componentes.find(c => c.mecanica === "produto");
+  prefs.chosen = pc ? { [DEMO_ITEM]: bestOf(matrixOf(pc), pc.skus).i } : {};
+  prefs.seededChosen = true; savePrefs();
+}
 renderGrid(); wire(); initAddModal(); initTooltip(); initTour();
