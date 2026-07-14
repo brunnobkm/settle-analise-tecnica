@@ -288,9 +288,9 @@ function renderItemSummary() {
 
 /* ---------- Mecânica: matriz (produto) ---------- */
 function buildCols(order) {
-  const cols = [{ key: "req" }, { key: "val" }, ...order.map(i => ({ key: "sku-" + i, skuIdx: i })), { key: "acoes" }];
+  const cols = [{ key: "check" }, { key: "req" }, { key: "val" }, ...order.map(i => ({ key: "sku-" + i, skuIdx: i })), { key: "acoes" }];
   let fl = 0;
-  cols.forEach(c => { c.w = COLW(c.key); c.frozen = frozen.has(c.key); });
+  cols.forEach(c => { c.w = COLW(c.key); c.frozen = c.key === "check" || frozen.has(c.key); });
   cols.forEach(c => { if (c.frozen) { c.left = fl; fl += c.w; } });
   const frz = cols.filter(c => c.frozen); if (frz.length) frz[frz.length - 1].edge = true;
   return cols;
@@ -317,7 +317,8 @@ function renderMatrix() {
   const colgroup = `<colgroup>${cols.map(c => `<col data-k="${c.key}" style="width:${c.w}px">`).join("")}</colgroup>`;
   let head = "";
   cols.forEach(c => {
-    if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
+    if (c.key === "check") head += `<th class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar requisitos (para ações em lote, em breve)"></span></th>`;
+    else if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
     else if (c.key === "val") head += `<th class="col-val${fzCls(c)}"${fzStyle(c)} data-tip="Valor que o edital exige para o requisito">Valor requerido${colCtrls(c)}</th>`;
     else if (c.key === "acoes") head += `<th class="col-acoes">Ações</th>`;
     else {
@@ -346,7 +347,8 @@ function renderMatrix() {
     const nx = !!spec.naoExtraido;
     let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}${nx ? " row-missing" : ""}">`;
     cols.forEach(c => {
-      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span></td>`;
+      if (c.key === "check") row += `<td class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar requisito (para ações em lote, em breve)"></span></td>`;
+      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span></td>`;
       else if (c.key === "val") {
         const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
         row += nx
@@ -389,6 +391,7 @@ function renderChecklist(host, clArr, sec) {
   const rows = clArr.map((r, ri) => {
     const st = CL_ST[r.st] || CL_ST.ne;
     return `<tr>
+      <td class="col-check"><span class="cbox" data-tip="Selecionar requisito (para ações em lote, em breve)"></span></td>
       <td class="col-req"><span class="req-name">${esc(r.req)}</span></td>
       <td class="col-val"><div class="val-head"><span class="val-text">${esc(r.exig || "—")}</span><button class="req-ico val-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button></div></td>
       <td class="col-meta"><span class="badge soft">${esc(r.modulo || "—")}</span></td>
@@ -398,7 +401,7 @@ function renderChecklist(host, clArr, sec) {
       <td class="col-meta"><span class="badge soft with-avatar">Selecionar</span></td>
     </tr>`;
   }).join("");
-  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-val">Valor requerido</th><th class="col-meta">Módulo</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Responsável</th></tr></thead><tbody>${rows}</tbody></table><div class="dt-foot" data-addcl="${sec}">${ICO_PLUS} Adicionar requisito</div></div>`;
+  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-check"><span class="cbox" data-tip="Selecionar requisitos (para ações em lote, em breve)"></span></th><th class="col-req">Requisito</th><th class="col-val">Valor requerido</th><th class="col-meta">Módulo</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Responsável</th></tr></thead><tbody>${rows}</tbody></table><div class="dt-foot" data-addcl="${sec}">${ICO_PLUS} Adicionar requisito</div></div>`;
 }
 
 /* ============================================================
