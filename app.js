@@ -101,6 +101,12 @@ function itemSummary(i) {
 function secSummary(cs) {
   const mono = m => `<span style="font-family:var(--mono)">${esc(m)}</span>`;
   if (cs.mecanica === "produto") {
+    // a escolha substitui a recomendação
+    const chosenIdx = prefs.chosen[active];
+    if (chosenIdx != null && cs.comp.skus[chosenIdx]) {
+      const s = cs.comp.skus[chosenIdx];
+      return `<b>✓ Escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}`;
+    }
     return cs.ok
       ? `<b>Recomendado:</b> ${mono(cs.best.sku.model)} · atende ${cs.best.pct}%`
       : `Melhor produto atende ${cs.best.pct}% (${cs.best.ok}/${cs.best.evaluable})`;
@@ -181,7 +187,6 @@ function renderGrid() {
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
       : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
-    const chosenBadge = (chosenIdx != null) ? `<span class="badge brand">Produto selecionado</span>` : "";
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     // Opção C: card mostra status + o bloqueio em linguagem clara (ou o SKU recomendado quando atende)
     const prod = sum.comps.find(c => c.mecanica === "produto");
@@ -206,8 +211,14 @@ function renderGrid() {
         }).join(" · ");
       }
     }
+    // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
+    const chosenSku = (prod && chosenIdx != null && prod.comp.skus[chosenIdx]) ? prod.comp.skus[chosenIdx] : null;
+    if (chosenSku) {
+      reco = `<b>✓ Produto escolhido:</b> <span style="font-family:var(--mono)">${esc(chosenSku.model)}</span> · ${esc(chosenSku.brand)}`;
+      recoCls = " chosen";
+    }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges">${segBadge}${statusBadge}${chosenBadge}</div>
+      <div class="ic-badges">${segBadge}${statusBadge}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-metaline">
         <span><b>Quantidade:</b> ${qtyTxt}</span>
@@ -272,18 +283,20 @@ function renderNav() {
 function renderItemSummary() {
   const el = $("#toSummary"); if (!el || active == null) return;
   const it = ITEMS[active];
-  const prod = it.componentes.find(c => c.mecanica === "produto");
-  const chosenIdx = prefs.chosen[active];
-  const chosen = (prod && chosenIdx != null && MX_SKUS[chosenIdx]) ? MX_SKUS[chosenIdx] : null;
-  const chosenChip = chosen
-    ? `<span class="ts-chosen" data-tip="Produto definido para a proposta">✓ Produto escolhido: <b>${esc(chosen.model)}</b> · ${esc(chosen.brand)}</span>`
-    : (prod ? `<span class="ts-chosen none" data-tip="Selecione um SKU na tabela para definir o produto da proposta">Nenhum produto escolhido</span>` : "");
   el.innerHTML = `<div class="ts-metas">
       <span><b>Quantidade:</b> ${esc(it.quantidade)}</span>
       <span><b>Unidade de medida:</b> ${esc(it.unidadeMedida || "unidade")}</span>
       <span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span>
       <span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span>
-    </div>${chosenChip}`;
+    </div>`;
+}
+/* atualiza ao vivo o resumo da seção de produto (accordion) quando o SKU escolhido muda */
+function updateProdSecSummary() {
+  const details = [...document.querySelectorAll(".comp-acc")].find(d => d.querySelector("#matrixHost"));
+  if (!details) return;
+  const cs = itemSummary(active).comps.find(c => c.mecanica === "produto");
+  const el = details.querySelector(".comp-sum");
+  if (cs && el) el.innerHTML = secSummary(cs);
 }
 
 /* ---------- Mecânica: matriz (produto) ---------- */
@@ -322,7 +335,7 @@ function renderMatrix() {
     else if (c.key === "val") head += `<th class="col-val${fzCls(c)}"${fzStyle(c)} data-tip="Valor que o edital exige para o requisito">Valor requerido${colCtrls(c)}</th>`;
     else if (c.key === "acoes") head += `<th class="col-acoes">Ações</th>`;
     else {
-      const idx = c.skuIdx, sc = STATE[idx], rank = ORDER.indexOf(idx), best = rank === 0, isChosen = chosenIdx === idx;
+      const idx = c.skuIdx, sc = STATE[idx], rank = ORDER.indexOf(idx), best = rank === 0, isChosen = chosenIdx === idx, hasChoice = chosenIdx != null;
       const sku = sc.sku;
       const estoqueBadge = sku.estoque
         ? `<span class="sku-tag ok" data-tip="Disponível no estoque">Em estoque</span>`
@@ -331,8 +344,8 @@ function renderMatrix() {
         ? `<span class="sku-tag net" data-tip="SKU encontrado na internet (não é do seu catálogo)">Internet</span>`
         : `<span class="sku-tag cat" data-tip="SKU do seu catálogo">Catálogo</span>`;
       const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do SKU">${esc(fmtBRL(sku.preco))}</div>` : "";
-      head += `<th class="col-sku${best ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : best ? `<div class="best-tag" data-tip="Produto com maior aderência">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
+      head += `<th class="col-sku${(best && !hasChoice) ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
+        ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Produto com maior aderência">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
         <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do SKU, não é requisito)">${esc(sku.brand)}</div>
         ${precoLine}
         <div class="sku-tags">${estoqueBadge}${origemBadge}</div>
@@ -526,7 +539,7 @@ function wire() {
   tb.addEventListener("click", e => {
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
     const hnm = e.target.closest("[data-hidenomatch]"); if (hnm) { prefs.hideNoMatch = !prefs.hideNoMatch; savePrefs(); renderMatrix(); return; }
-    const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); renderItemSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
+    const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
