@@ -150,6 +150,14 @@ button { font-family: inherit; cursor: pointer; }
 .mech-host { position: relative; }
 .clickable-badge { border: 0; cursor: pointer; font-family: inherit; }
 .clickable-badge:hover { filter: brightness(.96); box-shadow: 0 0 0 3px rgba(0,0,0,.04); }
+.cl-caret { margin-left: 3px; opacity: .6; font-size: 9px; line-height: 1; }
+/* dropdown de status */
+.status-menu { position: fixed; z-index: 70; background: #FFF; border: 1px solid var(--border); border-radius: var(--r-field); box-shadow: 0 8px 28px rgba(0,0,0,.16); padding: 4px; min-width: 190px; }
+.status-menu[hidden] { display: none; }
+.sm-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; border: 0; background: transparent; border-radius: var(--r-md); padding: 6px 8px; cursor: pointer; text-align: left; }
+.sm-item:hover { background: var(--muted); }
+.sm-item.sel { background: var(--muted); }
+.sm-check { color: var(--brand-600); font-weight: 700; }
 .dt-foot { cursor: pointer; }
 .dt-foot:hover { background: var(--muted); }
 .dt .c-just { white-space: normal; }

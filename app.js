@@ -402,7 +402,7 @@ function renderChecklist(host, clArr, sec) {
       <td class="col-req"><span class="req-name">${esc(r.req)}</span></td>
       <td class="col-val"><div class="val-head"><span class="val-text">${esc(r.exig || "—")}</span><button class="req-ico val-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button></div></td>
       <td class="col-meta"><span class="badge soft">${esc(r.modulo || "—")}</span></td>
-      <td class="col-meta"><button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para alternar o status">${st.ico}${st.label}</button></td>
+      <td class="col-meta"><button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para escolher o status">${st.ico}${st.label}<span class="cl-caret">▾</span></button></td>
       <td class="col-meta">${confBadge(r.c)}</td>
       <td class="col-meta c-just">${esc(r.just || "—")}</td>
       <td class="col-meta"><span class="badge soft with-avatar">Selecionar</span></td>
@@ -499,8 +499,20 @@ function requestCatalog() { $("#addModal").hidden = true; toast(`Pedido enviado 
 let pendingWarnEl = null;
 function focusEditable(el) { el.focus(); try { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (_) { } }
 function openInlineWarn(el) { pendingWarnEl = el; $("#warnModal").hidden = false; }
-const CL_CYCLE = { ok: "no", no: "parcial", parcial: "ne", ne: "ok" };
-function toggleClStatus(sec, ri) { const r = currentChecklists[sec][ri]; r.st = CL_CYCLE[r.st] || "ok"; renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec); }
+/* dropdown de status do checklist: escolhe direto em vez de ciclar */
+const CL_OPTS = ["ok", "no", "parcial", "ne"];
+let statusMenuTarget = null;
+function openStatusMenu(anchor, sec, ri) {
+  const menu = $("#statusMenu"); if (!menu) return;
+  statusMenuTarget = { sec, ri };
+  const cur = currentChecklists[sec][ri].st;
+  menu.innerHTML = CL_OPTS.map(k => { const o = CL_ST[k]; return `<button class="sm-item${k === cur ? " sel" : ""}" data-stval="${k}"><span class="badge ${o.cls}">${o.ico}${o.label}</span>${k === cur ? `<span class="sm-check">✓</span>` : ""}</button>`; }).join("");
+  menu.hidden = false;
+  const r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
+  let top = r.bottom + 6; if (top + mh > innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+  menu.style.top = top + "px"; menu.style.left = Math.max(8, Math.min(r.left, innerWidth - mw - 8)) + "px";
+}
+function closeStatusMenu() { const m = $("#statusMenu"); if (m) m.hidden = true; statusMenuTarget = null; }
 function addClReq(sec) { currentChecklists[sec].push({ req: "Novo requisito", exig: "", modulo: "—", st: "ne", c: null, just: "—", origem: { doc: "Inserido manualmente", pag: "—" } }); renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec); }
 
 /* ============================================================
@@ -538,7 +550,7 @@ function wire() {
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     if (e.target.closest("#addReq")) { openAddModal(); return; }
-    const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); toggleClStatus(s, r); return; }
+    const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
     const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
     const ac = e.target.closest("[data-addcl]"); if (ac) { addClReq(+ac.dataset.addcl); return; }
@@ -564,7 +576,20 @@ function wire() {
     recompute(); renderMatrix(); closeOrigin();
     toast(`Valor extraído para "${nm}" — produtos liberados para comparação`);
   });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#statusMenu").hidden) closeStatusMenu(); else if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
+  // dropdown de status do checklist
+  $("#statusMenu").addEventListener("click", e => {
+    const b = e.target.closest("[data-stval]"); if (!b || !statusMenuTarget) return;
+    const { sec, ri } = statusMenuTarget;
+    currentChecklists[sec][ri].st = b.dataset.stval;
+    renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec);
+    closeStatusMenu();
+  });
+  document.addEventListener("click", e => {
+    if ($("#statusMenu").hidden) return;
+    if (e.target.closest("#statusMenu") || e.target.closest("[data-clstatus]")) return;
+    closeStatusMenu();
+  });
 }
 
 
