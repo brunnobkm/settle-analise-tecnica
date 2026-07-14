@@ -250,15 +250,9 @@ function openTable(i) {
     let hostHTML;
     if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; }
     else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); hostHTML = `<div class="mech-host" id="clHost-${idx}"></div>`; }
-    if (multi) {
-      const cs = sum.comps[ci];
-      // abre por padrão a seção de produto (a decisão principal) e qualquer seção com pendência; recolhe as que já atendem
-      const open = (cs.mecanica === "produto" || !cs.ok) ? " open" : "";
-      secs += `<details class="comp-acc"${open}><summary class="comp-head"><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span>${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
-    } else {
-      // seção única: mesmo card, sem accordion
-      secs += `<div class="comp-card"><div class="comp-acc-body">${hostHTML}</div></div>`;
-    }
+    // toda seção é um accordion colapsável (inclusive itens de uma seção só), aberto por padrão
+    const cs = sum.comps[ci];
+    secs += `<details class="comp-acc" open><summary class="comp-head"><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span>${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
