@@ -387,7 +387,7 @@ function collapsiblesHTML(it) {
   const prodComp = it.componentes.find(comp => comp.mecanica === "produto");
   if (prodComp) {
     const naoExigidas = [...matrixOf(prodComp).filter(s => s.exigNa).map(s => s.req), ...(prodComp.catalogoNaoEdital || [])];
-    if (naoExigidas.length) html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, ""), null);
+    if (naoExigidas.length) html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, ""), null, true);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
