@@ -249,12 +249,13 @@ function openTable(i) {
 
   let body = collapsiblesHTML(it), secs = "";
   it.componentes.forEach((comp, ci) => {
-    let hostHTML;
-    if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; }
-    else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); hostHTML = `<div class="mech-host" id="clHost-${idx}"></div>`; }
-    // toda seção é um accordion colapsável (inclusive itens de uma seção só), aberto por padrão
+    let hostHTML, editSec;
+    if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; editSec = "produto"; }
+    else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); hostHTML = `<div class="mech-host" id="clHost-${idx}"></div>`; editSec = "cl:" + idx; }
+    // toda seção é um accordion colapsável (aberto por padrão) com seu próprio botão Editar
     const cs = sum.comps[ci];
-    secs += `<details class="comp-acc" open><summary class="comp-head"><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span>${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+    const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="Editar as exigências desta seção">${ICO_PENCIL} Editar</button>`;
+    secs += `<details class="comp-acc" open><summary class="comp-head"><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span>${editBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
@@ -289,10 +290,14 @@ function renderItemSummary() {
 /* atualiza ao vivo o resumo da seção de produto (accordion) quando o SKU escolhido muda */
 function updateProdSecSummary() {
   const details = [...document.querySelectorAll(".comp-acc")].find(d => d.querySelector("#matrixHost"));
-  if (!details) return;
-  const cs = itemSummary(active).comps.find(c => c.mecanica === "produto");
-  const el = details.querySelector(".comp-sum");
-  if (cs && el) el.innerHTML = secSummary(cs);
+  if (!details || !BEST) return;
+  const chosenIdx = prefs.chosen[active], mono = m => `<span style="font-family:var(--mono)">${esc(m)}</span>`;
+  const ok = BEST.diverg.length === 0;
+  let html;
+  if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<b>✓ Escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}`; }
+  else html = ok ? `<b>Recomendado:</b> ${mono(BEST.sku.model)} · atende ${BEST.pct}%` : `Melhor produto atende ${BEST.pct}% (${BEST.ok}/${BEST.evaluable})`;
+  const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = html;
+  const dot = details.querySelector(".comp-dot"); if (dot) { dot.className = "comp-dot " + (ok ? "ok" : "no"); dot.innerHTML = ok ? ICO_OK : ICO_NO; }
 }
 
 /* ---------- Mecânica: matriz (produto) ---------- */
@@ -313,49 +318,84 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}" data-tip="Confiança da IA na extração deste valor"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
   return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val" data-tip="Valor do produto (vem do seu catálogo, somente leitura). Só a exigência do edital é editável.">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div>${conf}</td>`;
 }
-/* edição = ação consciente numa BARRA LATERAL (Editar → inputs no sidebar → Salvar reprocessa). Tabela é sempre leitura. */
-let editSnapshot = null;
-function renderEditControls() {
-  const el = $("#toEditCtrls"); if (!el) return;
-  el.innerHTML = $("#matrixHost")
-    ? `<button class="to-editbtn" id="btnEnterEdit" data-tip="Editar as exigências do edital numa barra lateral. A análise é reprocessada ao salvar.">${ICO_PENCIL} Editar</button>`
-    : "";
+/* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
+let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
+function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = ""; } // o Editar agora vive no cabeçalho de cada seção
+function editSecLabel() {
+  const it = ITEMS[active];
+  if (editTarget.type === "produto") return (it.componentes.find(c => c.mecanica === "produto") || {}).rotulo || "";
+  return (it.componentes.filter(c => c.mecanica !== "produto")[editTarget.sec] || {}).rotulo || "";
 }
-function openEditDrawer() { if (!SPECS) return; editSnapshot = clone(SPECS); renderEditDrawer(); $("#editOverlay").hidden = false; $("#editDrawer").hidden = false; const fab = $("#tourFab"); if (fab) fab.style.display = "none"; }
-function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; const fab = $("#tourFab"); if (fab) fab.style.display = ""; }
-function cancelEditDrawer() { if (editSnapshot) { SPECS = editSnapshot; recompute(); renderMatrix(); } closeEditDrawer(); }
+function openEditDrawer(target) {
+  editTarget = target;
+  editSnapshot = target.type === "produto" ? (SPECS ? clone(SPECS) : null) : clone(currentChecklists[target.sec]);
+  renderEditDrawer();
+  $("#editOverlay").hidden = false; $("#editDrawer").hidden = false;
+  const fab = $("#tourFab"); if (fab) fab.style.display = "none";
+}
+function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; editTarget = null; const fab = $("#tourFab"); if (fab) fab.style.display = ""; }
+function cancelEditDrawer() {
+  if (editSnapshot && editTarget) {
+    if (editTarget.type === "produto") { SPECS = editSnapshot; recompute(); renderMatrix(); }
+    else { const l = currentChecklists[editTarget.sec]; l.splice(0, l.length, ...editSnapshot); renderChecklist($("#clHost-" + editTarget.sec), l, editTarget.sec); }
+  }
+  closeEditDrawer();
+}
 function renderEditDrawer() {
   const it = ITEMS[active];
-  const fields = SPECS.map((spec, ri) => {
-    if (spec.exigNa) return "";
-    const nx = !!spec.naoExtraido;
-    const full = nx ? "" : esc(spec.exig);
-    const isBool = /^(sim|n[aã]o)\b/i.test((spec.exig || "").trim());
-    const control = isBool
-      ? `<select class="ed-input" data-eri="${ri}"><option${/^sim/i.test(spec.exig) ? " selected" : ""}>Sim</option><option${/^n[aã]o/i.test(spec.exig) ? " selected" : ""}>Não</option></select>`
-      : `<input class="ed-input" data-eri="${ri}" value="${full}" placeholder="${nx ? "Selecione um trecho no edital para extrair" : ""}">`;
-    return `<div class="ed-field${nx ? " missing" : ""}"><label>${esc(spec.req)}${nx ? ` <span class="ed-tag">não extraído</span>` : ""}</label>${control}</div>`;
-  }).join("");
+  let fields = "";
+  if (editTarget.type === "produto") {
+    fields = SPECS.map((spec, ri) => {
+      if (spec.exigNa) return "";
+      const nx = !!spec.naoExtraido, full = nx ? "" : esc(spec.exig);
+      const isBool = /^(sim|n[aã]o)\b/i.test((spec.exig || "").trim());
+      const control = isBool
+        ? `<select class="ed-input" data-eri="${ri}"><option${/^sim/i.test(spec.exig) ? " selected" : ""}>Sim</option><option${/^n[aã]o/i.test(spec.exig) ? " selected" : ""}>Não</option></select>`
+        : `<input class="ed-input" data-eri="${ri}" value="${full}" placeholder="${nx ? "Selecione um trecho no edital para extrair" : ""}">`;
+      return `<div class="ed-field${nx ? " missing" : ""}"><label>${esc(spec.req)}${nx ? ` <span class="ed-tag">não extraído</span>` : ""}</label>${control}</div>`;
+    }).join("");
+  } else {
+    fields = currentChecklists[editTarget.sec].map((r, ri) => `<div class="ed-field">
+      <label>${esc(r.req)}</label>
+      <input class="ed-input" data-eri="${ri}" value="${esc(r.exig || "")}" placeholder="Valor exigido">
+      <div class="ed-sub"><span class="ed-sub-label">Status</span><select class="ed-status" data-eri="${ri}">${CL_OPTS.map(k => `<option value="${k}"${k === r.st ? " selected" : ""}>${CL_ST[k].label}</option>`).join("")}</select></div>
+    </div>`).join("");
+  }
+  const addBtn = editTarget.type === "produto" ? `<button class="ed-add" id="editAddReq">${ICO_PLUS} Adicionar requisito</button>` : `<button class="ed-add" id="editAddCl">${ICO_PLUS} Adicionar requisito</button>`;
   $("#editBody").innerHTML = `
+    <div class="ed-scope">Seção: <b>${esc(editSecLabel())}</b></div>
     <div class="ed-hintbox">Revise as especificações extraídas do edital. Ao salvar, vamos atualizar a análise de compatibilidade dos produtos.</div>
     <div class="ed-section-label">Descrição</div>
     <p class="ed-desc clamp">${esc(it.nome)}</p>
     <button class="ed-more" id="edMore">Ver mais</button>
     <div class="ed-section-label">Especificações</div>
-    ${fields}
-    <button class="ed-add" id="editAddReq">${ICO_PLUS} Adicionar requisito</button>`;
+    ${fields}${addBtn}`;
 }
 function saveEditDrawer() {
-  $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(el => {
-    const ri = +el.dataset.eri, spec = SPECS[ri]; if (!spec || spec.exigNa) return;
-    const val = String(el.value != null ? el.value : "").trim(), wasMissing = spec.naoExtraido;
-    if (!val) { if (!wasMissing) spec.exig = ""; return; }
-    spec.exig = val; // valor completo (inclui operador/unidade), como na produção
-    if (wasMissing) spec.naoExtraido = false;
-  });
-  SPECS.forEach(spec => { if (!spec.exigNa && !spec.naoExtraido && spec.exig) rematchRow(spec); });
-  recompute(); renderMatrix(); renderItemSummary(); closeEditDrawer();
+  if (editTarget.type === "produto") {
+    $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(el => {
+      const ri = +el.dataset.eri, spec = SPECS[ri]; if (!spec || spec.exigNa) return;
+      const val = String(el.value != null ? el.value : "").trim(), wasMissing = spec.naoExtraido;
+      if (!val) { if (!wasMissing) spec.exig = ""; return; }
+      spec.exig = val; if (wasMissing) spec.naoExtraido = false;
+    });
+    SPECS.forEach(spec => { if (!spec.exigNa && !spec.naoExtraido && spec.exig) rematchRow(spec); });
+    recompute(); renderMatrix(); updateProdSecSummary();
+  } else {
+    const l = currentChecklists[editTarget.sec];
+    $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(el => { const ri = +el.dataset.eri; const v = String(el.value || "").trim(); if (l[ri]) l[ri].exig = v || l[ri].exig; });
+    $("#editBody").querySelectorAll(".ed-status[data-eri]").forEach(el => { const ri = +el.dataset.eri; if (l[ri]) l[ri].st = el.value; });
+    renderChecklist($("#clHost-" + editTarget.sec), l, editTarget.sec); refreshClSecSummary(editTarget.sec);
+  }
+  renderItemSummary(); closeEditDrawer();
   toast("Análise reprocessada com as novas informações");
+}
+function refreshClSecSummary(sec) {
+  const host = $("#clHost-" + sec); if (!host) return;
+  const details = host.closest(".comp-acc"); if (!details) return;
+  const s = checklistSummary(currentChecklists[sec]), ok = s.status === "ok";
+  const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = `Atende ${s.ok} de ${s.total} exigências`;
+  const dot = details.querySelector(".comp-dot"); if (dot) { dot.className = "comp-dot " + (ok ? "ok" : "no"); dot.innerHTML = ok ? ICO_OK : ICO_NO; }
 }
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
@@ -563,13 +603,13 @@ function wire() {
     const target = b.dataset.nav === "prev" ? list[pos - 1] : list[pos + 1];
     if (target != null) openTable(target);
   });
-  $("#toEditCtrls").addEventListener("click", e => { if (e.target.closest("#btnEnterEdit")) openEditDrawer(); });
   $("#editClose").onclick = cancelEditDrawer;
   $("#editCancel").onclick = cancelEditDrawer;
   $("#editOverlay").onclick = cancelEditDrawer;
   $("#editSave").onclick = saveEditDrawer;
   $("#editBody").addEventListener("click", e => {
     if (e.target.closest("#editAddReq")) { openAddModal(); return; }
+    if (e.target.closest("#editAddCl")) { const sec = editTarget.sec; currentChecklists[sec].push({ req: "Novo requisito", exig: "", modulo: "—", st: "ne", c: null, just: "—", origem: { doc: "Inserido manualmente", pag: "—" } }); renderEditDrawer(); return; }
     const more = e.target.closest("#edMore");
     if (more) { const d = $("#editBody .ed-desc"); d.classList.toggle("clamp"); more.textContent = d.classList.contains("clamp") ? "Ver mais" : "Ver menos"; }
   });
@@ -586,6 +626,7 @@ function wire() {
     window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
   });
   tb.addEventListener("click", e => {
+    const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
     const hnm = e.target.closest("[data-hidenomatch]"); if (hnm) { prefs.hideNoMatch = !prefs.hideNoMatch; savePrefs(); renderMatrix(); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
