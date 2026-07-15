@@ -321,8 +321,8 @@ function renderEditControls() {
     ? `<button class="to-editbtn" id="btnEnterEdit" data-tip="Editar as exigências do edital numa barra lateral. A análise é reprocessada ao salvar.">${ICO_PENCIL} Editar</button>`
     : "";
 }
-function openEditDrawer() { if (!SPECS) return; editSnapshot = clone(SPECS); renderEditDrawer(); $("#editOverlay").hidden = false; $("#editDrawer").hidden = false; }
-function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; }
+function openEditDrawer() { if (!SPECS) return; editSnapshot = clone(SPECS); renderEditDrawer(); $("#editOverlay").hidden = false; $("#editDrawer").hidden = false; const fab = $("#tourFab"); if (fab) fab.style.display = "none"; }
+function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; const fab = $("#tourFab"); if (fab) fab.style.display = ""; }
 function cancelEditDrawer() { if (editSnapshot) { SPECS = editSnapshot; recompute(); renderMatrix(); } closeEditDrawer(); }
 function renderEditDrawer() {
   const fields = SPECS.map((spec, ri) => {
