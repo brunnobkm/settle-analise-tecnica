@@ -357,6 +357,7 @@ th.col-sku.best { background: var(--success-bg); }
 .sku-tag.warn { color: var(--warning); background: var(--warning-bg); }
 .sku-tag.cat { color: var(--secondary-foreground); background: var(--muted); }
 .sku-tag.net { color: var(--muted-foreground); background: #FFF; border-color: var(--border); }
+.sku-tag.src { color: var(--muted-foreground); background: var(--muted); }
 /* coluna do produto escolhido: destaque forte */
 th.col-sku.chosen { background: var(--brand-100); box-shadow: inset 0 0 0 2px var(--brand); }
 .cmp tbody td.chosen-col { background: var(--brand-050, #EAF7F8); }
@@ -662,6 +663,19 @@ td.cell.na-cell { background: #FFF; }
 .to-update { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: #FFF; color: var(--foreground); border-radius: var(--r-field); padding: 6px 12px; font-size: 13px; font-weight: 600; }
 .to-update:hover { background: var(--muted); }
 .to-update svg { width: 14px; height: 14px; }
+/* controles do modo de edição no header */
+.to-edit-controls { display: inline-flex; align-items: center; gap: 8px; }
+.to-editbtn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: #FFF; color: var(--foreground); border-radius: var(--r-field); padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.to-editbtn:hover { background: var(--muted); }
+.to-editbtn svg { width: 14px; height: 14px; }
+.to-editbtn.primary { background: var(--brand); color: #FFF; border-color: var(--brand); }
+.to-editbtn.primary:hover { background: var(--brand-600); }
+.to-editbtn.ghost { border-color: transparent; color: var(--muted-foreground); }
+.to-editbtn.ghost:hover { background: var(--muted); color: var(--foreground); }
+/* conteúdo que só aparece no modo de edição */
+.table-overlay:not(.edit-mode) .edit-only { display: none; }
+/* valor requerido em modo leitura (texto simples, sem cara de input) */
+.col-val .val-plain { font-family: var(--mono); font-size: 14px; }
 
 /* Alerta de edição direta na célula (1ª vez) */
 .warn-overlay { position: fixed; inset: 0; background: rgba(10,10,10,.4); z-index: 96; }

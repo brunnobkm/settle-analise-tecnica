@@ -12,6 +12,7 @@ const ICO_ARROW = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" st
 const ICO_CHAT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h10v7H8l-3 2v-2H3z"/></svg>`;
 const ICO_PLUS = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>`;
 const ICO_CARET = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
+const ICO_PENCIL = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5L6 12.5 3 13l.5-3z"/></svg>`;
 const ICO_CHEV_L = `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>`;
 const ICO_CHEV_R = `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
 const ICO_TRASH = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8h6l.5-8M6.5 7v3.5M9.5 7v3.5"/></svg>`;
@@ -238,6 +239,7 @@ function renderGrid() {
 function openTable(i) {
   active = i; const it = ITEMS[i];
   currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
+  editMode = false; editSnapshot = null; $("#tableOverlay").classList.remove("edit-mode");
   $("#toTitle").textContent = it.titulo || it.nome;
   const sum = itemSummary(i), multi = it.componentes.length > 1;
 
@@ -259,7 +261,7 @@ function openTable(i) {
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
-  renderNav(); renderItemSummary();
+  renderNav(); renderItemSummary(); renderEditControls();
   $("#tableOverlay").hidden = false;
 }
 const closeTable = () => { $("#tableOverlay").hidden = true; active = null; renderGrid(); };
@@ -311,6 +313,23 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}" data-tip="Confiança da IA na extração deste valor"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
   return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val" data-tip="Valor do produto (vem do seu catálogo, somente leitura). Só a exigência do edital é editável.">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div>${conf}</td>`;
 }
+/* modo de edição: edição é ação consciente (Editar → altera → Salvar reprocessa). Sem edição sempre-aberta nem auto-recálculo. */
+let editMode = false, editSnapshot = null;
+function renderEditControls() {
+  const el = $("#toEditCtrls"); if (!el) return;
+  if (!$("#matrixHost")) { el.innerHTML = ""; return; } // só itens com matriz de produto
+  el.innerHTML = editMode
+    ? `<button class="to-editbtn ghost" id="btnCancelEdit" data-tip="Descartar as alterações">Cancelar</button><button class="to-editbtn primary" id="btnSaveEdit" data-tip="Salvar e reprocessar a análise">Salvar e reprocessar</button>`
+    : `<button class="to-editbtn" id="btnEnterEdit" data-tip="Editar as exigências do edital. A edição é uma ação consciente e a análise só é reprocessada ao salvar.">${ICO_PENCIL} Editar</button>`;
+}
+function enterEditMode() { editMode = true; editSnapshot = clone(SPECS); $("#tableOverlay").classList.add("edit-mode"); renderMatrix(); renderEditControls(); }
+function saveEdit() {
+  SPECS.forEach(spec => { if (!spec.exigNa && !spec.naoExtraido && spec.exig) rematchRow(spec); });
+  editMode = false; editSnapshot = null; $("#tableOverlay").classList.remove("edit-mode");
+  recompute(); renderMatrix(); renderEditControls(); renderItemSummary();
+  toast("Análise reprocessada com as novas informações");
+}
+function cancelEdit() { editMode = false; if (editSnapshot) SPECS = editSnapshot; editSnapshot = null; $("#tableOverlay").classList.remove("edit-mode"); recompute(); renderMatrix(); renderEditControls(); }
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
   const chosenIdx = prefs.chosen[active];
@@ -334,9 +353,9 @@ function renderMatrix() {
       const estoqueBadge = sku.estoque
         ? `<span class="sku-tag ok" data-tip="Disponível no estoque">Em estoque</span>`
         : `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar/terceirizar">Sem estoque</span>`;
-      const origemBadge = sku.origem === "internet"
-        ? `<span class="sku-tag net" data-tip="SKU encontrado na internet (não é do seu catálogo)">Internet</span>`
-        : `<span class="sku-tag cat" data-tip="SKU do seu catálogo">Catálogo</span>`;
+      const FONTE_LBL = { catalogo: "Catálogo", internet: "Internet" };
+      const fonteLbl = FONTE_LBL[sku.origem] || cap(sku.origem || "—");
+      const origemBadge = `<span class="sku-tag src" data-tip="Fonte de onde veio este dado do produto">Fonte: ${esc(fonteLbl)}</span>`;
       const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do SKU">${esc(fmtBRL(sku.preco))}</div>` : "";
       head += `<th class="col-sku${(best && !hasChoice) ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
         ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Produto com maior aderência">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
@@ -352,15 +371,19 @@ function renderMatrix() {
   SPECS.forEach((spec, ri) => {
     if (spec.exigNa) return;
     const nx = !!spec.naoExtraido;
+    if (nx && !editMode) return; // "valor não extraído" só aparece no modo de edição
     let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}${nx ? " row-missing" : ""}">`;
     cols.forEach(c => {
       if (c.key === "check") row += `<td class="col-check${fzCls(c)}"${fzStyle(c)}><span class="cbox" data-tip="Selecionar requisito (para ações em lote, em breve)"></span></td>`;
-      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name editable" data-edit="r" data-ri="${ri}" contenteditable="true" data-tip="Clique para editar o requisito">${esc(spec.req)}</span></td>`;
+      else if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="Requisito exigido pelo edital">${esc(spec.req)}</span></td>`;
       else if (c.key === "val") {
         const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-        row += nx
-          ? `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-text"><span class="val-missing editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="A IA identificou esta exigência no edital, mas não conseguiu extrair o valor. Clique para informar, ou use 'Atualizar informações' para a IA tentar extrair.">Valor não extraído</span></span><button class="req-ico val-ico" data-origin="${ri}" data-tip="Não conseguimos extrair essa informação. Selecione um trecho no edital para extrair o dado.">${ICO_ARROW}</button></div></td>`
-          : `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-text">${vrOp}<span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Clique para corrigir o valor exigido pelo edital. O operador e a unidade são fixos.">${vrCore}</span>${vrUnit}</span><button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button></div></td>`;
+        const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="${nx ? "Selecione um trecho no edital para extrair o valor." : "Ver de onde a IA extraiu no edital (página e trecho)"}">${ICO_ARROW}</button>`;
+        let valInner;
+        if (nx) valInner = `<span class="val-text"><span class="val-missing editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Informe o valor exigido pelo edital para este requisito.">Valor não extraído</span></span>`;
+        else if (editMode) valInner = `<span class="val-text">${vrOp}<span class="editable" data-edit="vr" data-ri="${ri}" contenteditable="true" data-tip="Corrija o valor exigido pelo edital. O operador e a unidade são fixos.">${vrCore}</span>${vrUnit}</span>`;
+        else valInner = `<span class="val-text">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</span>`;
+        row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${valInner}${originBtn}</div></td>`;
       }
       else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button></div></td>`;
       else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do produto disponível, mas ainda sem correspondência: não conseguimos extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
@@ -370,8 +393,8 @@ function renderMatrix() {
   });
   const noneNote = (hideNoMatch && !matchOrder.length) ? `<span class="mx-note">Nenhum produto atende 100% — mostrando todos.</span>` : "";
   const toolbar = `<div class="mx-toolbar"><button class="mx-toggle${hideNoMatch ? " on" : ""}" data-hidenomatch data-tip="Esconde os produtos que não atendem 100% dos requisitos, para focar na análise"><span class="mx-switch"></span>Ocultar quem não atende${hideNoMatch && hiddenCount ? ` · ${hiddenCount} oculto${hiddenCount > 1 ? "s" : ""}` : ""}</button>${noneNote}</div>`;
-  host.innerHTML = `${toolbar}<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
-    <div class="add-req" id="addReq" data-tip="Adicionar um requisito do edital a partir do catálogo">${ICO_PLUS} Adicionar requisito</div>`;
+  const addBtn = editMode ? `<div class="add-req" id="addReq" data-tip="Adicionar um requisito do edital a partir do catálogo">${ICO_PLUS} Adicionar requisito</div>` : "";
+  host.innerHTML = `${toolbar}<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${addBtn}`;
 }
 
 /* ---------- Seções colapsáveis (topo do overlay) ---------- */
@@ -387,7 +410,7 @@ function collapsiblesHTML(it) {
   const prodComp = it.componentes.find(comp => comp.mecanica === "produto");
   if (prodComp) {
     const naoExigidas = [...matrixOf(prodComp).filter(s => s.exigNa).map(s => s.req), ...(prodComp.catalogoNaoEdital || [])];
-    if (naoExigidas.length) html += collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, ""), null, true);
+    if (naoExigidas.length) html += `<div class="edit-only">${collapsible("Especificações não exigidas pelo edital", tagList(naoExigidas, ""), null, true)}</div>`;
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
@@ -433,23 +456,14 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.ad
 const rematchRow = spec => { if (spec.exigNa) return; spec.cells.forEach(cc => cc.st = evalCell(cc.v, spec.exig)); };
 function commitEdit(el) {
   const ri = +el.dataset.ri, kind = el.dataset.edit, txt = el.textContent.trim(), spec = SPECS[ri];
-  if (kind === "r") { spec.req = txt || "Requisito"; return; }
+  // edição só acontece no modo de edição; guarda o valor e reprocessa só no Salvar (sem auto-recálculo)
   if (kind === "vr") {
     if (spec.exigNa) return;
     const wasMissing = spec.naoExtraido;
-    if (!txt) { if (!wasMissing) spec.exig = ""; return; }
+    if (!txt || txt === "Valor não extraído") { if (!wasMissing) spec.exig = ""; return; }
     const op = wasMissing ? "" : splitOp(spec.exig).op; // operador fixo, preservado do edital
-    const numVal = joinUnit(txt, spec.unidade); // unidade fixa: só o número digitado muda
-    spec.exig = op ? op + " " + numVal : numVal;
+    spec.exig = op ? op + " " + joinUnit(txt, spec.unidade) : joinUnit(txt, spec.unidade);
     if (wasMissing) spec.naoExtraido = false;
-    rematchRow(spec); recompute(); renderMatrix();
-    toast(wasMissing ? `Valor requerido informado para "${spec.req}" — atendimento recalculado` : `Exigência atualizada — atendimento recalculado`);
-    return;
-  }
-  if (kind === "v") {
-    const cc = spec.cells[+el.dataset.ci]; cc.v = joinUnit(txt, spec.unidade); cc.c = "alta";
-    if (!spec.exigNa && spec.exig && !spec.naoExtraido) cc.st = evalCell(cc.v, spec.exig);
-    recompute(); renderMatrix();
   }
 }
 /* ---------- Adicionar requisito do edital (a partir do catálogo) ---------- */
@@ -529,7 +543,11 @@ function wire() {
     const target = b.dataset.nav === "prev" ? list[pos - 1] : list[pos + 1];
     if (target != null) openTable(target);
   });
-  $("#toUpdate").onclick = updateInfo;
+  $("#toEditCtrls").addEventListener("click", e => {
+    if (e.target.closest("#btnEnterEdit")) enterEditMode();
+    else if (e.target.closest("#btnSaveEdit")) saveEdit();
+    else if (e.target.closest("#btnCancelEdit")) cancelEdit();
+  });
   $("#toExport").onclick = () => toast("Exportando análise (PDF · planilha · resumo técnico)…");
   $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
 
@@ -557,8 +575,6 @@ function wire() {
   });
   tb.addEventListener("focusout", e => { const el = e.target.closest("[data-edit]"); if (el) commitEdit(el); });
   tb.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("[data-edit]")) { e.preventDefault(); e.target.blur(); } });
-  // 1ª vez que o usuário edita direto a exigência: alerta que perde o vínculo com o trecho do edital
-  tb.addEventListener("focusin", e => { const el = e.target.closest('[data-edit="vr"]'); if (el && !prefs.warnedInline) { el.blur(); openInlineWarn(el); } });
 
   $("#drawerClose").onclick = closeOrigin; $("#drawerOverlay").onclick = closeOrigin;
   $("#drawerBody").addEventListener("mouseup", () => {
