@@ -325,31 +325,32 @@ function openEditDrawer() { if (!SPECS) return; editSnapshot = clone(SPECS); ren
 function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; const fab = $("#tourFab"); if (fab) fab.style.display = ""; }
 function cancelEditDrawer() { if (editSnapshot) { SPECS = editSnapshot; recompute(); renderMatrix(); } closeEditDrawer(); }
 function renderEditDrawer() {
+  const it = ITEMS[active];
   const fields = SPECS.map((spec, ri) => {
     if (spec.exigNa) return "";
     const nx = !!spec.naoExtraido;
-    const op = nx ? "" : splitOp(spec.exig).op;
-    const core = nx ? "" : esc(splitUnit(splitOp(spec.exig).rest, spec.unidade));
-    const unit = spec.unidade ? esc(unitSep(spec.unidade) + spec.unidade) : "";
-    return `<div class="ed-field${nx ? " missing" : ""}">
-      <label>${esc(spec.req)}${nx ? ` <span class="ed-tag">não extraído</span>` : ""}</label>
-      <div class="ed-input-wrap">${op ? `<span class="ed-op">${esc(op)}</span>` : ""}<input class="ed-input" data-eri="${ri}" value="${core}" placeholder="${nx ? "Informe o valor exigido pelo edital" : ""}">${unit ? `<span class="ed-unit">${unit}</span>` : ""}</div>
-    </div>`;
+    const full = nx ? "" : esc(spec.exig);
+    const isBool = /^(sim|n[aã]o)\b/i.test((spec.exig || "").trim());
+    const control = isBool
+      ? `<select class="ed-input" data-eri="${ri}"><option${/^sim/i.test(spec.exig) ? " selected" : ""}>Sim</option><option${/^n[aã]o/i.test(spec.exig) ? " selected" : ""}>Não</option></select>`
+      : `<input class="ed-input" data-eri="${ri}" value="${full}" placeholder="${nx ? "Selecione um trecho no edital para extrair" : ""}">`;
+    return `<div class="ed-field${nx ? " missing" : ""}"><label>${esc(spec.req)}${nx ? ` <span class="ed-tag">não extraído</span>` : ""}</label>${control}</div>`;
   }).join("");
-  let ref = "";
-  if (activeComp) {
-    const naoEx = [...matrixOf(activeComp).filter(s => s.exigNa).map(s => s.req), ...(activeComp.catalogoNaoEdital || [])];
-    if (naoEx.length) ref = `<div class="ed-ref"><div class="ed-ref-title">Especificações do seu produto não exigidas pelo edital</div><div class="tag-list">${naoEx.map(t => `<span class="tag-item">${esc(t)}</span>`).join("")}</div></div>`;
-  }
-  $("#editBody").innerHTML = `<p class="ed-hint">Corrija ou complete as exigências do edital. O operador e a unidade são fixos (vêm do edital). Ao salvar, a análise é reprocessada.</p>${fields}<button class="ed-add" id="editAddReq">${ICO_PLUS} Adicionar requisito</button>${ref}`;
+  $("#editBody").innerHTML = `
+    <div class="ed-hintbox">Revise as especificações extraídas do edital. Ao salvar, vamos atualizar a análise de compatibilidade dos produtos.</div>
+    <div class="ed-section-label">Descrição</div>
+    <p class="ed-desc clamp">${esc(it.nome)}</p>
+    <button class="ed-more" id="edMore">Ver mais</button>
+    <div class="ed-section-label">Especificações</div>
+    ${fields}
+    <button class="ed-add" id="editAddReq">${ICO_PLUS} Adicionar requisito</button>`;
 }
 function saveEditDrawer() {
-  $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(inp => {
-    const ri = +inp.dataset.eri, spec = SPECS[ri]; if (!spec || spec.exigNa) return;
-    const val = inp.value.trim(), wasMissing = spec.naoExtraido;
+  $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(el => {
+    const ri = +el.dataset.eri, spec = SPECS[ri]; if (!spec || spec.exigNa) return;
+    const val = String(el.value != null ? el.value : "").trim(), wasMissing = spec.naoExtraido;
     if (!val) { if (!wasMissing) spec.exig = ""; return; }
-    const op = wasMissing ? "" : splitOp(spec.exig).op;
-    spec.exig = op ? op + " " + joinUnit(val, spec.unidade) : joinUnit(val, spec.unidade);
+    spec.exig = val; // valor completo (inclui operador/unidade), como na produção
     if (wasMissing) spec.naoExtraido = false;
   });
   SPECS.forEach(spec => { if (!spec.exigNa && !spec.naoExtraido && spec.exig) rematchRow(spec); });
@@ -567,7 +568,11 @@ function wire() {
   $("#editCancel").onclick = cancelEditDrawer;
   $("#editOverlay").onclick = cancelEditDrawer;
   $("#editSave").onclick = saveEditDrawer;
-  $("#editBody").addEventListener("click", e => { if (e.target.closest("#editAddReq")) openAddModal(); });
+  $("#editBody").addEventListener("click", e => {
+    if (e.target.closest("#editAddReq")) { openAddModal(); return; }
+    const more = e.target.closest("#edMore");
+    if (more) { const d = $("#editBody .ed-desc"); d.classList.toggle("clamp"); more.textContent = d.classList.contains("clamp") ? "Ver mais" : "Ver menos"; }
+  });
   $("#toExport").onclick = () => toast("Exportando análise (PDF · planilha · resumo técnico)…");
   $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
 

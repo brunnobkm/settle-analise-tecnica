@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=49" />
+  <link rel="stylesheet" href="styles.css?v=50" />
 </head>
 <body>
   <!-- Sidebar -->
@@ -103,13 +103,13 @@
   <div class="edit-overlay" id="editOverlay" hidden></div>
   <aside class="edit-drawer" id="editDrawer" hidden aria-label="Editar exigências do edital">
     <header class="ed-head">
-      <h3>Editar exigências do edital</h3>
+      <h3>Editar informações</h3>
       <button class="drawer-close" id="editClose" aria-label="Fechar"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
     </header>
     <div class="ed-body" id="editBody"></div>
     <footer class="ed-foot">
-      <button class="to-editbtn ghost" id="editCancel">Cancelar</button>
-      <button class="to-editbtn primary" id="editSave">Salvar e reprocessar</button>
+      <button class="ed-btn primary" id="editSave">Salvar</button>
+      <button class="ed-btn ghost" id="editCancel">Cancelar</button>
     </footer>
   </aside>
 
@@ -170,6 +170,6 @@
   </div>
 
   <script src="data.js?v=21"></script>
-  <script src="app.js?v=61"></script>
+  <script src="app.js?v=62"></script>
 </body>
 </html>
