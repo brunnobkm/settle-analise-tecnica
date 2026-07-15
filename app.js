@@ -348,11 +348,11 @@ function renderEditDrawer() {
     fields = SPECS.map((spec, ri) => {
       if (spec.exigNa) return "";
       const nx = !!spec.naoExtraido, full = nx ? "" : esc(spec.exig);
-      const isBool = /^(sim|n[aã]o)\b/i.test((spec.exig || "").trim());
+      const isBool = !nx && /^(sim|n[aã]o)\b/i.test((spec.exig || "").trim());
       const control = isBool
         ? `<select class="ed-input" data-eri="${ri}"><option${/^sim/i.test(spec.exig) ? " selected" : ""}>Sim</option><option${/^n[aã]o/i.test(spec.exig) ? " selected" : ""}>Não</option></select>`
-        : `<input class="ed-input" data-eri="${ri}" value="${full}" placeholder="${nx ? "Selecione um trecho no edital para extrair" : ""}">`;
-      return `<div class="ed-field${nx ? " missing" : ""}"><label>${esc(spec.req)}${nx ? ` <span class="ed-tag">não extraído</span>` : ""}</label>${control}</div>`;
+        : `<input class="ed-input" data-eri="${ri}" value="${full}">`;
+      return `<div class="ed-field"><label>${esc(spec.req)}</label>${control}</div>`;
     }).join("");
   } else {
     fields = currentChecklists[editTarget.sec].map((r, ri) => `<div class="ed-field">
