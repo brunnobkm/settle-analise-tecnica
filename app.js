@@ -320,7 +320,7 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
 let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
-function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = ""; } // o Editar agora vive no cabeçalho de cada seção
+function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = active == null ? "" : `<button class="to-editbtn" id="btnEditItem" data-tip="Editar as informações do item (quantidade, unidade de medida, valores)">${ICO_PENCIL} Editar</button>`; } // header edita o item; cada seção tem seu próprio Editar
 function editSecLabel() {
   const it = ITEMS[active];
   if (editTarget.type === "produto") return (it.componentes.find(c => c.mecanica === "produto") || {}).rotulo || "";
@@ -328,7 +328,9 @@ function editSecLabel() {
 }
 function openEditDrawer(target) {
   editTarget = target;
-  editSnapshot = target.type === "produto" ? (SPECS ? clone(SPECS) : null) : clone(currentChecklists[target.sec]);
+  if (target.type === "produto") editSnapshot = SPECS ? clone(SPECS) : null;
+  else if (target.type === "checklist") editSnapshot = clone(currentChecklists[target.sec]);
+  else { const it = ITEMS[active]; editSnapshot = { quantidade: it.quantidade, unidadeMedida: it.unidadeMedida, vu: it.valorUnitario.v, vt: it.valorTotal.v }; }
   renderEditDrawer();
   $("#editOverlay").hidden = false; $("#editDrawer").hidden = false;
   const fab = $("#tourFab"); if (fab) fab.style.display = "none";
@@ -337,14 +339,24 @@ function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").h
 function cancelEditDrawer() {
   if (editSnapshot && editTarget) {
     if (editTarget.type === "produto") { SPECS = editSnapshot; recompute(); renderMatrix(); }
-    else { const l = currentChecklists[editTarget.sec]; l.splice(0, l.length, ...editSnapshot); renderChecklist($("#clHost-" + editTarget.sec), l, editTarget.sec); }
+    else if (editTarget.type === "checklist") { const l = currentChecklists[editTarget.sec]; l.splice(0, l.length, ...editSnapshot); renderChecklist($("#clHost-" + editTarget.sec), l, editTarget.sec); }
+    // item: só aplica no Salvar, nada a restaurar
   }
   closeEditDrawer();
 }
 function renderEditDrawer() {
   const it = ITEMS[active];
-  let fields = "";
-  if (editTarget.type === "produto") {
+  let scopeLine = "", sectionLabel = "Especificações", fields = "", addBtn = "", hint = "Revise as especificações extraídas do edital. Ao salvar, vamos atualizar a análise de compatibilidade dos produtos.";
+  if (editTarget.type === "item") {
+    sectionLabel = "Informações do item";
+    hint = "Revise as informações do item extraídas do edital. Você pode corrigir os valores caso a IA não tenha extraído corretamente.";
+    fields = `
+      <div class="ed-field"><label>Quantidade</label><input class="ed-input" data-eitem="quantidade" value="${esc(it.quantidade)}"></div>
+      <div class="ed-field"><label>Unidade de medida</label><input class="ed-input" data-eitem="unidadeMedida" value="${esc(it.unidadeMedida || "")}"></div>
+      <div class="ed-field"><label>Valor unitário</label><input class="ed-input" data-eitem="vu" value="${esc(it.valorUnitario.v)}"></div>
+      <div class="ed-field"><label>Valor total</label><input class="ed-input" data-eitem="vt" value="${esc(it.valorTotal.v)}"></div>`;
+  } else if (editTarget.type === "produto") {
+    scopeLine = `<div class="ed-scope">Seção: <b>${esc(editSecLabel())}</b></div>`;
     fields = SPECS.map((spec, ri) => {
       if (spec.exigNa) return "";
       const nx = !!spec.naoExtraido, full = nx ? "" : esc(spec.exig);
@@ -354,25 +366,36 @@ function renderEditDrawer() {
         : `<input class="ed-input" data-eri="${ri}" value="${full}">`;
       return `<div class="ed-field"><label>${esc(spec.req)}</label>${control}</div>`;
     }).join("");
+    addBtn = `<button class="ed-add" id="editAddReq">${ICO_PLUS} Adicionar requisito</button>`;
   } else {
+    scopeLine = `<div class="ed-scope">Seção: <b>${esc(editSecLabel())}</b></div>`;
     fields = currentChecklists[editTarget.sec].map((r, ri) => `<div class="ed-field">
       <label>${esc(r.req)}</label>
       <input class="ed-input" data-eri="${ri}" value="${esc(r.exig || "")}" placeholder="Valor exigido">
       <div class="ed-sub"><span class="ed-sub-label">Status</span><select class="ed-status" data-eri="${ri}">${CL_OPTS.map(k => `<option value="${k}"${k === r.st ? " selected" : ""}>${CL_ST[k].label}</option>`).join("")}</select></div>
     </div>`).join("");
+    addBtn = `<button class="ed-add" id="editAddCl">${ICO_PLUS} Adicionar requisito</button>`;
   }
-  const addBtn = editTarget.type === "produto" ? `<button class="ed-add" id="editAddReq">${ICO_PLUS} Adicionar requisito</button>` : `<button class="ed-add" id="editAddCl">${ICO_PLUS} Adicionar requisito</button>`;
   $("#editBody").innerHTML = `
-    <div class="ed-scope">Seção: <b>${esc(editSecLabel())}</b></div>
-    <div class="ed-hintbox">Revise as especificações extraídas do edital. Ao salvar, vamos atualizar a análise de compatibilidade dos produtos.</div>
+    ${scopeLine}
+    <div class="ed-hintbox">${hint}</div>
     <div class="ed-section-label">Descrição</div>
     <p class="ed-desc clamp">${esc(it.nome)}</p>
     <button class="ed-more" id="edMore">Ver mais</button>
-    <div class="ed-section-label">Especificações</div>
+    <div class="ed-section-label">${sectionLabel}</div>
     ${fields}${addBtn}`;
 }
 function saveEditDrawer() {
-  if (editTarget.type === "produto") {
+  if (editTarget.type === "item") {
+    const it = ITEMS[active];
+    $("#editBody").querySelectorAll("[data-eitem]").forEach(el => {
+      const k = el.dataset.eitem, v = String(el.value || "").trim();
+      if (k === "quantidade") it.quantidade = v;
+      else if (k === "unidadeMedida") it.unidadeMedida = v;
+      else if (k === "vu") it.valorUnitario = { v };
+      else if (k === "vt") it.valorTotal = { v };
+    });
+  } else if (editTarget.type === "produto") {
     $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(el => {
       const ri = +el.dataset.eri, spec = SPECS[ri]; if (!spec || spec.exigNa) return;
       const val = String(el.value != null ? el.value : "").trim(), wasMissing = spec.naoExtraido;
@@ -600,6 +623,7 @@ function wire() {
     const target = b.dataset.nav === "prev" ? list[pos - 1] : list[pos + 1];
     if (target != null) openTable(target);
   });
+  $("#toEditCtrls").addEventListener("click", e => { if (e.target.closest("#btnEditItem")) openEditDrawer({ type: "item" }); });
   $("#editClose").onclick = cancelEditDrawer;
   $("#editCancel").onclick = cancelEditDrawer;
   $("#editOverlay").onclick = cancelEditDrawer;
