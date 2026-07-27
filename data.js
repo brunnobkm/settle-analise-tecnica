@@ -117,6 +117,15 @@ const SOFTWARE_VMS = [
   cl("Armazenamento em nuvem", "Opcional", "Storage", "ok", "media", "Oferece gravação em nuvem como opção contratável.", 26, "<mark>Armazenamento em nuvem</mark> opcional."),
 ];
 
+/* checklist de SOFTWARE que ATENDE tudo (cenários positivos) */
+const SOFTWARE_OK = [
+  cl("Gestão por perfis de usuário", "Sim", "Acesso", "ok", "alta", "Perfis e permissões por usuário.", 23, "<mark>Gestão por perfis</mark> de usuário."),
+  cl("Autenticação em dois fatores (2FA)", "Sim", "Segurança", "ok", "alta", "2FA nativo incluído.", 24, "<mark>Autenticação em dois fatores</mark>."),
+  cl("Registro de auditoria (logs)", "Sim", "Auditoria", "ok", "alta", "Trilha de auditoria completa.", 24, "<mark>Registro de auditoria</mark> de ações."),
+  cl("Integração via API REST", "Sim", "Integração", "ok", "media", "API REST documentada.", 25, "Integração via <mark>API REST</mark>."),
+  cl("Aplicativo mobile", "Sim", "Mobile", "ok", "alta", "App iOS/Android incluído.", 25, "<mark>Aplicativo mobile</mark> para visualização."),
+];
+
 /* Requisitos que a IA identificou no edital, mas não conseguiu extrair o VALOR EXIGIDO.
    O valor de cada SKU (catálogo do cliente) nós temos; o que falta é a exigência do edital
    para fazer o match. vals segue a ordem de SKUS. */
@@ -197,64 +206,73 @@ const CATALOGO_NAO_EDITAL_FW = ["Fonte redundante (RPS)", "Módulo Wi-Fi", "Fort
    Um item da vida real é quase sempre uma composição (ex.: caixa + licença + garantia).
    titulo = "o que é o item" em linguagem clara; nome = descrição completa.
    ============================================================ */
+/* CENÁRIOS DE CARD (para design): um item por estado possível. Só Produto e Software (Serviço oculto por agora).
+   PROD_OK = há SKU que atende 100% (override em Detecção facial no SKU0). PROD_FAIL = nenhum SKU 100% (melhor = 93%).
+   SOFTWARE_OK = checklist tudo atende. SOFTWARE_VMS = checklist com exigência não atendida. */
+const PROD_CAM = ov => ({ mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: ov ? [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] : [] });
+const CHK = (rotulo, ok) => ({ mecanica: "checklist", rotulo, lista: (ok ? SOFTWARE_OK : SOFTWARE_VMS).map(r => ({ ...r })) });
+
 const ITEMS = [
-  // 1) SÓ PRODUTO — compara/escolhe SKU
-  { titulo: "Câmeras LPR (leitura de placas)",
-    nome: "Câmera de segurança: fornecimento de 80 câmeras, modelo LPR (leitura de placas), para o anel viário, conforme Termo de Referência.",
-    numero: "1", quantidade: "80", precoUnit: 2980, unidadeMedida: "unidade",
-    resumoTR: "Aquisição de 80 câmeras IP com leitura de placas (LPR) para o anel viário. Indique, do seu catálogo, qual SKU atende às especificações e a que preço.",
-    componentes: [
-      // cenário NÃO ATENDE (produto): o melhor produto não cobre 1 requisito (Detecção facial) → card mostra a aderência agregada
-      { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [] },
-    ] },
+  // 1) SÓ PRODUTO · NÃO ATENDE (nenhum SKU atende 100%)
+  { titulo: "Câmeras LPR (leitura de placas)", numero: "1",
+    nome: "Fornecimento de 80 câmeras IP modelo LPR (leitura de placas) para o anel viário, conforme Termo de Referência.",
+    quantidade: "80", precoUnit: 2980, unidadeMedida: "unidade",
+    resumoTR: "Aquisição de 80 câmeras IP com leitura de placas (LPR). Compare os SKUs do seu catálogo com a exigência do edital.",
+    componentes: [ PROD_CAM(false) ] },
 
-  // 2) PRODUTO + SERVIÇO — câmera bullet + instalação
-  { titulo: "Câmeras Bullet + instalação",
-    nome: "Câmera de segurança bullet fixa (100 unidades) com serviço de instalação, lançamento de rede e integração ao VMS.",
-    numero: "2", quantidade: "100", precoUnit: 2210, unidadeMedida: "unidade",
-    resumoTR: "Fornecimento de 100 câmeras bullet fixas mais o serviço de instalação. Item composto: você escolhe o SKU da câmera e confirma se atende às exigências do serviço.",
-    componentes: [
-      { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
-      { mecanica: "checklist", rotulo: "Instalação e operação", lista: SERVICO_INSTALL },
-    ] },
+  // 2) SÓ PRODUTO · ATENDE (recomendado, sem escolha feita)
+  { titulo: "Câmeras dome fixas 4MP", numero: "2",
+    nome: "Fornecimento de 60 câmeras dome fixas 4MP para ambientes internos.",
+    quantidade: "60", precoUnit: 1740, unidadeMedida: "unidade",
+    resumoTR: "Aquisição de 60 câmeras dome fixas. Há SKU no catálogo que atende a todos os requisitos.",
+    componentes: [ PROD_CAM(true) ] },
 
-  // 3) COMPOSIÇÃO TI — caixa + licença + garantia (caso dos "99%" do Paulo)
-  { titulo: "Firewall de perímetro (appliance + licença + garantia)",
-    nome: "Solução de firewall de próxima geração (NGFW) para o perímetro: appliance, subscrição de segurança (licença) e serviço de garantia/suporte do fabricante, em part numbers compostos.",
-    numero: "3", quantidade: "2", precoUnit: 86000, unidadeMedida: "unidade",
-    resumoTR: "Item de TI composto por três part numbers que somam: o hardware (appliance), a licença de segurança e o serviço de garantia. A análise precisa cobrir os três componentes juntos.",
-    componentes: [
-      { mecanica: "produto", rotulo: "Appliance (hardware)", skus: SKUS_FW, reqs: REQS_FW, catalogoNaoEdital: CATALOGO_NAO_EDITAL_FW, overrides: [] },
-      { mecanica: "checklist", rotulo: "Licença de segurança (subscrição)", lista: LICENCA_FW },
-      { mecanica: "checklist", rotulo: "Garantia e suporte do fabricante", lista: GARANTIA_FW },
-    ] },
+  // 3) SÓ PRODUTO · ATENDE · com PRODUTO ESCOLHIDO (seed no boot)
+  { titulo: "Câmeras bullet fixas", numero: "3",
+    nome: "Fornecimento de 100 câmeras bullet fixas para o perímetro externo.",
+    quantidade: "100", precoUnit: 2210, unidadeMedida: "unidade",
+    resumoTR: "Aquisição de 100 câmeras bullet. Um SKU já foi escolhido para a proposta.",
+    componentes: [ PROD_CAM(true) ] },
 
-  // 4) SÓ SERVIÇO — instalação e operação
-  { titulo: "Instalação e operação do sistema",
-    nome: "Serviço de instalação, configuração e operação assistida do sistema de videomonitoramento.",
-    numero: "4", quantidade: "1", precoUnit: 320000, unidadeMedida: "serviço",
-    resumoTR: "Contratação da empresa que instala as câmeras, lança a rede, integra ao software e opera o sistema. Não há escolha de SKU: você confirma se consegue cumprir cada exigência do serviço.",
-    componentes: [
-      { mecanica: "checklist", rotulo: "Serviço de instalação e operação", lista: SERVICO_INSTALL },
-    ] },
+  // 4) SÓ SOFTWARE · ATENDE (checklist tudo atende)
+  { titulo: "Software de controle de acesso", numero: "4",
+    nome: "Licença de software de controle de acesso integrado ao videomonitoramento.",
+    quantidade: "1", precoUnit: 98000, unidadeMedida: "licença",
+    resumoTR: "Licenciamento de software de controle de acesso. Confirme se a sua solução atende a cada exigência.",
+    componentes: [ CHK("Software de controle de acesso", true) ] },
 
-  // 5) SÓ SOFTWARE / LICENÇA — VMS
-  { titulo: "Software de gestão de vídeo (VMS)",
+  // 5) SÓ SOFTWARE · NÃO ATENDE (checklist com exigência não atendida)
+  { titulo: "Software de gestão de vídeo (VMS)", numero: "5",
     nome: "Licença de software de gestão de vídeo (VMS) com leitura de placas (LPR) e cerco virtual.",
-    numero: "5", quantidade: "1", precoUnit: 145000, unidadeMedida: "licença",
-    resumoTR: "Licenciamento do software que centraliza as câmeras, faz leitura de placas e cerco virtual. Confirme se a sua solução atende a cada funcionalidade exigida.",
-    componentes: [
-      { mecanica: "checklist", rotulo: "Software de gestão de vídeo (VMS)", lista: SOFTWARE_VMS },
-    ] },
+    quantidade: "1", precoUnit: 145000, unidadeMedida: "licença",
+    resumoTR: "Licenciamento do VMS. Confirme cada funcionalidade exigida; há exigências não atendidas.",
+    componentes: [ CHK("Software de gestão de vídeo (VMS)", false) ] },
 
-  // 6) MISTO COMPLETO — produto + software + serviço num item só (caso "os três em conjunto", Michele)
-  { titulo: "Solução completa de videomonitoramento",
-    nome: "Solução de videomonitoramento em lote único: fornecimento das câmeras (hardware), licença do software de gestão de vídeo (VMS/LPR) e serviço de instalação e operação assistida.",
-    numero: "6", quantidade: "1", precoUnit: 690000, unidadeMedida: "lote",
-    resumoTR: "Item misto: um único lote que reúne produto (câmeras), software (VMS com LPR) e serviço (instalação e operação). A análise cobre os três componentes juntos, cada um com a sua mecânica.",
-    componentes: [
-      { mecanica: "produto", rotulo: "Câmeras (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] },
-      { mecanica: "checklist", rotulo: "Software de gestão de vídeo (VMS)", lista: SOFTWARE_VMS },
-      { mecanica: "checklist", rotulo: "Instalação e operação", lista: SERVICO_INSTALL },
-    ] },
+  // 6) MISTO · ATENDE (produto 100% + software atende)
+  { titulo: "Câmeras speed dome + licença VMS", numero: "6",
+    nome: "Fornecimento de câmeras speed dome PTZ e a licença do software de gestão de vídeo (VMS).",
+    quantidade: "1", precoUnit: 260000, unidadeMedida: "lote",
+    resumoTR: "Item misto (produto + software). O produto atende e o software atende: item completo.",
+    componentes: [ PROD_CAM(true), CHK("Licença do software VMS", true) ] },
+
+  // 7) MISTO · NÃO ATENDE · pendência SÓ no software (produto atende 100%) — recomendação condicionada
+  { titulo: "Câmeras + software VMS (LPR/facial)", numero: "7",
+    nome: "Fornecimento de câmeras e a licença do VMS com LPR e reconhecimento facial.",
+    quantidade: "1", precoUnit: 310000, unidadeMedida: "lote",
+    resumoTR: "Item misto. O produto (câmera) atende 100%, mas o software tem exigência não atendida: pendência fora do produto.",
+    componentes: [ PROD_CAM(true), CHK("Software de gestão de vídeo (VMS)", false) ] },
+
+  // 8) MISTO · NÃO ATENDE · pendência SÓ no produto (software atende)
+  { titulo: "Câmeras fisheye + licença VMS", numero: "8",
+    nome: "Fornecimento de câmeras fisheye 180° e a licença do software de gestão de vídeo.",
+    quantidade: "1", precoUnit: 275000, unidadeMedida: "lote",
+    resumoTR: "Item misto. O software atende, mas nenhum SKU de câmera atende 100%: pendência no produto.",
+    componentes: [ PROD_CAM(false), CHK("Licença do software VMS", true) ] },
+
+  // 9) MISTO · NÃO ATENDE · pendência no PRODUTO e no SOFTWARE
+  { titulo: "Solução câmeras + software VMS", numero: "9",
+    nome: "Solução de videomonitoramento: fornecimento das câmeras e a licença do VMS com LPR e facial.",
+    quantidade: "1", precoUnit: 420000, unidadeMedida: "lote",
+    resumoTR: "Item misto. Nem o produto nem o software atendem totalmente: pendência nas duas camadas.",
+    componentes: [ PROD_CAM(false), CHK("Software de gestão de vídeo (VMS)", false) ] },
 ];

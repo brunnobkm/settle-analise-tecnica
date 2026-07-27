@@ -795,10 +795,10 @@ function initTour() {
 
 /* boot */
 // demo: pré-seleciona um produto num item que ATENDE, para ilustrar melhor o "produto escolhido"
-if (!prefs.seededChosen) {
-  const DEMO_ITEM = 1; // Câmeras Bullet + instalação (status Atende, tem componente produto)
+if (!prefs.seededChosen2) {
+  const DEMO_ITEM = 2; // "Câmeras bullet fixas": só produto que ATENDE, para ilustrar o "produto escolhido"
   const pc = ITEMS[DEMO_ITEM].componentes.find(c => c.mecanica === "produto");
   prefs.chosen = pc ? { [DEMO_ITEM]: bestOf(matrixOf(pc), pc.skus).i } : {};
-  prefs.seededChosen = true; savePrefs();
+  prefs.seededChosen2 = true; savePrefs();
 }
 renderGrid(); wire(); initAddModal(); initTooltip(); initTour();
