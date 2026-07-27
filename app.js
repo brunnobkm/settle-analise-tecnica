@@ -183,26 +183,24 @@ function renderGrid() {
     const segLabel = tipos.length > 1 ? `Misto (${tipos.map(t => TIPO_LBL[t]).join(" + ")})` : TIPO_LBL[tipos[0]];
     const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
     const segBadge = `<span class="badge seg" data-tip="${esc(segTip)}">${esc(segLabel)}</span>`;
-    // item só de software que não atende: o contador entra na própria escrita da badge ("Não atende · 4/6")
-    const _pw = sum.comps.find(c => c.mecanica === "produto");
-    const soloChkCount = (!_pw && !sum.multi && sum.status !== "ok") ? ` · ${sum.comps[0].ok_n}/${sum.comps[0].total}` : "";
+    // a badge "Não atende" carrega o contador: X/Y quando há UMA pendência de checklist; "N pendências" quando há 2+ camadas. Se a única pendência é o produto, o chip "Melhor produto · atende X%" já mostra.
+    let badgeCount = "", badgeTip = "Há exigência(s) que você não atende";
+    if (sum.status !== "ok") {
+      const fails = sum.comps.filter(c => !c.ok);
+      if (fails.length === 1 && fails[0].mecanica !== "produto") {
+        const f = fails[0]; badgeCount = ` · ${f.ok_n}/${f.total}`; badgeTip = `Atende ${f.ok_n} de ${f.total} exigências`;
+      } else if (fails.length >= 2) {
+        badgeCount = ` · ${fails.length} pendências`; badgeTip = `${fails.length} camadas com pendência (detalhe ao abrir o item)`;
+      }
+    }
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
-      : `<span class="badge bad" data-tip="${soloChkCount ? `Atende ${sum.comps[0].ok_n} de ${sum.comps[0].total} exigências` : "Há exigência(s) que você não atende"}">Não atende${soloChkCount}</span>`;
+      : `<span class="badge bad" data-tip="${badgeTip}">Não atende${badgeCount}</span>`;
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
-    // linha-resumo: sempre "Melhor produto · atende X%" quando há produto; "Pendências" quando misto não atende; contador ao lado da badge quando é só software que não atende
+    // chip do topo: "Melhor produto · atende X%" quando há produto (a pendência de camada vive na própria badge "Não atende · X/Y")
     const prod = sum.comps.find(c => c.mecanica === "produto");
     let reco = "", recoCls = "";
     if (prod) { reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · atende ${prod.best.pct}%`; recoCls = " prod"; }
-    if (sum.status !== "ok" && sum.multi) {
-      const fails = sum.comps.filter(c => !c.ok);
-      reco = `<b>Pendências:</b> ` + fails.map(f => {
-        const at = f.mecanica === "produto" ? f.best.ok : f.ok_n;
-        const tot = f.mecanica === "produto" ? f.best.evaluable : f.total;
-        return `${esc(f.rotulo)} ${at}/${tot}`;
-      }).join(" · ");
-      recoCls = " pend";
-    }
     // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
     const chosenSku = (prod && chosenIdx != null && prod.comp.skus[chosenIdx]) ? prod.comp.skus[chosenIdx] : null;
     if (chosenSku) {
