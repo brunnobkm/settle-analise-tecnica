@@ -108,9 +108,7 @@ function secSummary(cs) {
       const s = cs.comp.skus[chosenIdx];
       return `<b>✓ Escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}`;
     }
-    return cs.ok
-      ? `<b>Recomendado:</b> ${mono(cs.best.sku.model)} · atende ${cs.best.pct}%`
-      : `Melhor produto atende ${cs.best.pct}% (${cs.best.ok}/${cs.best.evaluable})`;
+    return `<b>Melhor produto:</b> ${mono(cs.best.sku.model)} · atende ${cs.best.pct}%`;
   }
   return `Atende ${cs.ok_n} de ${cs.total} exigências`;
 }
@@ -189,27 +187,22 @@ function renderGrid() {
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
       : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
-    // Opção C: card mostra status + o bloqueio em linguagem clara (ou o SKU recomendado quando atende)
+    // linha-resumo: sempre "Melhor produto · atende X%" quando há produto; "Pendências" quando misto não atende; contador ao lado da badge quando é só software que não atende
     const prod = sum.comps.find(c => c.mecanica === "produto");
-    let reco, recoCls = "";
-    if (sum.status === "ok") {
-      reco = prod
-        ? `<b>Recomendado:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`
-        : `Atende todas as exigências do edital`;
-    } else {
-      // escalável: número agregado (atende X de Y), ancorado no melhor produto. O detalhe por produto/requisito fica na tabela. O selo "Não atende" já carrega o veredito, então a linha fica neutra.
-      const fails = sum.comps.filter(c => !c.ok);
-      if (!sum.multi && fails.length === 1) {
-        const f = fails[0];
-        reco = f.mecanica === "produto"
-          ? `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(f.best.sku.model)}</span> · atende ${f.best.pct}% (${f.best.ok}/${f.best.evaluable})`
-          : `Atende ${f.ok_n} de ${f.total} exigências`;
-      } else {
+    let reco = "", recoCls = "", badgeCount = "";
+    if (prod) reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · atende ${prod.best.pct}%`;
+    if (sum.status !== "ok") {
+      if (sum.multi) {
+        const fails = sum.comps.filter(c => !c.ok);
         reco = `<b>Pendências:</b> ` + fails.map(f => {
           const at = f.mecanica === "produto" ? f.best.ok : f.ok_n;
           const tot = f.mecanica === "produto" ? f.best.evaluable : f.total;
           return `${esc(f.rotulo)} ${at}/${tot}`;
         }).join(" · ");
+      } else if (!prod) {
+        // item só de software que não atende: contador vai ao lado da badge, sem segunda linha
+        const c0 = sum.comps[0];
+        badgeCount = `<span class="ic-count" data-tip="Atende ${c0.ok_n} de ${c0.total} exigências">${c0.ok_n}/${c0.total}</span>`;
       }
     }
     // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
@@ -219,13 +212,13 @@ function renderGrid() {
       recoCls = " chosen";
     }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}${statusBadge}</div>
+      <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}${statusBadge}${badgeCount}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-metaline">
         <span><b>Quantidade:</b> ${qtyTxt}</span>
         <span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span>
         <span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span>
-        <span class="ic-reco-inline${recoCls}">${reco}</span>
+        ${reco ? `<span class="ic-reco-inline${recoCls}">${reco}</span>` : ""}
       </div>
     </div>`;
   }).join("");
@@ -295,7 +288,7 @@ function updateProdSecSummary() {
   const ok = BEST.diverg.length === 0;
   let html;
   if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<b>✓ Escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}`; }
-  else html = ok ? `<b>Recomendado:</b> ${mono(BEST.sku.model)} · atende ${BEST.pct}%` : `Melhor produto atende ${BEST.pct}% (${BEST.ok}/${BEST.evaluable})`;
+  else html = `<b>Melhor produto:</b> ${mono(BEST.sku.model)} · atende ${BEST.pct}%`;
   const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = html;
   const dot = details.querySelector(".comp-dot"); if (dot) { dot.className = "comp-dot " + (ok ? "ok" : "no"); dot.innerHTML = ok ? ICO_OK : ICO_NO; }
 }
@@ -443,7 +436,7 @@ function renderMatrix() {
         : `<span class="sku-tag src" data-tip="Dado do seu catálogo (cadastrado por você)">Fonte: Catálogo</span>`;
       const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto">${esc(fmtBRL(sku.preco))}</div>` : "";
       head += `<th class="col-sku${(best && !hasChoice) ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Recomendado: maior aderência aos requisitos e, entre os que atendem, o menor preço">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
+        ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Melhor produto: maior aderência aos requisitos e, entre os que atendem, o menor preço">★ Melhor produto</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
         <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do produto, não é requisito)">${esc(sku.brand)}</div>
         ${precoLine}
         <div class="sku-tags">${estoqueBadge}${origemBadge}</div>
