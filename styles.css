@@ -352,6 +352,14 @@ th.col-sku.best { background: var(--success-bg); }
 .sku-src-lite { margin-top: 10px; }
 .sku-metaline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; }
 .sku-metaline .sku-preco { margin-top: 0; }
+/* topo do card: badge/rank à esquerda, ícone de fonte (globo=internet / catálogo) clicável à direita */
+.sku-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; }
+.sku-srcico { width: 24px; height: 24px; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); color: var(--muted-foreground); display: grid; place-items: center; padding: 0; cursor: pointer; flex-shrink: 0; }
+.sku-srcico:hover { background: var(--muted); color: var(--brand-600); border-color: #D4D4D4; }
+.sku-srcico svg { width: 15px; height: 15px; }
+/* rótulos das colunas de linha colados nas linhas de dados (sem o vazio no topo); cards de produto ficam no topo */
+.cmp thead .col-req, .cmp thead .col-val, .cmp thead .col-acoes { vertical-align: bottom; }
+.cmp thead .col-sku { vertical-align: top; }
 .sku-model { font-family: var(--mono); font-size: 14px; font-weight: 600; margin-top: 2px; }
 .sku-brand { font-size: 12px; color: var(--muted-foreground); }
 .sku-scoreline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 10px; }
@@ -438,10 +446,10 @@ td.col-req { padding: 12px 16px; }
 /* requisito identificado mas sem valor extraído */
 .row-missing td.col-req, .row-missing td.col-val, .row-missing td.col-check { background: var(--warning-bg, #FEF6EC); }
 .cmp tbody tr.row-missing:hover td.col-req, .cmp tbody tr.row-missing:hover td.col-val, .cmp tbody tr.row-missing:hover td.col-check { background: #FCEFD8; }
-.val-missing { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--warning); }
+.val-missing { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--muted-foreground); }
 .val-missing svg { width: 14px; height: 14px; flex-shrink: 0; }
 .cell-muted { font-size: 12.5px; color: var(--muted-foreground); font-style: italic; }
-.ico-nm { display: inline-flex; flex-shrink: 0; color: var(--warning); }
+.ico-nm { display: inline-flex; flex-shrink: 0; color: var(--muted-foreground); }
 .ico-nm svg { width: 15px; height: 15px; }
 td.cell { padding: 12px 14px; }
 .cell-line { display: flex; align-items: center; gap: 7px; }

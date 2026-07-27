@@ -17,6 +17,8 @@ const ICO_CHEV_L = `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" 
 const ICO_CHEV_R = `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
 const ICO_TRASH = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8h6l.5-8M6.5 7v3.5M9.5 7v3.5"/></svg>`;
 const ICO_LINK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.7 9.3l2.6-2.6M7 4.6l1-1a2.4 2.4 0 0 1 3.4 3.4l-1 1M9 11.4l-1 1a2.4 2.4 0 0 1-3.4-3.4l1-1"/></svg>`;
+const ICO_GLOBE = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6"/><path d="M2 8h12" stroke-linecap="round"/><path d="M8 2c2.1 2.2 2.1 9.8 0 12M8 2c-2.1 2.2-2.1 9.8 0 12"/></svg>`;
+const ICO_CATALOG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M8 3.4C6.9 2.7 5.4 2.4 3.7 2.6a1 1 0 0 0-.9 1v8a1 1 0 0 0 1.1 1c1.5-.2 2.9.1 4.1.8"/><path d="M8 3.4c1.1-.7 2.6-1 4.3-.8a1 1 0 0 1 .9 1v8a1 1 0 0 1-1.1 1c-1.5-.2-2.9.1-4.1.8"/><path d="M8 3.4v10.4" stroke-linecap="round"/></svg>`;
 const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2l6-11z"/><path d="M8 6.5v3.2"/><path d="M8 11.6v.01"/></svg>`;
 const ICO_ALERT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.4" stroke-linecap="round"/><path d="M8 11v.01" stroke-linecap="round"/></svg>`;
 const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 2.5h4l-.8 3.5 2.3 2H4.5l2.3-2L6 2.5z"/><path d="M8 8v5.5"/></svg>`;
@@ -426,17 +428,17 @@ function renderMatrix() {
       const estoqueBadge = sku.estoque
         ? `<span class="sku-tag ${isNet ? "warn" : "ok"}" data-tip="${isNet ? "Estoque informado pela fonte externa — pode mudar a qualquer momento" : "Disponível no seu estoque"}">${isNet ? "Estoque externo" : "Em estoque"}</span>`
         : `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar ou terceirizar">Sem estoque</span>`;
-      // hierarquia (pedido da Alice): a FONTE encabeça o bloco de dados; preço e estoque são relativos a ela
-      const sourceHead = isNet
-        ? `<button class="sku-source net" data-neturl="${idx}" data-tip="Dado obtido da internet — abra a origem para conferir">Fonte: Internet ${ICO_LINK}</button>`
-        : `<span class="sku-source" data-tip="Dado do seu catálogo (cadastrado por você)">Fonte: Catálogo</span>`;
+      // fonte vira ÍCONE clicável ao lado da badge: globo = internet (abre a origem), catálogo = catálogo (abre no catálogo)
+      const sourceIcon = isNet
+        ? `<button class="sku-srcico net" data-neturl="${idx}" data-tip="Fonte: Internet — clique para abrir a origem e conferir">${ICO_GLOBE}</button>`
+        : `<button class="sku-srcico" data-caturl="${idx}" data-tip="Fonte: Catálogo — clique para abrir no catálogo">${ICO_CATALOG}</button>`;
+      const badgeHTML = isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Melhor produto: maior aderência aos requisitos e, entre os que atendem, o menor preço">★ Melhor produto</div>` : `<div class="sku-rank">${rank + 1}º</div>`;
       const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto (conforme a fonte)">${esc(fmtBRL(sku.preco))}</div>` : "";
       head += `<th class="col-sku${(best && !hasChoice) ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Melhor produto: maior aderência aos requisitos e, entre os que atendem, o menor preço">★ Melhor produto</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
+        <div class="sku-top">${badgeHTML}${sourceIcon}</div>
         <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do produto, não é requisito)">${esc(sku.brand)}</div>
         <div class="sku-fit" data-tip="Aderência: requisitos atendidos e percentual"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}${sc.ne ? ` · ${sc.ne} n/e` : ""}</span></div>
         <div class="score-bar"><span class="score-fill" style="width:${sc.pct}%"></span></div>
-        <div class="sku-src-lite">${sourceHead}</div>
         <div class="sku-metaline">${precoLine}${estoqueBadge}</div>
         <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}" data-tip="${isChosen ? "Remover seleção" : "Definir como produto escolhido para a proposta"}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
@@ -666,6 +668,7 @@ function wire() {
     const vcan = e.target.closest("[data-vcancel]"); if (vcan) { cancelInlineEdit(); return; }
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
     const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); toast(`Abrindo a origem do dado na internet — ${MX_SKUS[+nl.dataset.neturl].model} (para conferência)`); return; }
+    const cl = e.target.closest("[data-caturl]"); if (cl) { e.stopPropagation(); toast(`Abrindo no catálogo — ${MX_SKUS[+cl.dataset.caturl].model}`); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
