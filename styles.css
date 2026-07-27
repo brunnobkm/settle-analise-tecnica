@@ -190,9 +190,9 @@ button { font-family: inherit; cursor: pointer; }
 .ic-metaline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 24px; font-size: 12.5px; color: var(--foreground); padding-top: 8px; border-top: 1px dashed var(--border); }
 .ic-metaline b { font-weight: 600; }
 .ic-metaline .mono { font-family: var(--mono); }
-/* "Melhor produto" e "Produto escolhido" são badges (chip) */
-.ic-reco-inline.prod, .ic-reco-inline.chosen { display: inline-block; border-radius: var(--r-full); padding: 3px 11px; font-weight: 500; }
-.ic-reco-inline.prod { background: var(--muted); border: 1px solid var(--border); }
+/* "Melhor produto" / "Produto escolhido" / "Pendências" são badges (chip), agrupadas com as demais no topo */
+.ic-reco-inline.prod, .ic-reco-inline.chosen, .ic-reco-inline.pend { display: inline-block; border-radius: var(--r-full); padding: 2px 10px; font-size: 12px; font-weight: 500; }
+.ic-reco-inline.prod, .ic-reco-inline.pend { background: var(--muted); border: 1px solid var(--border); color: var(--foreground); }
 .ic-reco-inline.chosen { color: var(--brand-600); font-weight: 600; background: var(--brand-100); border: 1px solid var(--brand-100); }
 .ic-reco-inline.chosen b { color: var(--brand-600); }
 .ic-divider { height: 1px; background: var(--border); margin: 2px 0; }

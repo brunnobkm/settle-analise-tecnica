@@ -201,7 +201,7 @@ function renderGrid() {
         const tot = f.mecanica === "produto" ? f.best.evaluable : f.total;
         return `${esc(f.rotulo)} ${at}/${tot}`;
       }).join(" · ");
-      recoCls = "";
+      recoCls = " pend";
     }
     // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
     const chosenSku = (prod && chosenIdx != null && prod.comp.skus[chosenIdx]) ? prod.comp.skus[chosenIdx] : null;
@@ -210,13 +210,12 @@ function renderGrid() {
       recoCls = " chosen";
     }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}${statusBadge}</div>
+      <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}${statusBadge}${reco ? `<span class="ic-reco-inline${recoCls}">${reco}</span>` : ""}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-metaline">
         <span><b>Quantidade:</b> ${qtyTxt}</span>
         <span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span>
         <span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span>
-        ${reco ? `<span class="ic-reco-inline${recoCls}">${reco}</span>` : ""}
       </div>
     </div>`;
   }).join("");
