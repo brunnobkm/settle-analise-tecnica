@@ -358,6 +358,13 @@ th.col-sku.best { background: var(--success-bg); }
 /* preço / estoque / origem do SKU */
 .sku-preco { font-family: var(--mono); font-size: 13px; font-weight: 700; margin-top: 8px; }
 .sku-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+/* bloco de dados agrupado sob a fonte (hierarquia: preço/estoque são relativos à fonte) */
+.sku-data { margin-top: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 7px 8px; border: 1px solid rgba(0,0,0,.08); border-radius: var(--r-md); background: rgba(0,0,0,.02); }
+.sku-data .sku-preco { margin-top: 0; }
+.sku-data .sku-tags { margin-top: 0; }
+.sku-source { font-size: 10px; font-weight: 700; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .3px; }
+button.sku-source.net { display: inline-flex; align-items: center; gap: 3px; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--muted-foreground); }
+.sku-source.net svg { width: 11px; height: 11px; }
 .sku-tag { font-size: 10px; font-weight: 600; border-radius: var(--r-full); padding: 1px 7px; border: 1px solid transparent; white-space: nowrap; }
 .sku-tag.ok { color: var(--success); background: var(--success-bg); }
 .sku-tag.warn { color: var(--warning); background: var(--warning-bg); }

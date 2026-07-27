@@ -426,15 +426,15 @@ function renderMatrix() {
       const estoqueBadge = sku.estoque
         ? `<span class="sku-tag ${isNet ? "warn" : "ok"}" data-tip="${isNet ? "Estoque informado pela fonte externa — pode mudar a qualquer momento" : "Disponível no seu estoque"}">${isNet ? "Estoque externo" : "Em estoque"}</span>`
         : `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar ou terceirizar">Sem estoque</span>`;
-      const origemBadge = isNet
-        ? `<button class="sku-tag src net" data-neturl="${idx}" data-tip="Dado obtido da internet — abra a origem para conferir">Fonte: Internet ${ICO_LINK}</button>`
-        : `<span class="sku-tag src" data-tip="Dado do seu catálogo (cadastrado por você)">Fonte: Catálogo</span>`;
-      const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto">${esc(fmtBRL(sku.preco))}</div>` : "";
+      // hierarquia (pedido da Alice): a FONTE encabeça o bloco de dados; preço e estoque são relativos a ela
+      const sourceHead = isNet
+        ? `<button class="sku-source net" data-neturl="${idx}" data-tip="Dado obtido da internet — abra a origem para conferir">Fonte: Internet ${ICO_LINK}</button>`
+        : `<span class="sku-source" data-tip="Dado do seu catálogo (cadastrado por você)">Fonte: Catálogo</span>`;
+      const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto (conforme a fonte)">${esc(fmtBRL(sku.preco))}</div>` : "";
       head += `<th class="col-sku${(best && !hasChoice) ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
         ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Melhor produto: maior aderência aos requisitos e, entre os que atendem, o menor preço">★ Melhor produto</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
         <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do produto, não é requisito)">${esc(sku.brand)}</div>
-        ${precoLine}
-        <div class="sku-tags">${estoqueBadge}${origemBadge}</div>
+        <div class="sku-data">${sourceHead}${precoLine}<div class="sku-tags">${estoqueBadge}</div></div>
         <div class="sku-scoreline" data-tip="Requisitos atendidos e percentual de aderência"><span class="score-frac">${sc.ok}/${sc.evaluable}${sc.ne ? ` · ${sc.ne} n/e` : ""}</span><span class="score-pct">${sc.pct}%</span></div>
         <div class="score-bar"><span class="score-fill" style="width:${sc.pct}%"></span></div>
         <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}" data-tip="${isChosen ? "Remover seleção" : "Definir como produto escolhido para a proposta"}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
