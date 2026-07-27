@@ -183,27 +183,25 @@ function renderGrid() {
     const segLabel = tipos.length > 1 ? `Misto (${tipos.map(t => TIPO_LBL[t]).join(" + ")})` : TIPO_LBL[tipos[0]];
     const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
     const segBadge = `<span class="badge seg" data-tip="${esc(segTip)}">${esc(segLabel)}</span>`;
+    // item só de software que não atende: o contador entra na própria escrita da badge ("Não atende · 4/6")
+    const _pw = sum.comps.find(c => c.mecanica === "produto");
+    const soloChkCount = (!_pw && !sum.multi && sum.status !== "ok") ? ` · ${sum.comps[0].ok_n}/${sum.comps[0].total}` : "";
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
-      : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
+      : `<span class="badge bad" data-tip="${soloChkCount ? `Atende ${sum.comps[0].ok_n} de ${sum.comps[0].total} exigências` : "Há exigência(s) que você não atende"}">Não atende${soloChkCount}</span>`;
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     // linha-resumo: sempre "Melhor produto · atende X%" quando há produto; "Pendências" quando misto não atende; contador ao lado da badge quando é só software que não atende
     const prod = sum.comps.find(c => c.mecanica === "produto");
-    let reco = "", recoCls = "", badgeCount = "";
-    if (prod) reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · atende ${prod.best.pct}%`;
-    if (sum.status !== "ok") {
-      if (sum.multi) {
-        const fails = sum.comps.filter(c => !c.ok);
-        reco = `<b>Pendências:</b> ` + fails.map(f => {
-          const at = f.mecanica === "produto" ? f.best.ok : f.ok_n;
-          const tot = f.mecanica === "produto" ? f.best.evaluable : f.total;
-          return `${esc(f.rotulo)} ${at}/${tot}`;
-        }).join(" · ");
-      } else if (!prod) {
-        // item só de software que não atende: contador vai ao lado da badge, sem segunda linha
-        const c0 = sum.comps[0];
-        badgeCount = `<span class="ic-count" data-tip="Atende ${c0.ok_n} de ${c0.total} exigências">${c0.ok_n}/${c0.total}</span>`;
-      }
+    let reco = "", recoCls = "";
+    if (prod) { reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · atende ${prod.best.pct}%`; recoCls = " prod"; }
+    if (sum.status !== "ok" && sum.multi) {
+      const fails = sum.comps.filter(c => !c.ok);
+      reco = `<b>Pendências:</b> ` + fails.map(f => {
+        const at = f.mecanica === "produto" ? f.best.ok : f.ok_n;
+        const tot = f.mecanica === "produto" ? f.best.evaluable : f.total;
+        return `${esc(f.rotulo)} ${at}/${tot}`;
+      }).join(" · ");
+      recoCls = "";
     }
     // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
     const chosenSku = (prod && chosenIdx != null && prod.comp.skus[chosenIdx]) ? prod.comp.skus[chosenIdx] : null;
@@ -212,7 +210,7 @@ function renderGrid() {
       recoCls = " chosen";
     }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}${statusBadge}${badgeCount}</div>
+      <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}${statusBadge}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-metaline">
         <span><b>Quantidade:</b> ${qtyTxt}</span>

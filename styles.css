@@ -178,9 +178,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .item-card:hover { border-color: #D4D4D4; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
 .ic-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.ic-num { font-size: 11px; font-weight: 700; color: var(--muted-foreground); letter-spacing: .3px; text-transform: uppercase; }
-.ic-count { font-size: 12px; font-weight: 600; color: var(--muted-foreground); }
-.ic-count::before { content: "·"; margin-right: 6px; }
+.ic-num { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; color: var(--muted-foreground); letter-spacing: .3px; text-transform: uppercase; background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-full); padding: 2px 9px; }
 .badge.seg { background: #0A0A0A; color: #FFFFFF; border: 0; font-weight: 600; }
 .ic-meta { font-size: 13px; }
 .ic-meta b { font-weight: 600; }
@@ -189,10 +187,13 @@ button { font-family: inherit; cursor: pointer; }
 .ic-vals .mut { color: var(--muted-foreground); }
 .ic-desc { font-size: 13.5px; font-weight: 500; color: var(--foreground); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* lista (1 coluna): metadados numa linha só */
-.ic-metaline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 24px; font-size: 12.5px; color: var(--foreground); padding-top: 8px; border-top: 1px dashed var(--border); }
+.ic-metaline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 24px; font-size: 12.5px; color: var(--foreground); padding-top: 8px; border-top: 1px dashed var(--border); }
 .ic-metaline b { font-weight: 600; }
 .ic-metaline .mono { font-family: var(--mono); }
-.ic-reco-inline.chosen { color: var(--brand-600); font-weight: 600; background: var(--brand-100); border-radius: var(--r-full); padding: 3px 11px; }
+/* "Melhor produto" e "Produto escolhido" são badges (chip) */
+.ic-reco-inline.prod, .ic-reco-inline.chosen { display: inline-block; border-radius: var(--r-full); padding: 3px 11px; font-weight: 500; }
+.ic-reco-inline.prod { background: var(--muted); border: 1px solid var(--border); }
+.ic-reco-inline.chosen { color: var(--brand-600); font-weight: 600; background: var(--brand-100); border: 1px solid var(--brand-100); }
 .ic-reco-inline.chosen b { color: var(--brand-600); }
 .ic-divider { height: 1px; background: var(--border); margin: 2px 0; }
 .ic-line { font-size: 12.5px; color: var(--foreground); }
