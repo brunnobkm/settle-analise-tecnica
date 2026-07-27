@@ -261,18 +261,4 @@ const ITEMS = [
     quantidade: "1", precoUnit: 310000, unidadeMedida: "lote",
     resumoTR: "Item misto. O produto (câmera) atende 100%, mas o software tem exigência não atendida: pendência fora do produto.",
     componentes: [ PROD_CAM(true), CHK("Software de gestão de vídeo (VMS)", false) ] },
-
-  // 8) MISTO · NÃO ATENDE · pendência SÓ no produto (software atende)
-  { titulo: "Câmeras fisheye + licença VMS", numero: "8",
-    nome: "Fornecimento de câmeras fisheye 180° e a licença do software de gestão de vídeo.",
-    quantidade: "1", precoUnit: 275000, unidadeMedida: "lote",
-    resumoTR: "Item misto. O software atende, mas nenhum SKU de câmera atende 100%: pendência no produto.",
-    componentes: [ PROD_CAM(false), CHK("Licença do software VMS", true) ] },
-
-  // 9) MISTO · NÃO ATENDE · pendência no PRODUTO e no SOFTWARE
-  { titulo: "Solução câmeras + software VMS", numero: "9",
-    nome: "Solução de videomonitoramento: fornecimento das câmeras e a licença do VMS com LPR e facial.",
-    quantidade: "1", precoUnit: 420000, unidadeMedida: "lote",
-    resumoTR: "Item misto. Nem o produto nem o software atendem totalmente: pendência nas duas camadas.",
-    componentes: [ PROD_CAM(false), CHK("Software de gestão de vídeo (VMS)", false) ] },
 ];
