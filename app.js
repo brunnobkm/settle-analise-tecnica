@@ -219,7 +219,7 @@ function renderGrid() {
       recoCls = " chosen";
     }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges">${segBadge}${statusBadge}</div>
+      <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}${statusBadge}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-metaline">
         <span><b>Quantidade:</b> ${qtyTxt}</span>
@@ -240,7 +240,7 @@ function openTable(i) {
   active = i; const it = ITEMS[i];
   currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
   closeEditDrawer();
-  $("#toTitle").textContent = it.titulo || it.nome;
+  $("#toTitle").textContent = (it.numero ? "Item " + it.numero + " · " : "") + (it.titulo || it.nome);
   const sum = itemSummary(i), multi = it.componentes.length > 1;
 
   // componente produto é processado antes (collapsiblesHTML usa SPECS)
@@ -320,7 +320,7 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
 let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
-function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = active == null ? "" : `<button class="to-editbtn" id="btnEditItem" data-tip="Editar as informações do item (quantidade, unidade de medida, valores)">${ICO_PENCIL} Editar</button>`; } // header edita o item; cada seção tem seu próprio Editar
+function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = active == null ? "" : `<button class="to-editbtn primary" id="btnEditItem" data-tip="Editar as informações do item (quantidade, unidade de medida, valores)">${ICO_PENCIL} Editar</button>`; } // header edita o item; cada seção tem seu próprio Editar
 function editSecLabel() {
   const it = ITEMS[active];
   if (editTarget.type === "produto") return (it.componentes.find(c => c.mecanica === "produto") || {}).rotulo || "";
@@ -423,13 +423,7 @@ function refreshClSecSummary(sec) {
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
   const chosenIdx = prefs.chosen[active];
-  // ocultar quem não atende: esconde SKUs que não atendem 100% dos requisitos
-  const pctOf = i => (STATE.find(s => s.i === i) || {}).pct || 0;
-  const hideNoMatch = !!prefs.hideNoMatch;
-  const fullOrder = ORDER, matchOrder = ORDER.filter(i => pctOf(i) === 100);
-  const shownOrder = (hideNoMatch && matchOrder.length) ? matchOrder : ORDER;
-  const hiddenCount = fullOrder.length - shownOrder.length;
-  const cols = buildCols(shownOrder), totalW = cols.reduce((s, c) => s + c.w, 0);
+  const cols = buildCols(ORDER), totalW = cols.reduce((s, c) => s + c.w, 0);
   const colgroup = `<colgroup>${cols.map(c => `<col data-k="${c.key}" style="width:${c.w}px">`).join("")}</colgroup>`;
   let head = "";
   cols.forEach(c => {
@@ -439,16 +433,18 @@ function renderMatrix() {
     else {
       const idx = c.skuIdx, sc = STATE[idx], rank = ORDER.indexOf(idx), best = rank === 0, isChosen = chosenIdx === idx, hasChoice = chosenIdx != null;
       const sku = sc.sku;
+      // fonte do dado qualifica o estoque: catálogo = seu estoque; internet = fonte externa (com link para a origem)
+      const isNet = sku.origem === "internet";
       const estoqueBadge = sku.estoque
-        ? `<span class="sku-tag ok" data-tip="Disponível no estoque">Em estoque</span>`
-        : `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar/terceirizar">Sem estoque</span>`;
-      const FONTE_LBL = { catalogo: "Catálogo", internet: "Internet" };
-      const fonteLbl = FONTE_LBL[sku.origem] || cap(sku.origem || "—");
-      const origemBadge = `<span class="sku-tag src" data-tip="Fonte de onde veio este dado do produto">Fonte: ${esc(fonteLbl)}</span>`;
-      const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do SKU">${esc(fmtBRL(sku.preco))}</div>` : "";
+        ? `<span class="sku-tag ${isNet ? "warn" : "ok"}" data-tip="${isNet ? "Estoque informado pela fonte externa — pode mudar a qualquer momento" : "Disponível no seu estoque"}">${isNet ? "Estoque externo" : "Em estoque"}</span>`
+        : `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar ou terceirizar">Sem estoque</span>`;
+      const origemBadge = isNet
+        ? `<button class="sku-tag src net" data-neturl="${idx}" data-tip="Dado obtido da internet — abra a origem para conferir">Fonte: Internet ${ICO_LINK}</button>`
+        : `<span class="sku-tag src" data-tip="Dado do seu catálogo (cadastrado por você)">Fonte: Catálogo</span>`;
+      const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto">${esc(fmtBRL(sku.preco))}</div>` : "";
       head += `<th class="col-sku${(best && !hasChoice) ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Produto com maior aderência">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
-        <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do SKU, não é requisito)">${esc(sku.brand)}</div>
+        ${isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Recomendado: maior aderência aos requisitos e, entre os que atendem, o menor preço">★ Recomendado</div>` : `<div class="sku-rank">${rank + 1}º</div>`}
+        <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do produto, não é requisito)">${esc(sku.brand)}</div>
         ${precoLine}
         <div class="sku-tags">${estoqueBadge}${origemBadge}</div>
         <div class="sku-scoreline" data-tip="Requisitos atendidos e percentual de aderência"><span class="score-frac">${sc.ok}/${sc.evaluable}${sc.ne ? ` · ${sc.ne} n/e` : ""}</span><span class="score-pct">${sc.pct}%</span></div>
@@ -460,25 +456,27 @@ function renderMatrix() {
   SPECS.forEach((spec, ri) => {
     if (spec.exigNa) return;
     const nx = !!spec.naoExtraido;
-    if (nx) return; // "valor não extraído" não aparece na tabela; é completado na barra de edição
-    let row = `<tr class="${isConcordant(spec) ? "concordant" : ""}">`;
+    let row = `<tr class="${nx ? "nx-row" : (isConcordant(spec) ? "concordant" : "")}">`;
     cols.forEach(c => {
       if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="Requisito exigido pelo edital">${esc(spec.req)}</span></td>`;
       else if (c.key === "val") {
-        const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-        const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>`;
-        const valInner = `<span class="val-text">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</span>`;
-        row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${valInner}${originBtn}</div></td>`;
+        if (nx) {
+          const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Abrir o edital para localizar e extrair o valor exigido">${ICO_ARROW}</button>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-missing" data-tip="O edital exige este requisito, mas a IA não conseguiu extrair o valor. Preencha para liberar a comparação.">${ICO_WARN} Não extraído</span>${originBtn}</div></td>`;
+        } else {
+          const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
+          const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>`;
+          const valInner = `<span class="val-text">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</span>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${valInner}${originBtn}</div></td>`;
+        }
       }
       else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button></div></td>`;
-      else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do produto disponível, mas ainda sem correspondência: não conseguimos extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
+      else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do seu produto disponível, mas ainda sem correspondência: falta extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
       else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c, spec.unidade);
     });
     body += row + `</tr>`;
   });
-  const noneNote = (hideNoMatch && !matchOrder.length) ? `<span class="mx-note">Nenhum produto atende 100% — mostrando todos.</span>` : "";
-  const toolbar = `<div class="mx-toolbar"><button class="mx-toggle${hideNoMatch ? " on" : ""}" data-hidenomatch data-tip="Esconde os produtos que não atendem 100% dos requisitos, para focar na análise"><span class="mx-switch"></span>Ocultar quem não atende${hideNoMatch && hiddenCount ? ` · ${hiddenCount} oculto${hiddenCount > 1 ? "s" : ""}` : ""}</button>${noneNote}</div>`;
-  host.innerHTML = `${toolbar}<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  host.innerHTML = `<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
 /* ---------- Seções colapsáveis (topo do overlay) ---------- */
@@ -490,8 +488,13 @@ function tagList(items, note) {
   return `${note ? `<div class="ex-note">${note}</div>` : ""}<div class="tag-list">${items.map(t => `<span class="tag-item">${esc(t)}</span>`).join("")}</div>`;
 }
 function collapsiblesHTML(it) {
-  // só a Descrição no corpo; as "não exigidas" vivem na barra de edição (referência)
-  const html = collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true);
+  let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true);
+  // "Especificações não exigidas pelo edital": o seu produto oferece, o edital não pede. Aberto por padrão, com texto explicativo.
+  const naoExig = [...new Set(it.componentes.flatMap(c => c.catalogoNaoEdital || []))];
+  if (naoExig.length) {
+    const note = "Especificações que o seu produto oferece e o edital não exige. Ficam aqui só como referência, não entram na comparação. Se alguma passar a ser exigida, você pode adicioná-la pelo Editar.";
+    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, true);
+  }
   return `<div class="to-collapsibles">${html}</div>`;
 }
 
@@ -649,7 +652,7 @@ function wire() {
   tb.addEventListener("click", e => {
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
-    const hnm = e.target.closest("[data-hidenomatch]"); if (hnm) { prefs.hideNoMatch = !prefs.hideNoMatch; savePrefs(); renderMatrix(); return; }
+    const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); toast(`Abrindo a origem do dado na internet — ${MX_SKUS[+nl.dataset.neturl].model} (para conferência)`); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }

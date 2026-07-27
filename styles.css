@@ -141,8 +141,8 @@ button { font-family: inherit; cursor: pointer; }
 .comp-dot.no { color: var(--destructive); background: var(--destructive-bg); }
 .comp-rotulo { font-size: 15px; font-weight: 600; color: var(--foreground); }
 .comp-sum { margin-left: auto; font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comp-edit { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--border); background: #FFF; color: var(--foreground); border-radius: var(--r-field); padding: 5px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.comp-edit:hover { background: var(--muted); }
+.comp-edit { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--brand); background: #FFF; color: var(--brand-600); border-radius: var(--r-field); padding: 5px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.comp-edit:hover { background: var(--brand-100); }
 .comp-edit svg { width: 13px; height: 13px; }
 .comp-sum b { color: var(--foreground); font-weight: 600; }
 .comp-acc-body { padding: 16px; }
@@ -173,12 +173,12 @@ button { font-family: inherit; cursor: pointer; }
 .card-grid { display: flex; flex-direction: column; gap: 10px; }
 .item-card {
   border: 1px solid var(--border); border-radius: var(--r-box); background: var(--card);
-  padding: 14px 16px; cursor: pointer; transition: box-shadow .15s, border-color .15s;
-  display: flex; flex-direction: column; gap: 8px;
+  padding: 16px; cursor: pointer; transition: box-shadow .15s, border-color .15s;
+  display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
-.item-card:hover { border-color: #D4D4D4; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
-/* item com produto escolhido: sem borda colorida (o texto "Produto escolhido" já comunica; verde confundiria com "atende") */
+.item-card:hover { border-color: #D4D4D4; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
 .ic-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ic-num { font-size: 11px; font-weight: 700; color: var(--muted-foreground); letter-spacing: .3px; text-transform: uppercase; }
 .badge.seg { background: #0A0A0A; color: #FFFFFF; border: 0; font-weight: 600; }
 .ic-meta { font-size: 13px; }
 .ic-meta b { font-weight: 600; }
@@ -190,7 +190,7 @@ button { font-family: inherit; cursor: pointer; }
 .ic-metaline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 24px; font-size: 12.5px; color: var(--foreground); padding-top: 8px; border-top: 1px dashed var(--border); }
 .ic-metaline b { font-weight: 600; }
 .ic-metaline .mono { font-family: var(--mono); }
-.ic-reco-inline.chosen { color: var(--brand-600); }
+.ic-reco-inline.chosen { color: var(--brand-600); font-weight: 600; background: var(--brand-100); border-radius: var(--r-full); padding: 3px 11px; }
 .ic-reco-inline.chosen b { color: var(--brand-600); }
 .ic-divider { height: 1px; background: var(--border); margin: 2px 0; }
 .ic-line { font-size: 12.5px; color: var(--foreground); }
@@ -361,6 +361,12 @@ th.col-sku.best { background: var(--success-bg); }
 .sku-tag.cat { color: var(--secondary-foreground); background: var(--muted); }
 .sku-tag.net { color: var(--muted-foreground); background: #FFF; border-color: var(--border); }
 .sku-tag.src { color: var(--muted-foreground); background: var(--muted); }
+button.sku-tag { font: inherit; font-size: 10px; font-weight: 600; line-height: 1.4; cursor: pointer; }
+.sku-tag.src.net { display: inline-flex; align-items: center; gap: 3px; }
+.sku-tag.src.net svg { width: 11px; height: 11px; }
+/* linha de requisito cujo valor a IA não extraiu (fica visível na tabela, sinalizada) */
+tr.nx-row .cell.nm-cell .cell-val { color: var(--muted-foreground); }
+tr.nx-row .col-req .req-name { color: var(--foreground); }
 /* coluna do produto escolhido: destaque forte */
 th.col-sku.chosen { background: var(--brand-100); box-shadow: inset 0 0 0 2px var(--brand); }
 .cmp tbody td.chosen-col { background: var(--brand-050, #EAF7F8); }
