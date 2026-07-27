@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=55" />
+  <link rel="stylesheet" href="styles.css?v=56" />
 </head>
 <body>
   <!-- Sidebar -->
@@ -149,9 +149,9 @@
   <!-- Alerta: edição direta na célula (1ª vez) -->
   <div class="warn-overlay" id="warnOverlay" hidden></div>
   <div class="warn-modal" id="warnModal" hidden>
-    <h3>Editar direto na célula?</h3>
-    <p>Este valor foi <b>extraído do edital</b>. Se você editar direto na célula, ele deixa de ficar <b>vinculado ao trecho de origem</b> no documento. Tudo bem para correções rápidas; para revisar em lote, use o botão <b>"Atualizar informações"</b>.</p>
-    <div class="warn-actions"><button class="btn" id="warnCancel">Cancelar</button><button class="btn primary" id="warnOk">Editar mesmo assim</button></div>
+    <h3>Confirmar edição?</h3>
+    <p>Editar o <b>valor requerido</b> recalcula a análise de compatibilidade dos produtos para este requisito. Você também pode editar em lote pelo botão <b>Editar</b> da seção. Não perguntaremos de novo.</p>
+    <div class="warn-actions"><button class="btn" id="warnCancel">Cancelar</button><button class="btn primary" id="warnOk">Confirmar e recalcular</button></div>
   </div>
 
   <!-- Tour guiado -->
@@ -170,6 +170,6 @@
   </div>
 
   <script src="data.js?v=24"></script>
-  <script src="app.js?v=77"></script>
+  <script src="app.js?v=78"></script>
 </body>
 </html>

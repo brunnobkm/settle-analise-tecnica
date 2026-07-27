@@ -82,11 +82,11 @@ const isConcordant = spec => new Set(spec.cells.filter(c => c.st === "ok" || c.s
 
 /* ---------- checklist (serviço / software) ---------- */
 function checklistSummary(cl) {
-  const ev = cl.filter(r => ["ok", "no", "parcial"].includes(r.st));
-  const ok = cl.filter(r => r.st === "ok").length, no = cl.filter(r => r.st === "no").length;
+  const ev = cl.filter(r => ["ok", "no", "parcial", "parceiro"].includes(r.st));
+  const ok = cl.filter(r => r.st === "ok" || r.st === "parceiro").length, no = cl.filter(r => r.st === "no").length;
   return { ok, total: ev.length, no, status: no === 0 ? "ok" : "no", pct: ev.length ? Math.round(ok / ev.length * 100) : 0 };
 }
-const CL_ST = { ok: { cls: "ok", label: "Atende", ico: ICO_OK }, no: { cls: "bad", label: "Não atende", ico: ICO_NO }, parcial: { cls: "warn", label: "Atende parcialmente", ico: "" }, ne: { cls: "soft", label: "Não avaliado", ico: "" } };
+const CL_ST = { ok: { cls: "ok", label: "Atende", ico: ICO_OK }, no: { cls: "bad", label: "Não atende", ico: ICO_NO }, parcial: { cls: "warn", label: "Atende parcialmente", ico: "" }, parceiro: { cls: "warn", label: "Atende com parceiro", ico: "" }, ne: { cls: "soft", label: "Não avaliado", ico: "" } };
 const confBadge = c => c ? `<span class="badge ${c === "alta" ? "ok" : c === "media" ? "warn" : "bad"}" data-tip="Confiança da IA na extração">${cap(c === "media" ? "média" : c)}</span>` : `<span class="state-na">—</span>`;
 
 /* ---------- resumo por item (adapta ao tipo) ---------- */
@@ -120,6 +120,7 @@ const savePrefs = () => localStorage.setItem(LS, JSON.stringify(prefs));
 prefs.chosen = prefs.chosen || {};
 let statusFilter = prefs.filter || "all";
 let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeComp = null, MX_SKUS = [];
+let editingRow = null, pendingCommitRi = null; // edição inline do "Valor requerido" na matriz (com confirmação)
 let currentChecklists = [];
 /* "Atualizar informações": re-analisa o item e a IA tenta extrair os valores que faltam (linhas "Valor não extraído") */
 function updateInfo() {
@@ -242,7 +243,7 @@ function openTable(i) {
     // toda seção é um accordion colapsável (aberto por padrão) com seu próprio botão Editar
     const cs = sum.comps[ci];
     const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="Editar as exigências desta seção">${ICO_PENCIL} Editar</button>`;
-    secs += `<details class="comp-acc" open><summary class="comp-head"><span class="comp-dot ${cs.ok ? "ok" : "no"}">${cs.ok ? ICO_OK : ICO_NO}</span><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-sum">${secSummary(cs)}</span>${editBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+    secs += `<details class="comp-acc" open><summary class="comp-head"><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span><span class="comp-sum">${secSummary(cs)}</span>${editBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
@@ -284,7 +285,7 @@ function updateProdSecSummary() {
   if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<b>✓ Escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}`; }
   else html = `<b>Melhor produto:</b> ${mono(BEST.sku.model)} · atende ${BEST.pct}%`;
   const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = html;
-  const dot = details.querySelector(".comp-dot"); if (dot) { dot.className = "comp-dot " + (ok ? "ok" : "no"); dot.innerHTML = ok ? ICO_OK : ICO_NO; }
+  const st = details.querySelector(".comp-status"); if (st) { st.className = "comp-status badge " + (ok ? "ok" : "bad"); st.textContent = ok ? "Atende" : "Não atende"; }
 }
 
 /* ---------- Mecânica: matriz (produto) ---------- */
@@ -405,7 +406,7 @@ function refreshClSecSummary(sec) {
   const details = host.closest(".comp-acc"); if (!details) return;
   const s = checklistSummary(currentChecklists[sec]), ok = s.status === "ok";
   const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = `Atende ${s.ok} de ${s.total} exigências`;
-  const dot = details.querySelector(".comp-dot"); if (dot) { dot.className = "comp-dot " + (ok ? "ok" : "no"); dot.innerHTML = ok ? ICO_OK : ICO_NO; }
+  const st = details.querySelector(".comp-status"); if (st) { st.className = "comp-status badge " + (ok ? "ok" : "bad"); st.textContent = ok ? "Atende" : "Não atende"; }
 }
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
@@ -450,11 +451,15 @@ function renderMatrix() {
         if (nx) {
           const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Abrir o edital para localizar e extrair o valor exigido">${ICO_ARROW}</button>`;
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-missing" data-tip="O edital exige este requisito, mas a IA não conseguiu extrair o valor. Preencha para liberar a comparação.">${ICO_WARN} Não extraído</span>${originBtn}</div></td>`;
+        } else if (editingRow === ri) {
+          const core = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head val-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}">${vrUnit}<button class="val-confirm" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="val-cancelbtn" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></div></td>`;
         } else {
           const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
           const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>`;
+          const editBtn = `<button class="req-ico val-editbtn" data-vstart="${ri}" data-tip="Editar o valor requerido (recalcula ao confirmar)">${ICO_PENCIL}</button>`;
           const valInner = `<span class="val-text">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</span>`;
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${valInner}${originBtn}</div></td>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${valInner}${originBtn}${editBtn}</div></td>`;
         }
       }
       else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button></div></td>`;
@@ -464,6 +469,23 @@ function renderMatrix() {
     body += row + `</tr>`;
   });
   host.innerHTML = `<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  if (editingRow != null) { const inp = host.querySelector(".val-inline-input"); if (inp) { inp.focus(); inp.select(); } }
+}
+/* edição inline do "Valor requerido" (matriz): editar direto na célula com confirmação (check) antes de recalcular */
+function startInlineEdit(ri) { editingRow = ri; renderMatrix(); }
+function cancelInlineEdit() { editingRow = null; renderMatrix(); }
+function commitInline(ri) {
+  const inp = $("#matrixHost .val-inline-input"), spec = SPECS[ri];
+  if (inp && spec) {
+    const raw = String(inp.value || "").trim();
+    if (raw) { const op = splitOp(spec.exig).op; spec.exig = op ? op + " " + joinUnit(raw, spec.unidade) : joinUnit(raw, spec.unidade); if (spec.naoExtraido) spec.naoExtraido = false; rematchRow(spec); }
+  }
+  editingRow = null; recompute(); renderMatrix(); updateProdSecSummary();
+  toast("Valor requerido atualizado — análise recalculada");
+}
+function tryCommitInline(ri) {
+  if (!prefs.warnedInline) { pendingCommitRi = ri; $("#warnOverlay").hidden = false; $("#warnModal").hidden = false; return; }
+  commitInline(ri);
 }
 
 /* ---------- Seções colapsáveis (topo do overlay) ---------- */
@@ -584,7 +606,7 @@ let pendingWarnEl = null;
 function focusEditable(el) { el.focus(); try { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (_) { } }
 function openInlineWarn(el) { pendingWarnEl = el; $("#warnModal").hidden = false; }
 /* dropdown de status do checklist: escolhe direto em vez de ciclar */
-const CL_OPTS = ["ok", "no", "parcial", "ne"];
+const CL_OPTS = ["ok", "no", "parcial", "parceiro", "ne"];
 let statusMenuTarget = null;
 function openStatusMenu(anchor, sec, ri) {
   const menu = $("#statusMenu"); if (!menu) return;
@@ -638,6 +660,9 @@ function wire() {
   });
   tb.addEventListener("click", e => {
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
+    const vs = e.target.closest("[data-vstart]"); if (vs) { startInlineEdit(+vs.dataset.vstart); return; }
+    const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }
+    const vcan = e.target.closest("[data-vcancel]"); if (vcan) { cancelInlineEdit(); return; }
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
     const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); toast(`Abrindo a origem do dado na internet — ${MX_SKUS[+nl.dataset.neturl].model} (para conferência)`); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
@@ -650,8 +675,11 @@ function wire() {
     const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
     const ac = e.target.closest("[data-addcl]"); if (ac) { addClReq(+ac.dataset.addcl); return; }
   });
-  tb.addEventListener("focusout", e => { const el = e.target.closest("[data-edit]"); if (el) commitEdit(el); });
-  tb.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("[data-edit]")) { e.preventDefault(); e.target.blur(); } });
+  tb.addEventListener("keydown", e => {
+    const inp = e.target.closest(".val-inline-input"); if (!inp) return;
+    if (e.key === "Enter") { e.preventDefault(); tryCommitInline(+inp.dataset.vedit); }
+    else if (e.key === "Escape") { e.preventDefault(); cancelInlineEdit(); }
+  });
 
   $("#drawerClose").onclick = closeOrigin; $("#drawerOverlay").onclick = closeOrigin;
   $("#drawerBody").addEventListener("mouseup", () => {
@@ -702,9 +730,9 @@ function initAddModal() {
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#addModal").hidden) close(); });
   // alerta de edição direta na célula
-  const closeWarn = () => { $("#warnModal").hidden = true; pendingWarnEl = null; };
+  const closeWarn = () => { $("#warnModal").hidden = true; $("#warnOverlay").hidden = true; pendingCommitRi = null; };
   $("#warnCancel").onclick = closeWarn; $("#warnOverlay").onclick = closeWarn;
-  $("#warnOk").onclick = () => { prefs.warnedInline = true; savePrefs(); $("#warnModal").hidden = true; const el = pendingWarnEl; pendingWarnEl = null; if (el) focusEditable(el); };
+  $("#warnOk").onclick = () => { prefs.warnedInline = true; savePrefs(); $("#warnModal").hidden = true; $("#warnOverlay").hidden = true; const ri = pendingCommitRi; pendingCommitRi = null; if (ri != null) commitInline(ri); };
 }
 
 /* ---------- tooltip próprio ---------- */

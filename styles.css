@@ -406,6 +406,17 @@ td.col-req { padding: 12px 16px; }
 .val-head .val-text { flex: 1; min-width: 0; }
 .val-head .val-ico { opacity: 0; flex-shrink: 0; }
 .col-val:hover .val-head .val-ico, .val-head .val-ico:focus { opacity: 1; }
+.val-head .val-editbtn { opacity: 0; flex-shrink: 0; }
+.col-val:hover .val-head .val-editbtn, .val-head .val-editbtn:focus { opacity: 1; }
+/* edição inline do valor requerido */
+.val-edit { gap: 4px; }
+.val-inline-input { width: 68px; min-width: 0; font-family: var(--mono); font-size: 12.5px; padding: 3px 7px; border: 1px solid var(--brand); border-radius: var(--r-field); outline: none; background: #FFF; }
+.val-confirm, .val-cancelbtn { flex-shrink: 0; width: 24px; height: 24px; border: 1px solid var(--border); border-radius: var(--r-md); background: #FFF; display: grid; place-items: center; padding: 0; cursor: pointer; }
+.val-confirm { color: var(--success); border-color: var(--success); }
+.val-confirm:hover { background: var(--success-bg); }
+.val-cancelbtn { color: var(--destructive); }
+.val-cancelbtn:hover { background: var(--destructive-bg); }
+.val-confirm svg, .val-cancelbtn svg { width: 13px; height: 13px; }
 .req-exig { color: var(--muted-foreground); font-size: 12px; margin-top: 2px; }
 .req-exig .val { font-family: var(--mono); color: var(--foreground); }
 .req-origin { margin-top: 6px; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--brand-600); background: transparent; border: 0; padding: 0; font-weight: 600; }
