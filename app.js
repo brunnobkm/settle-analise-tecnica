@@ -183,15 +183,12 @@ function renderGrid() {
     const segLabel = tipos.length > 1 ? `Misto (${tipos.map(t => TIPO_LBL[t]).join(" + ")})` : TIPO_LBL[tipos[0]];
     const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
     const segBadge = `<span class="badge seg" data-tip="${esc(segTip)}">${esc(segLabel)}</span>`;
-    // a badge "Não atende" carrega o contador: X/Y quando há UMA pendência de checklist; "N pendências" quando há 2+ camadas. Se a única pendência é o produto, o chip "Melhor produto · atende X%" já mostra.
+    // "Não atende" sempre com o total do item: soma das exigências de todas as camadas (produto ancorado no melhor SKU)
     let badgeCount = "", badgeTip = "Há exigência(s) que você não atende";
     if (sum.status !== "ok") {
-      const fails = sum.comps.filter(c => !c.ok);
-      if (fails.length === 1 && fails[0].mecanica !== "produto") {
-        const f = fails[0]; badgeCount = ` · ${f.ok_n}/${f.total}`; badgeTip = `Atende ${f.ok_n} de ${f.total} exigências`;
-      } else if (fails.length >= 2) {
-        badgeCount = ` · ${fails.length} pendências`; badgeTip = `${fails.length} camadas com pendência (detalhe ao abrir o item)`;
-      }
+      let at = 0, tot = 0;
+      sum.comps.forEach(c => { if (c.mecanica === "produto") { at += c.best.ok; tot += c.best.evaluable; } else { at += c.ok_n; tot += c.total; } });
+      badgeCount = ` · ${at}/${tot}`; badgeTip = `Atende ${at} de ${tot} exigências do item`;
     }
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
