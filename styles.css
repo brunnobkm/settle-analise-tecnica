@@ -515,10 +515,6 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .addcol-btn { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); color: var(--muted-foreground); cursor: pointer; padding: 0; }
 .addcol-btn:hover { background: var(--muted); color: var(--brand-600); border-color: var(--border-strong); }
 .addcol-btn svg { width: 14px; height: 14px; }
-.proto-note { display: flex; align-items: flex-start; gap: 10px; margin: 16px 20px 0; padding: 10px 14px; border: 1px dashed var(--border-strong); border-radius: var(--r-box); background: var(--muted); font-size: 12.5px; line-height: 1.5; color: var(--muted-foreground); }
-.proto-note .pn-ico { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; color: var(--muted-foreground); }
-.proto-note .pn-ico svg { width: 16px; height: 16px; }
-.proto-note .pn-tag { display: inline-block; margin-right: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--foreground); }
 .cbox { width: 16px; height: 16px; border: 1.5px solid #C4C4C4; border-radius: var(--r-sm); display: inline-block; }
 .dt-foot { display: flex; align-items: center; gap: 8px; padding: 14px 16px; color: var(--brand-600); font-size: 13px; font-weight: 600; border-top: 1px solid var(--border); cursor: pointer; }
 .dt-foot:hover { background: var(--muted); }
