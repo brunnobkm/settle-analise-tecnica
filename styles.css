@@ -144,6 +144,9 @@ button { font-family: inherit; cursor: pointer; }
 .comp-edit { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--brand); background: #FFF; color: var(--brand-600); border-radius: var(--r-field); padding: 5px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .comp-edit:hover { background: var(--brand-100); }
 .comp-edit svg { width: 13px; height: 13px; }
+.comp-kebab { display: inline-grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; border: 1px solid var(--border); background: #FFF; color: var(--muted-foreground); border-radius: var(--r-field); cursor: pointer; padding: 0; }
+.comp-kebab:hover { background: var(--muted); color: var(--foreground); border-color: #D4D4D4; }
+.comp-kebab svg { width: 15px; height: 15px; }
 .comp-sum b { color: var(--foreground); font-weight: 600; }
 .comp-acc-body { padding: 16px; }
 /* tabela rola DENTRO do card (a borda do card é a moldura) */
@@ -160,6 +163,10 @@ button { font-family: inherit; cursor: pointer; }
 .sm-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; border: 0; background: transparent; border-radius: var(--r-md); padding: 6px 8px; cursor: pointer; text-align: left; }
 .sm-item:hover { background: var(--muted); }
 .sm-item.sel { background: var(--muted); }
+.kebab-menu { position: fixed; z-index: 70; background: #FFF; border: 1px solid var(--border); border-radius: var(--r-field); box-shadow: 0 8px 28px rgba(0,0,0,.16); padding: 4px; min-width: 160px; }
+.kebab-menu[hidden] { display: none; }
+.km-item { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; border-radius: var(--r-md); padding: 7px 9px; cursor: pointer; text-align: left; font-size: 13px; color: var(--foreground); }
+.km-item:hover { background: var(--muted); }
 .sm-check { color: var(--brand-600); font-weight: 700; }
 .dt-foot { cursor: pointer; }
 .dt-foot:hover { background: var(--muted); }
@@ -435,6 +442,8 @@ td.col-req { padding: 12px 16px; }
 .col-val:hover .val-head .val-ico, .val-head .val-ico:focus { opacity: 1; }
 .val-head .val-editbtn { opacity: 0; flex-shrink: 0; }
 .col-val:hover .val-head .val-editbtn, .val-head .val-editbtn:focus { opacity: 1; }
+.val-head .val-copybtn { opacity: 0; flex-shrink: 0; }
+.col-val:hover .val-head .val-copybtn, .val-head .val-copybtn:focus { opacity: 1; }
 /* edição inline do valor requerido */
 .val-edit { gap: 4px; }
 .val-inline-input { width: 68px; min-width: 0; font-family: var(--mono); font-size: 12.5px; padding: 3px 7px; border: 1px solid var(--brand); border-radius: var(--r-field); outline: none; background: #FFF; }

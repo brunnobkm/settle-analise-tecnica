@@ -21,6 +21,8 @@ const ICO_TRASH = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" st
 const ICO_LINK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.7 9.3l2.6-2.6M7 4.6l1-1a2.4 2.4 0 0 1 3.4 3.4l-1 1M9 11.4l-1 1a2.4 2.4 0 0 1-3.4-3.4l1-1"/></svg>`;
 const ICO_GLOBE = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6"/><path d="M2 8h12" stroke-linecap="round"/><path d="M8 2c2.1 2.2 2.1 9.8 0 12M8 2c-2.1 2.2-2.1 9.8 0 12"/></svg>`;
 const ICO_CATALOG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M8 3.4C6.9 2.7 5.4 2.4 3.7 2.6a1 1 0 0 0-.9 1v8a1 1 0 0 0 1.1 1c1.5-.2 2.9.1 4.1.8"/><path d="M8 3.4c1.1-.7 2.6-1 4.3-.8a1 1 0 0 1 .9 1v8a1 1 0 0 1-1.1 1c-1.5-.2-2.9.1-4.1.8"/><path d="M8 3.4v10.4" stroke-linecap="round"/></svg>`;
+const ICO_COPY = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="5.2" y="5.2" width="8" height="8.6" rx="1.3"/><path d="M2.8 10.8V3.2a1 1 0 0 1 1-1h6"/></svg>`;
+const ICO_KEBAB = `<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3.2" r="1.35"/><circle cx="8" cy="8" r="1.35"/><circle cx="8" cy="12.8" r="1.35"/></svg>`;
 const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2l6-11z"/><path d="M8 6.5v3.2"/><path d="M8 11.6v.01"/></svg>`;
 const ICO_ALERT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.4" stroke-linecap="round"/><path d="M8 11v.01" stroke-linecap="round"/></svg>`;
 const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 2.5h4l-.8 3.5 2.3 2H4.5l2.3-2L6 2.5z"/><path d="M8 8v5.5"/></svg>`;
@@ -247,7 +249,8 @@ function openTable(i) {
     // toda seção é um accordion colapsável (aberto por padrão) com seu próprio botão Editar
     const cs = sum.comps[ci];
     const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="Editar as exigências desta seção">${ICO_PENCIL} Editar</button>`;
-    secs += `<details class="comp-acc" open><summary class="comp-head"><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span><span class="comp-sum">${secSummary(cs)}</span>${editBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+    const kebabBtn = `<button class="comp-kebab" data-kebab data-tip="Mais ações">${ICO_KEBAB}</button>`;
+    secs += `<details class="comp-acc" open><summary class="comp-head"><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span><span class="comp-sum">${secSummary(cs)}</span>${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
@@ -312,7 +315,7 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
 let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
-function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = active == null ? "" : `<button class="to-editbtn primary" id="btnEditItem" data-tip="Editar as informações do item (quantidade, unidade de medida, valores)">${ICO_PENCIL} Editar</button>`; } // header edita o item; cada seção tem seu próprio Editar
+function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = active == null ? "" : `<button class="to-editbtn primary" id="btnEditItem" data-tip="Editar as informações do item (quantidade, unidade de medida, valores)">${ICO_PENCIL} Editar informações do item</button>`; } // header edita o item; cada seção tem seu próprio Editar
 function editSecLabel() {
   const it = ITEMS[active];
   if (editTarget.type === "produto") return (it.componentes.find(c => c.mecanica === "produto") || {}).rotulo || "";
@@ -429,7 +432,7 @@ function renderMatrix() {
       const isNet = sku.origem === "internet";
       // estoque = só disponibilidade (verde/âmbar), independente da fonte
       const estoqueBadge = sku.estoque
-        ? `<span class="sku-tag ok" data-tip="Em estoque">Em estoque</span>`
+        ? `<span class="sku-tag ok" data-tip="Com estoque">Com estoque</span>`
         : `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar ou terceirizar">Sem estoque</span>`;
       // fonte = ÍCONE de origem: livro = catálogo do cliente, globo = internet (externo). Azul quando tem link (clicável), cinza quando não.
       const hasLink = isNet || !!sku.datasheet;
@@ -467,10 +470,11 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head val-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}">${vrUnit}<button class="val-confirm" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="val-cancelbtn" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></div></td>`;
         } else {
           const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-          const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>`;
+          const copyBtn = `<button class="req-ico val-copybtn" data-copyval="${ri}" data-tip="Copiar o valor requerido">${ICO_COPY}</button>`;
           const editBtn = `<button class="req-ico val-editbtn" data-vstart="${ri}" data-tip="Editar o valor requerido (recalcula ao confirmar)">${ICO_PENCIL}</button>`;
+          const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>`;
           const valInner = `<span class="val-text">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</span>`;
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${valInner}${originBtn}${editBtn}</div></td>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${valInner}${copyBtn}${editBtn}${originBtn}</div></td>`;
         }
       }
       else if (c.key === "acoes") row += `<td class="col-acoes"><div class="acoes-cell"><button class="act-ico" data-rowlink="${ri}" data-tip="Copiar link para este requisito (ir direto para a linha)">${ICO_LINK}</button><button class="act-ico danger" data-delreq="${ri}" data-tip="Excluir este requisito">${ICO_TRASH}</button></div></td>`;
@@ -631,6 +635,15 @@ function openStatusMenu(anchor, sec, ri) {
 }
 function closeStatusMenu() { const m = $("#statusMenu"); if (m) m.hidden = true; statusMenuTarget = null; }
 
+function openKebabMenu(anchor) {
+  const menu = $("#kebabMenu"); if (!menu) return;
+  menu.hidden = false;
+  const r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
+  let top = r.bottom + 6; if (top + mh > innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+  menu.style.top = top + "px"; menu.style.left = Math.max(8, Math.min(r.right - mw, innerWidth - mw - 8)) + "px";
+}
+function closeKebabMenu() { const m = $("#kebabMenu"); if (m) m.hidden = true; }
+
 /* ============================================================
    Wire
    ============================================================ */
@@ -677,6 +690,8 @@ function wire() {
     const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); toast(`Abrindo a origem do dado na internet — ${MX_SKUS[+nl.dataset.neturl].model} (para conferência)`); return; }
     const cl = e.target.closest("[data-caturl]"); if (cl) { e.stopPropagation(); toast(`Abrindo no catálogo — ${MX_SKUS[+cl.dataset.caturl].model}`); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
+    const cv = e.target.closest("[data-copyval]"); if (cv) { const ri = +cv.dataset.copyval; const txt = SPECS[ri].exig; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
+    const kb = e.target.closest("[data-kebab]"); if (kb) { e.preventDefault(); e.stopPropagation(); openKebabMenu(kb); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const rl = e.target.closest("[data-rowlink]"); if (rl) { toast(`Link para o requisito "${SPECS[+rl.dataset.rowlink].req}" copiado`); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
@@ -707,7 +722,18 @@ function wire() {
     recompute(); renderMatrix(); closeOrigin();
     toast(`Valor extraído para "${nm}" — produtos liberados para comparação`);
   });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#statusMenu").hidden) closeStatusMenu(); else if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#kebabMenu").hidden) closeKebabMenu(); else if (!$("#statusMenu").hidden) closeStatusMenu(); else if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
+  // dropdown de mais ações da seção (kebab)
+  $("#kebabMenu").addEventListener("click", e => {
+    const b = e.target.closest("[data-kbact]"); if (!b) return;
+    if (b.dataset.kbact === "export") toast("Exportando a seção (gera um arquivo com os requisitos e a análise)");
+    closeKebabMenu();
+  });
+  document.addEventListener("click", e => {
+    if ($("#kebabMenu").hidden) return;
+    if (e.target.closest("#kebabMenu") || e.target.closest("[data-kebab]")) return;
+    closeKebabMenu();
+  });
   // dropdown de status do checklist
   $("#statusMenu").addEventListener("click", e => {
     const b = e.target.closest("[data-stval]"); if (!b || !statusMenuTarget) return;
