@@ -192,16 +192,10 @@ function renderGrid() {
     const segLabel = tipos.length > 1 ? `Misto (${tipos.map(t => TIPO_LBL[t]).join(" + ")})` : TIPO_LBL[tipos[0]];
     const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
     const segBadge = `<span class="badge seg" data-tip="${esc(segTip)}">${esc(segLabel)}</span>`;
-    // "Não atende" sempre com o total do item: soma das exigências de todas as camadas (produto ancorado no melhor SKU)
-    let badgeCount = "", badgeTip = "Há exigência(s) que você não atende";
-    if (sum.status !== "ok") {
-      let at = 0, tot = 0;
-      sum.comps.forEach(c => { if (c.mecanica === "produto") { at += c.best.ok; tot += c.best.evaluable; } else { at += c.ok_n; tot += c.total; } });
-      badgeCount = ` · ${at}/${tot}`; badgeTip = `Atende ${at} de ${tot} exigências do item`;
-    }
+    // status do card: só "Atende" / "Não atende" (decisão Alice 28/07 — sem a fração X/Y)
     const statusBadge = sum.status === "ok"
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
-      : `<span class="badge bad" data-tip="${badgeTip}">Não atende${badgeCount}</span>`;
+      : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     // chip do topo: "Melhor produto · atende X%" quando há produto (a pendência de camada vive na própria badge "Não atende · X/Y")
     const prod = sum.comps.find(c => c.mecanica === "produto");
@@ -248,11 +242,16 @@ function openTable(i) {
     let hostHTML, editSec;
     if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; editSec = "produto"; }
     else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); hostHTML = `<div class="mech-host" id="clHost-${idx}"></div>`; editSec = "cl:" + idx; }
-    // toda seção é um accordion colapsável (aberto por padrão) com seu próprio botão Editar
+    // toda seção é um accordion colapsável (aberto por padrão) com seu próprio botão de edição
     const cs = sum.comps[ci];
-    const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="Editar as exigências desta seção">${ICO_PENCIL} Editar</button>`;
+    // Produto = "Editar"; Software/checklist = "Revisar Requisitos" (decisão Alice 28/07)
+    const editLabel = comp.mecanica === "produto" ? "Editar" : "Revisar Requisitos";
+    const editTip = comp.mecanica === "produto" ? "Editar as exigências desta seção" : "Revisar os requisitos deste software";
+    const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="${editTip}">${ICO_PENCIL} ${editLabel}</button>`;
     const kebabBtn = `<button class="comp-kebab" data-kebab data-tip="Mais ações">${ICO_KEBAB}</button>`;
-    secs += `<details class="comp-acc" open><summary class="comp-head"><span class="comp-rotulo">${esc(comp.rotulo)}</span><span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span><span class="comp-sum">${secSummary(cs)}</span>${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+    // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
+    const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
+    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}<span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span><span class="comp-sum">${secSummary(cs)}</span>${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
@@ -443,16 +442,15 @@ function renderMatrix() {
       const sourceIcon = hasLink
         ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip} — clique para abrir">${srcIco}</button>`
         : `<span class="sku-srcico" data-tip="${srcTip} (sem link disponível)">${srcIco}</span>`;
-      const chosenChip = "";
       const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto (conforme a fonte)">${esc(fmtBRL(sku.preco))}</div>` : "";
       const fitCls = sc.pct === 100 ? "full" : sc.pct >= 50 ? "mid" : "low";
-      // sem badge "Melhor produto" nem número do rank: as colunas já vêm em ordem de aderência; estoque sobe pra linha do ícone de fonte
+      // nome do SKU primeiro (Alice 28/07); fonte + estoque descem para baixo do preço
       head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        <div class="sku-top">${sourceIcon}${estoqueBadge}${chosenChip}</div>
         <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do produto, não é requisito)">${esc(sku.brand)}</div>
         <div class="sku-fit" data-tip="Aderência: requisitos atendidos e percentual"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}${sc.ne ? ` · ${sc.ne} n/e` : ""}</span></div>
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
         ${precoLine}
+        <div class="sku-src">${sourceIcon}${estoqueBadge}</div>
         <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}" data-tip="${isChosen ? "Remover seleção" : "Definir como produto escolhido para a proposta"}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
   });
@@ -506,6 +504,7 @@ function tryCommitInline(ri) {
 
 /* ---------- Seções colapsáveis (topo do overlay) ---------- */
 const CARET = `<svg class="caret-svg" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>`;
+const CARET_SM = `<svg class="caret-sm" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`;
 function collapsible(title, inner, count, open) {
   return `<details class="cps"${open ? " open" : ""}><summary><span class="cps-title">${title}</span>${count != null ? `<span class="cps-cnt">${count}</span>` : ""}${CARET}</summary><div class="cps-body">${inner}</div></details>`;
 }
@@ -513,9 +512,11 @@ function tagList(items, note) {
   return `${note ? `<div class="ex-note">${note}</div>` : ""}<div class="tag-list">${items.map(t => `<span class="tag-item">${esc(t)}</span>`).join("")}</div>`;
 }
 function collapsiblesHTML(it) {
-  let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true);
+  // "Descrição completa" só quando o item tem Produto (software não tem descrição — decisão Alice 28/07)
+  const temProduto = it.componentes.some(c => c.mecanica === "produto");
+  let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true) : "";
   // "Especificações não exigidas pelo edital": o seu produto oferece, o edital não pede. Aberto por padrão, com texto explicativo.
-  const naoExig = [...new Set(it.componentes.flatMap(c => c.catalogoNaoEdital || []))];
+  const naoExig = [...new Set(it.componentes.filter(c => c.mecanica === "produto").flatMap(c => c.catalogoNaoEdital || []))];
   if (naoExig.length) {
     const note = "Especificações que o seu produto oferece e o edital não exige. Ficam aqui só como referência, não entram na comparação. Se alguma passar a ser exigida, você pode adicioná-la pelo Editar.";
     html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, true);
@@ -650,6 +651,24 @@ function openKebabMenu(anchor) {
 }
 function closeKebabMenu() { const m = $("#kebabMenu"); if (m) m.hidden = true; }
 
+const CAT_OPTS = {
+  produto: ["Câmera de segurança", "Gravador de vídeo (DVR/NVR)", "Cabo de rede", "Access point", "Nobreak / fonte"],
+  checklist: ["Software de vídeo monitoramento", "Software de gestão pública", "Software de gestão da educação", "Software de gestão de saúde"],
+};
+let catMenuAnchor = null;
+function openCatMenu(anchor) {
+  const menu = $("#catMenu"); if (!menu) return;
+  catMenuAnchor = anchor;
+  const cur = anchor.textContent.trim();
+  const opts = CAT_OPTS[anchor.dataset.catmech] || CAT_OPTS.produto;
+  menu.innerHTML = opts.map(o => `<button class="sm-item${o === cur ? " sel" : ""}" data-catval="${esc(o)}"><span>${esc(o)}</span>${o === cur ? `<span class="sm-check">✓</span>` : ""}</button>`).join("");
+  menu.hidden = false;
+  const r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
+  let top = r.bottom + 6; if (top + mh > innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+  menu.style.top = top + "px"; menu.style.left = Math.max(8, Math.min(r.left, innerWidth - mw - 8)) + "px";
+}
+function closeCatMenu() { const m = $("#catMenu"); if (m) m.hidden = true; catMenuAnchor = null; }
+
 /* ============================================================
    Wire
    ============================================================ */
@@ -707,6 +726,7 @@ function wire() {
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
     const cv = e.target.closest("[data-copytext]"); if (cv) { e.stopPropagation(); const txt = cv.dataset.copytext; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
     const kb = e.target.closest("[data-kebab]"); if (kb) { e.preventDefault(); e.stopPropagation(); openKebabMenu(kb); return; }
+    const cd = e.target.closest("[data-catdrop]"); if (cd) { e.preventDefault(); e.stopPropagation(); openCatMenu(cd); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }
@@ -737,7 +757,20 @@ function wire() {
     recompute(); renderMatrix(); closeOrigin();
     toast(`Valor extraído para "${nm}" — produtos liberados para comparação`);
   });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#kebabMenu").hidden) closeKebabMenu(); else if (!$("#statusMenu").hidden) closeStatusMenu(); else if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#catMenu").hidden) closeCatMenu(); else if (!$("#kebabMenu").hidden) closeKebabMenu(); else if (!$("#statusMenu").hidden) closeStatusMenu(); else if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
+  // dropdown de categoria da seção (com qual catálogo compara)
+  $("#catMenu").addEventListener("click", e => {
+    const b = e.target.closest("[data-catval]"); if (!b || !catMenuAnchor) return;
+    const val = b.dataset.catval;
+    catMenuAnchor.childNodes[0].nodeValue = val;
+    toast(`Categoria alterada para "${val}" (recalcula a comparação com o catálogo)`);
+    closeCatMenu();
+  });
+  document.addEventListener("click", e => {
+    if ($("#catMenu").hidden) return;
+    if (e.target.closest("#catMenu") || e.target.closest("[data-catdrop]")) return;
+    closeCatMenu();
+  });
   // dropdown de mais ações da seção (kebab)
   $("#kebabMenu").addEventListener("click", e => {
     const b = e.target.closest("[data-kbact]"); if (!b) return;

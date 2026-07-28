@@ -140,6 +140,9 @@ button { font-family: inherit; cursor: pointer; }
 .comp-dot.ok { color: var(--success); background: var(--success-bg); }
 .comp-dot.no { color: var(--destructive); background: var(--destructive-bg); }
 .comp-rotulo { font-size: 15px; font-weight: 600; color: var(--foreground); }
+.comp-cat { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 600; color: var(--foreground); background: transparent; border: 1px solid transparent; border-radius: var(--r-field); padding: 3px 8px 3px 6px; margin-left: -6px; cursor: pointer; }
+.comp-cat:hover { background: var(--muted); border-color: var(--border); }
+.comp-cat .caret-sm { color: var(--muted-foreground); flex-shrink: 0; }
 .comp-sum { margin-left: auto; font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comp-edit { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--brand); background: #FFF; color: var(--brand-600); border-radius: var(--r-field); padding: 5px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .comp-edit:hover { background: var(--brand-100); }
@@ -180,10 +183,10 @@ button { font-family: inherit; cursor: pointer; }
 .card-grid { display: flex; flex-direction: column; gap: 10px; }
 .item-card {
   border: 1px solid var(--border); border-radius: var(--r-box); background: var(--card);
-  padding: 16px; cursor: pointer; transition: box-shadow .15s, border-color .15s;
+  padding: 16px; cursor: pointer; transition: box-shadow .15s, border-color .15s, transform .15s;
   display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
-.item-card:hover { border-color: #D4D4D4; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+.item-card:hover { border-color: #D4D4D4; box-shadow: 0 6px 20px rgba(0,0,0,.10); transform: translateY(-2px); }
 .ic-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ic-num { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; color: var(--muted-foreground); letter-spacing: .3px; text-transform: uppercase; background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-full); padding: 2px 9px; }
 .badge.seg { background: #0A0A0A; color: #FFFFFF; border: 0; font-weight: 600; }
@@ -361,6 +364,7 @@ th.col-sku.best { background: var(--success-bg); }
 .sku-metaline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; }
 .sku-metaline .sku-preco { margin-top: 0; }
 /* topo do card: badge/rank à esquerda, ícone de fonte (globo=internet / catálogo) clicável à direita */
+.sku-src { display: flex; align-items: center; gap: 6px; min-height: 24px; flex-wrap: wrap; margin-top: 8px; }
 .sku-top { display: flex; align-items: center; gap: 6px; min-height: 24px; flex-wrap: wrap; }
 .sku-top .chosen-tag { margin-left: auto; margin-top: 0; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--r-full); background: var(--brand); color: #FFF; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
 .sku-srcico { width: 24px; height: 24px; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); color: var(--muted-foreground); display: grid; place-items: center; padding: 0; cursor: default; flex-shrink: 0; }
@@ -502,6 +506,10 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .dt td.col-check { background: #FFF; }
 .dt tbody tr:hover td.col-check { background: #FAFAFA; }
 .dt .col-req { width: 22%; }
+/* freeze da 1ª coluna (Requisito) + cabeçalho na tabela de software (Alice 28/07) */
+.dt th.col-req, .dt td.col-req { position: sticky; left: 0; z-index: 1; background: #FFF; box-shadow: 1px 0 0 var(--border); }
+.dt thead th.col-req { z-index: 3; background: var(--muted); }
+.dt tr:hover td.col-req { background: var(--muted); }
 .dt td.col-val { font-family: var(--mono); }
 .dt .col-meta { font-size: 13px; }
 .dt .c-just { width: 24%; white-space: normal; color: var(--muted-foreground); font-size: 13px; line-height: 1.5; }
