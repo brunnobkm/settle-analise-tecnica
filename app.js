@@ -247,7 +247,7 @@ function openTable(i) {
     // Produto = "Editar"; Software/checklist = "Revisar Requisitos" (decisão Alice 28/07)
     const editLabel = comp.mecanica === "produto" ? "Editar" : "Revisar Requisitos";
     const editTip = comp.mecanica === "produto" ? "Editar as exigências desta seção" : "Revisar os requisitos deste software";
-    const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="${editTip}">${ICO_PENCIL} ${editLabel}</button>`;
+    const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="${editTip}">${editLabel}</button>`;
     const kebabBtn = `<button class="comp-kebab" data-kebab data-tip="Mais ações">${ICO_KEBAB}</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
@@ -317,7 +317,7 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
 let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
-function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = active == null ? "" : `<button class="to-editbtn primary" id="btnEditItem" data-tip="Editar as informações do item (quantidade, unidade de medida, valores)">${ICO_PENCIL} Editar informações do item</button>`; } // header edita o item; cada seção tem seu próprio Editar
+function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = active == null ? "" : `<button class="to-editbtn primary" id="btnEditItem" data-tip="Editar as informações do item (quantidade, unidade de medida, valores)">Editar informações do item</button>`; } // header edita o item; cada seção tem seu próprio Editar
 function editSecLabel() {
   const it = ITEMS[active];
   if (editTarget.type === "produto") return (it.componentes.find(c => c.mecanica === "produto") || {}).rotulo || "";
@@ -553,27 +553,27 @@ function renderChecklist(host, clArr, sec) {
   const addColTh = `<th class="col-addcol"><button class="addcol-btn" data-addcol data-tip="Adicionar uma coluna à tabela">${ICO_PLUS}</button></th>`;
   host.innerHTML = seg + `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Módulo</th><th class="col-meta">Responsável</th><th class="col-meta">Notas</th>${addColTh}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-/* Visão em bloco: agrupa os requisitos por módulo (mesma info da tabela, agrupada) */
+/* Visão em bloco: tabela agregada por módulo (contagem por status), espelha produção */
 function renderChecklistBlocks(clArr, sec) {
   const groups = {};
-  clArr.forEach((r, ri) => { const m = r.modulo || "Outros"; (groups[m] || (groups[m] = [])).push({ r, ri }); });
-  const blocks = Object.entries(groups).map(([mod, items]) => {
-    const atende = items.filter(x => x.r.st === "ok" || x.r.st === "parceiro").length;
-    const allOk = atende === items.length;
-    const rows = items.map(({ r, ri }) => {
-      const st = CL_ST[r.st] || CL_ST.ne;
-      return `<div class="clb-row">
-        <button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para escolher o status">${st.ico}${st.label}<span class="cl-caret">▾</span></button>
-        <span class="clb-req">${esc(r.req)}</span>
-        <button class="req-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>
-      </div>`;
-    }).join("");
-    return `<div class="cl-bloco">
-      <div class="cl-bloco-head"><span class="clb-title">${esc(mod)}</span><span class="badge ${allOk ? "ok" : "bad"}" data-tip="Requisitos atendidos neste módulo">${atende}/${items.length} atende</span></div>
-      <div class="cl-bloco-body">${rows}</div>
-    </div>`;
+  clArr.forEach((r, ri) => { const m = r.modulo || "Outros"; (groups[m] || (groups[m] = [])).push(r); });
+  const pct = (n, t) => t ? Math.round(n / t * 100) : 0;
+  const cell = (n, t) => `${n} <span class="blk-pct">(${pct(n, t)}%)</span>`;
+  const rows = Object.entries(groups).map(([mod, items]) => {
+    const t = items.length, cnt = st => items.filter(r => r.st === st).length;
+    return `<tr>
+      <td class="col-req"><span class="req-name">${esc(mod)}</span></td>
+      <td class="col-meta"><span class="badge soft with-avatar">Selecionar</span></td>
+      <td class="col-meta blk-num">${t}</td>
+      <td class="col-meta blk-num">${cell(cnt("ok"), t)}</td>
+      <td class="col-meta blk-num">${cell(cnt("parcial"), t)}</td>
+      <td class="col-meta blk-num">${cell(cnt("parceiro"), t)}</td>
+      <td class="col-meta blk-num">${cell(cnt("no"), t)}</td>
+      <td class="col-meta blk-num">${cell(cnt("ne"), t)}</td>
+      <td class="col-meta"><div class="acoes-cell"><button class="act-ico danger" data-blockact="excluir" data-tip="Excluir módulo">${ICO_TRASH}</button><button class="act-ico" data-blockact="ir" data-tip="Ir para o módulo">${ICO_LINK}</button></div></td>
+    </tr>`;
   }).join("");
-  return `<div class="cl-blocos">${blocks}</div>`;
+  return `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Módulo</th><th class="col-meta">Responsável</th><th class="col-meta">Total de Requisitos</th><th class="col-meta">Atende</th><th class="col-meta">Atende parcialmente</th><th class="col-meta">Atende com parceiro</th><th class="col-meta">Não atende</th><th class="col-meta">Sem estado</th><th class="col-meta">Ações</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 /* ============================================================
@@ -756,7 +756,8 @@ function wire() {
     const cv = e.target.closest("[data-copytext]"); if (cv) { e.stopPropagation(); const txt = cv.dataset.copytext; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
     const kb = e.target.closest("[data-kebab]"); if (kb) { e.preventDefault(); e.stopPropagation(); openKebabMenu(kb); return; }
     const cd = e.target.closest("[data-catdrop]"); if (cd) { e.preventDefault(); e.stopPropagation(); openCatMenu(cd); return; }
-    const clv = e.target.closest("[data-clview]"); if (clv) { const [s, v] = clv.dataset.clview.split(":"); if (v === "bloco") { toast("Visão em bloco ainda não está disponível"); return; } clView[+s] = v; renderChecklist($("#clHost-" + s), currentChecklists[+s], +s); return; }
+    const clv = e.target.closest("[data-clview]"); if (clv) { const [s, v] = clv.dataset.clview.split(":"); clView[+s] = v; renderChecklist($("#clHost-" + s), currentChecklists[+s], +s); return; }
+    const ba = e.target.closest("[data-blockact]"); if (ba) { toast(ba.dataset.blockact === "excluir" ? "Excluir módulo (remove os requisitos do módulo)" : "Ir para o módulo"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }

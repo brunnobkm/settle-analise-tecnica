@@ -144,8 +144,8 @@ button { font-family: inherit; cursor: pointer; }
 .comp-cat:hover { background: var(--muted); border-color: var(--border-strong); }
 .comp-cat .caret-sm { color: var(--muted-foreground); flex-shrink: 0; }
 .comp-sum { margin-left: auto; font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comp-edit { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--brand); background: #FFF; color: var(--brand-600); border-radius: var(--r-field); padding: 5px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.comp-edit:hover { background: var(--brand-100); }
+.comp-edit { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--brand); background: var(--brand); color: #FFF; border-radius: var(--r-field); padding: 6px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.comp-edit:hover { background: var(--brand-600); border-color: var(--brand-600); }
 .comp-edit svg { width: 13px; height: 13px; }
 .comp-kebab { display: inline-grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; border: 1px solid var(--border); background: #FFF; color: var(--muted-foreground); border-radius: var(--r-field); cursor: pointer; padding: 0; }
 .comp-kebab:hover { background: var(--muted); color: var(--foreground); border-color: #D4D4D4; }
@@ -517,18 +517,9 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .clview-tab { border: 0; background: transparent; color: var(--muted-foreground); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: var(--r-md); cursor: pointer; }
 .clview-tab.on { background: #FFF; color: var(--foreground); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .clview-tab:not(.on):hover { color: var(--foreground); }
-/* visão em bloco (agrupada por módulo) */
-.cl-blocos { display: flex; flex-direction: column; gap: 14px; }
-.cl-bloco { border: 1px solid var(--border); border-radius: var(--r-box); overflow: hidden; }
-.cl-bloco-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: var(--bg-soft); border-bottom: 1px solid var(--border); }
-.cl-bloco-head .clb-title { font-size: 14px; font-weight: 600; color: var(--foreground); }
-.cl-bloco-body { display: flex; flex-direction: column; }
-.clb-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
-.clb-row:last-child { border-bottom: 0; }
-.clb-row .clb-req { flex: 1; min-width: 0; font-size: 13.5px; color: var(--foreground); }
-.clb-row .badge { flex-shrink: 0; }
-.clb-row .req-ico { opacity: 0; flex-shrink: 0; }
-.clb-row:hover .req-ico { opacity: 1; }
+/* visão em bloco: tabela agregada por módulo */
+.dt .blk-num { font-family: var(--mono); white-space: nowrap; }
+.dt .blk-pct { color: var(--muted-foreground); }
 .dt td.col-val { font-family: var(--mono); }
 .dt .col-meta { font-size: 13px; }
 .dt .c-just { width: 24%; white-space: normal; color: var(--muted-foreground); font-size: 13px; line-height: 1.5; }
