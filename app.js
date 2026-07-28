@@ -112,9 +112,9 @@ function secSummary(cs) {
     const chosenIdx = prefs.chosen[active];
     if (chosenIdx != null && cs.comp.skus[chosenIdx]) {
       const s = cs.comp.skus[chosenIdx];
-      return `<b>✓ Escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}`;
+      return `<span class="mp-tag chosen">✓ Escolhido</span> ${mono(s.model)} · ${esc(s.brand)}`;
     }
-    return `<b>Melhor produto:</b> ${mono(cs.best.sku.model)} · atende ${cs.best.pct}%`;
+    return `<span class="mp-tag">Melhor produto</span> ${mono(cs.best.sku.model)} · atende ${cs.best.pct}%`;
   }
   return `Atende ${cs.ok_n} de ${cs.total} exigências`;
 }
@@ -251,7 +251,7 @@ function openTable(i) {
     const kebabBtn = `<button class="comp-kebab" data-kebab data-tip="Mais ações">${ICO_KEBAB}</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
-    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}<span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span><span class="comp-sum">${secSummary(cs)}</span>${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}<span class="comp-sum">${secSummary(cs)}</span><span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span>${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
@@ -290,8 +290,8 @@ function updateProdSecSummary() {
   const chosenIdx = prefs.chosen[active], mono = m => `<span style="font-family:var(--mono)">${esc(m)}</span>`;
   const ok = BEST.diverg.length === 0;
   let html;
-  if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<b>✓ Escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}`; }
-  else html = `<b>Melhor produto:</b> ${mono(BEST.sku.model)} · atende ${BEST.pct}%`;
+  if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<span class="mp-tag chosen">✓ Escolhido</span> ${mono(s.model)} · ${esc(s.brand)}`; }
+  else html = `<span class="mp-tag">Melhor produto</span> ${mono(BEST.sku.model)} · atende ${BEST.pct}%`;
   const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = html;
   const st = details.querySelector(".comp-status"); if (st) { st.className = "comp-status badge " + (ok ? "ok" : "bad"); st.textContent = ok ? "Atende" : "Não atende"; }
 }
