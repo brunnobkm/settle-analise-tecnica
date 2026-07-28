@@ -311,7 +311,8 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
   if (exigNa) return `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-val">${esc(cell.v)}</span></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK_C : cell.st === "no" ? ICO_NO_C : "";
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}" data-tip="Confiança da IA na extração deste valor"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
-  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val" data-tip="Valor do produto (vem do seu catálogo, somente leitura). Só a exigência do edital é editável.">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div>${conf}</td>`;
+  const cpy = `<button class="cell-copy" data-copytext="${esc(cell.v)}" data-tip="Copiar o valor da célula">${ICO_COPY}</button>`;
+  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val" data-tip="Valor do produto (vem do seu catálogo, somente leitura). Só a exigência do edital é editável.">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}${cpy}</div>${conf}</td>`;
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
 let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
@@ -441,7 +442,7 @@ function renderMatrix() {
       const sourceIcon = hasLink
         ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip} — clique para abrir">${srcIco}</button>`
         : `<span class="sku-srcico" data-tip="${srcTip} (sem link disponível)">${srcIco}</span>`;
-      const chosenChip = isChosen ? `<span class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</span>` : "";
+      const chosenChip = "";
       const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto (conforme a fonte)">${esc(fmtBRL(sku.preco))}</div>` : "";
       const fitCls = sc.pct === 100 ? "full" : sc.pct >= 50 ? "mid" : "low";
       // sem badge "Melhor produto" nem número do rank: as colunas já vêm em ordem de aderência; estoque sobe pra linha do ícone de fonte
@@ -470,7 +471,7 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head val-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}">${vrUnit}<button class="val-confirm" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="val-cancelbtn" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></div></td>`;
         } else {
           const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-          const copyBtn = `<button class="req-ico val-copybtn" data-copyval="${ri}" data-tip="Copiar o valor requerido">${ICO_COPY}</button>`;
+          const copyBtn = `<button class="req-ico val-copybtn" data-copytext="${esc(spec.exig)}" data-tip="Copiar o valor requerido">${ICO_COPY}</button>`;
           const editBtn = `<button class="req-ico val-editbtn" data-vstart="${ri}" data-tip="Editar o valor requerido (recalcula ao confirmar)">${ICO_PENCIL}</button>`;
           const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>`;
           const valInner = `<span class="val-text">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</span>`;
@@ -690,7 +691,7 @@ function wire() {
     const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); toast(`Abrindo a origem do dado na internet — ${MX_SKUS[+nl.dataset.neturl].model} (para conferência)`); return; }
     const cl = e.target.closest("[data-caturl]"); if (cl) { e.stopPropagation(); toast(`Abrindo no catálogo — ${MX_SKUS[+cl.dataset.caturl].model}`); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
-    const cv = e.target.closest("[data-copyval]"); if (cv) { const ri = +cv.dataset.copyval; const txt = SPECS[ri].exig; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
+    const cv = e.target.closest("[data-copytext]"); if (cv) { e.stopPropagation(); const txt = cv.dataset.copytext; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
     const kb = e.target.closest("[data-kebab]"); if (kb) { e.preventDefault(); e.stopPropagation(); openKebabMenu(kb); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const rl = e.target.closest("[data-rowlink]"); if (rl) { toast(`Link para o requisito "${SPECS[+rl.dataset.rowlink].req}" copiado`); return; }
