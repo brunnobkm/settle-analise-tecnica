@@ -243,7 +243,11 @@ function openTable(i) {
   const prodComp = it.componentes.find(comp => comp.mecanica === "produto");
   if (prodComp) { activeComp = prodComp; MX_SKUS = prodComp.skus; SPECS = matrixOf(prodComp); recompute(); }
 
-  let body = collapsiblesHTML(it), secs = "";
+  const protoNote = `<div class="proto-note" role="note">
+      <span class="pn-ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/></svg></span>
+      <span class="pn-text"><b class="pn-tag">Nota de protótipo</b> O título do item ("${esc(it.titulo || it.nome)}") e os rótulos das seções (ex.: "${esc(it.componentes[0].rotulo)}") são gerados pela IA a partir da descrição do item no edital, só para facilitar a leitura. Não são texto literal do edital.</span>
+    </div>`;
+  let body = protoNote + collapsiblesHTML(it), secs = "";
   it.componentes.forEach((comp, ci) => {
     let hostHTML, editSec;
     if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; editSec = "produto"; }
