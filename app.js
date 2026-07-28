@@ -525,8 +525,15 @@ function collapsiblesHTML(it) {
 }
 
 /* ---------- Mecânica: checklist (serviço / software) ---------- */
+const clView = {}; // visão por seção: "requisito" (tabela) | "bloco" (agrupado por módulo)
 function renderChecklist(host, clArr, sec) {
   if (!host) return;
+  const view = clView[sec] || "requisito";
+  const seg = `<div class="clview-seg" role="tablist">
+      <button class="clview-tab${view === "requisito" ? " on" : ""}" data-clview="${sec}:requisito" data-tip="Ver os requisitos em tabela">Visão em requisito</button>
+      <button class="clview-tab${view === "bloco" ? " on" : ""}" data-clview="${sec}:bloco" data-tip="Agrupar os requisitos por módulo">Visão em bloco</button>
+    </div>`;
+  if (view === "bloco") { host.innerHTML = seg + renderChecklistBlocks(clArr, sec); return; }
   const rows = clArr.map((r, ri) => {
     const st = CL_ST[r.st] || CL_ST.ne;
     const nota = r.notas
@@ -544,7 +551,29 @@ function renderChecklist(host, clArr, sec) {
     </tr>`;
   }).join("");
   const addColTh = `<th class="col-addcol"><button class="addcol-btn" data-addcol data-tip="Adicionar uma coluna à tabela">${ICO_PLUS}</button></th>`;
-  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Módulo</th><th class="col-meta">Responsável</th><th class="col-meta">Notas</th>${addColTh}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  host.innerHTML = seg + `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Módulo</th><th class="col-meta">Responsável</th><th class="col-meta">Notas</th>${addColTh}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+/* Visão em bloco: agrupa os requisitos por módulo (mesma info da tabela, agrupada) */
+function renderChecklistBlocks(clArr, sec) {
+  const groups = {};
+  clArr.forEach((r, ri) => { const m = r.modulo || "Outros"; (groups[m] || (groups[m] = [])).push({ r, ri }); });
+  const blocks = Object.entries(groups).map(([mod, items]) => {
+    const atende = items.filter(x => x.r.st === "ok" || x.r.st === "parceiro").length;
+    const allOk = atende === items.length;
+    const rows = items.map(({ r, ri }) => {
+      const st = CL_ST[r.st] || CL_ST.ne;
+      return `<div class="clb-row">
+        <button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para escolher o status">${st.ico}${st.label}<span class="cl-caret">▾</span></button>
+        <span class="clb-req">${esc(r.req)}</span>
+        <button class="req-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>
+      </div>`;
+    }).join("");
+    return `<div class="cl-bloco">
+      <div class="cl-bloco-head"><span class="clb-title">${esc(mod)}</span><span class="badge ${allOk ? "ok" : "bad"}" data-tip="Requisitos atendidos neste módulo">${atende}/${items.length} atende</span></div>
+      <div class="cl-bloco-body">${rows}</div>
+    </div>`;
+  }).join("");
+  return `<div class="cl-blocos">${blocks}</div>`;
 }
 
 /* ============================================================
@@ -727,6 +756,7 @@ function wire() {
     const cv = e.target.closest("[data-copytext]"); if (cv) { e.stopPropagation(); const txt = cv.dataset.copytext; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
     const kb = e.target.closest("[data-kebab]"); if (kb) { e.preventDefault(); e.stopPropagation(); openKebabMenu(kb); return; }
     const cd = e.target.closest("[data-catdrop]"); if (cd) { e.preventDefault(); e.stopPropagation(); openCatMenu(cd); return; }
+    const clv = e.target.closest("[data-clview]"); if (clv) { const [s, v] = clv.dataset.clview.split(":"); clView[+s] = v; renderChecklist($("#clHost-" + s), currentChecklists[+s], +s); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }
@@ -774,7 +804,8 @@ function wire() {
   // dropdown de mais ações da seção (kebab)
   $("#kebabMenu").addEventListener("click", e => {
     const b = e.target.closest("[data-kbact]"); if (!b) return;
-    if (b.dataset.kbact === "export") toast("Exportando a seção (gera um arquivo com os requisitos e a análise)");
+    const msg = { concluir: "Concluir análise desta seção", importar: "Importar (planilha ou modelo) para esta análise", exportar: "Exportando a seção (gera um arquivo com os requisitos e a análise)" };
+    toast(msg[b.dataset.kbact] || "");
     closeKebabMenu();
   });
   document.addEventListener("click", e => {

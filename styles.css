@@ -140,8 +140,8 @@ button { font-family: inherit; cursor: pointer; }
 .comp-dot.ok { color: var(--success); background: var(--success-bg); }
 .comp-dot.no { color: var(--destructive); background: var(--destructive-bg); }
 .comp-rotulo { font-size: 15px; font-weight: 600; color: var(--foreground); }
-.comp-cat { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 600; color: var(--foreground); background: transparent; border: 1px solid transparent; border-radius: var(--r-field); padding: 3px 8px 3px 6px; margin-left: -6px; cursor: pointer; }
-.comp-cat:hover { background: var(--muted); border-color: var(--border); }
+.comp-cat { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--foreground); background: #FFF; border: 1px solid var(--border); border-radius: var(--r-field); padding: 4px 9px; cursor: pointer; }
+.comp-cat:hover { background: var(--muted); border-color: var(--border-strong); }
 .comp-cat .caret-sm { color: var(--muted-foreground); flex-shrink: 0; }
 .comp-sum { margin-left: auto; font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comp-edit { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--brand); background: #FFF; color: var(--brand-600); border-radius: var(--r-field); padding: 5px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
@@ -510,6 +510,23 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .dt th.col-req, .dt td.col-req { position: sticky; left: 0; z-index: 1; background: #FFF; box-shadow: 1px 0 0 var(--border); }
 .dt thead th.col-req { z-index: 3; background: var(--muted); }
 .dt tr:hover td.col-req { background: var(--muted); }
+/* toggle de visão do software: requisito | bloco */
+.clview-seg { display: inline-flex; gap: 2px; padding: 3px; margin: 0 0 14px; background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-field); }
+.clview-tab { border: 0; background: transparent; color: var(--muted-foreground); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: var(--r-md); cursor: pointer; }
+.clview-tab.on { background: #FFF; color: var(--foreground); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.clview-tab:not(.on):hover { color: var(--foreground); }
+/* visão em bloco (agrupada por módulo) */
+.cl-blocos { display: flex; flex-direction: column; gap: 14px; }
+.cl-bloco { border: 1px solid var(--border); border-radius: var(--r-box); overflow: hidden; }
+.cl-bloco-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: var(--bg-soft); border-bottom: 1px solid var(--border); }
+.cl-bloco-head .clb-title { font-size: 14px; font-weight: 600; color: var(--foreground); }
+.cl-bloco-body { display: flex; flex-direction: column; }
+.clb-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.clb-row:last-child { border-bottom: 0; }
+.clb-row .clb-req { flex: 1; min-width: 0; font-size: 13.5px; color: var(--foreground); }
+.clb-row .badge { flex-shrink: 0; }
+.clb-row .req-ico { opacity: 0; flex-shrink: 0; }
+.clb-row:hover .req-ico { opacity: 1; }
 .dt td.col-val { font-family: var(--mono); }
 .dt .col-meta { font-size: 13px; }
 .dt .c-just { width: 24%; white-space: normal; color: var(--muted-foreground); font-size: 13px; line-height: 1.5; }
