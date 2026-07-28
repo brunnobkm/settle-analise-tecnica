@@ -756,7 +756,7 @@ function wire() {
     const cv = e.target.closest("[data-copytext]"); if (cv) { e.stopPropagation(); const txt = cv.dataset.copytext; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
     const kb = e.target.closest("[data-kebab]"); if (kb) { e.preventDefault(); e.stopPropagation(); openKebabMenu(kb); return; }
     const cd = e.target.closest("[data-catdrop]"); if (cd) { e.preventDefault(); e.stopPropagation(); openCatMenu(cd); return; }
-    const clv = e.target.closest("[data-clview]"); if (clv) { const [s, v] = clv.dataset.clview.split(":"); clView[+s] = v; renderChecklist($("#clHost-" + s), currentChecklists[+s], +s); return; }
+    const clv = e.target.closest("[data-clview]"); if (clv) { const [s, v] = clv.dataset.clview.split(":"); if (v === "bloco") { toast("Visão em bloco ainda não está disponível"); return; } clView[+s] = v; renderChecklist($("#clHost-" + s), currentChecklists[+s], +s); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }
