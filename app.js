@@ -235,6 +235,8 @@ function openTable(i) {
   currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
   closeEditDrawer();
   $("#toTitle").textContent = (it.numero ? "Item " + it.numero + " · " : "") + (it.titulo || it.nome);
+  const toSum = $("#toSummary"); if (toSum) toSum.classList.remove("is-hidden");
+  const toBodyEl = $("#toBody"); if (toBodyEl) toBodyEl.scrollTop = 0;
   const sum = itemSummary(i), multi = it.componentes.length > 1;
 
   // componente produto é processado antes (collapsiblesHTML usa SPECS)
@@ -672,6 +674,15 @@ function wire() {
   $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
 
   const tb = $("#toBody");
+  // meta do item (Quantidade/Unidade/Valores): oculta ao rolar para baixo, reaparece ao subir
+  let lastToScroll = 0;
+  tb.addEventListener("scroll", () => {
+    const st = tb.scrollTop, sum = $("#toSummary"); if (!sum) return;
+    if (st <= 4) sum.classList.remove("is-hidden");
+    else if (st > lastToScroll + 4) sum.classList.add("is-hidden");
+    else if (st < lastToScroll - 4) sum.classList.remove("is-hidden");
+    lastToScroll = st;
+  });
   tb.addEventListener("pointerdown", e => {
     const rz = e.target.closest("[data-resize]"); if (!rz) return;
     e.preventDefault(); rz.classList.add("active");
