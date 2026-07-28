@@ -533,7 +533,7 @@ function renderChecklist(host, clArr, sec) {
       <td class="col-meta"><span class="badge soft with-avatar">Selecionar</span></td>
     </tr>`;
   }).join("");
-  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-val">Valor requerido</th><th class="col-meta">Módulo</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Responsável</th></tr></thead><tbody>${rows}</tbody></table><div class="dt-foot" data-addcl="${sec}">${ICO_PLUS} Adicionar requisito</div></div>`;
+  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-val">Valor requerido</th><th class="col-meta">Módulo</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Responsável</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 /* ============================================================
@@ -630,7 +630,6 @@ function openStatusMenu(anchor, sec, ri) {
   menu.style.top = top + "px"; menu.style.left = Math.max(8, Math.min(r.left, innerWidth - mw - 8)) + "px";
 }
 function closeStatusMenu() { const m = $("#statusMenu"); if (m) m.hidden = true; statusMenuTarget = null; }
-function addClReq(sec) { currentChecklists[sec].push({ req: "Novo requisito", exig: "", modulo: "—", st: "ne", c: null, just: "—", origem: { doc: "Inserido manualmente", pag: "—" } }); renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec); }
 
 /* ============================================================
    Wire
@@ -682,11 +681,9 @@ function wire() {
     const rl = e.target.closest("[data-rowlink]"); if (rl) { toast(`Link para o requisito "${SPECS[+rl.dataset.rowlink].req}" copiado`); return; }
     const dl = e.target.closest("[data-delreq]"); if (dl) { const ri = +dl.dataset.delreq; const nm = SPECS[ri].req; SPECS.splice(ri, 1); recompute(); renderMatrix(); toast(`Requisito removido: "${nm}"`); return; }
     const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
-    if (e.target.closest("#addReq")) { openAddModal(); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
     const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
-    const ac = e.target.closest("[data-addcl]"); if (ac) { addClReq(+ac.dataset.addcl); return; }
   });
   tb.addEventListener("keydown", e => {
     const inp = e.target.closest(".val-inline-input"); if (!inp) return;
