@@ -151,8 +151,6 @@ button { font-family: inherit; cursor: pointer; }
 .comp-kebab:hover { background: var(--muted); color: var(--foreground); border-color: #D4D4D4; }
 .comp-kebab svg { width: 15px; height: 15px; }
 .comp-sum b { color: var(--foreground); font-weight: 600; }
-.mp-tag { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--muted-foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-full); padding: 2px 8px; margin-right: 4px; vertical-align: middle; }
-.mp-tag.chosen { color: #FFF; background: var(--brand); border-color: var(--brand); }
 .comp-acc-body { padding: 16px; }
 /* tabela rola DENTRO do card (a borda do card é a moldura) */
 .to-body .comp-acc-body .table-wrap { overflow: auto; max-height: 60vh; border: 0; border-radius: 0; }
@@ -205,8 +203,8 @@ button { font-family: inherit; cursor: pointer; }
 /* "Melhor produto" / "Produto escolhido" / "Pendências" são badges (chip), agrupadas com as demais no topo */
 .ic-reco-inline.prod, .ic-reco-inline.chosen, .ic-reco-inline.pend { display: inline-block; border-radius: var(--r-full); padding: 2px 10px; font-size: 12px; font-weight: 500; }
 .ic-reco-inline.prod, .ic-reco-inline.pend { background: var(--muted); border: 1px solid var(--border); color: var(--foreground); }
-.ic-reco-inline.chosen { color: var(--brand-600); font-weight: 600; background: var(--brand-100); border: 1px solid var(--brand-100); }
-.ic-reco-inline.chosen b { color: var(--brand-600); }
+.ic-reco-inline.chosen { color: var(--success); font-weight: 600; background: var(--success-bg); border: 1px solid var(--success-bg); }
+.ic-reco-inline.chosen b { color: var(--success); }
 .ic-divider { height: 1px; background: var(--border); margin: 2px 0; }
 .ic-line { font-size: 12.5px; color: var(--foreground); }
 .ic-line b { font-weight: 600; }
