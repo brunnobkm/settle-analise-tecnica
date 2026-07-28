@@ -539,9 +539,11 @@ function renderChecklist(host, clArr, sec) {
       <td class="col-meta"><span class="badge soft">${esc(r.modulo || "—")}</span></td>
       <td class="col-meta"><span class="badge soft with-avatar">Selecionar</span></td>
       <td class="col-meta col-notas">${nota}</td>
+      <td class="col-addcol"></td>
     </tr>`;
   }).join("");
-  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Módulo</th><th class="col-meta">Responsável</th><th class="col-meta">Notas</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const addColTh = `<th class="col-addcol"><button class="addcol-btn" data-addcol data-tip="Adicionar uma coluna à tabela">${ICO_PLUS}</button></th>`;
+  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Módulo</th><th class="col-meta">Responsável</th><th class="col-meta">Notas</th>${addColTh}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 /* ============================================================
@@ -711,6 +713,7 @@ function wire() {
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
     const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
     const cn = e.target.closest("[data-clnote]"); if (cn) { const [s, r] = cn.dataset.clnote.split(":").map(Number); toast(`Adicionar nota interna — "${currentChecklists[s][r].req}"`); return; }
+    const ac = e.target.closest("[data-addcol]"); if (ac) { toast("Adicionar coluna à tabela (campo personalizado)"); return; }
   });
   tb.addEventListener("keydown", e => {
     const inp = e.target.closest(".val-inline-input"); if (!inp) return;

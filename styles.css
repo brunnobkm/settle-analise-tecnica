@@ -511,6 +511,10 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .cell-add { font-size: 13px; color: var(--muted-foreground); background: transparent; border: 1px dashed var(--border-strong); border-radius: var(--r-md); padding: 3px 9px; cursor: pointer; opacity: 0; transition: opacity .12s; }
 .dt tr:hover .cell-add, .cell-add:focus { opacity: 1; }
 .cell-add:hover { color: var(--brand-600); border-color: var(--brand); background: var(--brand-100); }
+.dt th.col-addcol, .dt td.col-addcol { width: 48px; padding-left: 6px; padding-right: 6px; }
+.addcol-btn { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); color: var(--muted-foreground); cursor: pointer; padding: 0; }
+.addcol-btn:hover { background: var(--muted); color: var(--brand-600); border-color: var(--border-strong); }
+.addcol-btn svg { width: 14px; height: 14px; }
 .cbox { width: 16px; height: 16px; border: 1.5px solid #C4C4C4; border-radius: var(--r-sm); display: inline-block; }
 .dt-foot { display: flex; align-items: center; gap: 8px; padding: 14px 16px; color: var(--brand-600); font-size: 13px; font-weight: 600; border-top: 1px solid var(--border); cursor: pointer; }
 .dt-foot:hover { background: var(--muted); }
