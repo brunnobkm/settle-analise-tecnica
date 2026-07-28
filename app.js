@@ -438,15 +438,16 @@ function renderMatrix() {
       const sourceIcon = hasLink
         ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip} — clique para abrir">${srcIco}</button>`
         : `<span class="sku-srcico" data-tip="${srcTip} (sem link disponível)">${srcIco}</span>`;
-      const badgeHTML = isChosen ? `<div class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</div>` : (best && !hasChoice) ? `<div class="best-tag" data-tip="Melhor produto: maior aderência aos requisitos e, entre os que atendem, o menor preço">★ Melhor produto</div>` : `<div class="sku-rank">${rank + 1}º</div>`;
+      const chosenChip = isChosen ? `<span class="chosen-tag" data-tip="Produto escolhido para a proposta">✓ Escolhido</span>` : "";
       const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto (conforme a fonte)">${esc(fmtBRL(sku.preco))}</div>` : "";
       const fitCls = sc.pct === 100 ? "full" : sc.pct >= 50 ? "mid" : "low";
-      head += `<th class="col-sku${(best && !hasChoice) ? " best" : ""}${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        <div class="sku-top">${badgeHTML}${sourceIcon}</div>
+      // sem badge "Melhor produto" nem número do rank: as colunas já vêm em ordem de aderência; estoque sobe pra linha do ícone de fonte
+      head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
+        <div class="sku-top">${sourceIcon}${estoqueBadge}${chosenChip}</div>
         <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do produto, não é requisito)">${esc(sku.brand)}</div>
         <div class="sku-fit" data-tip="Aderência: requisitos atendidos e percentual"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}${sc.ne ? ` · ${sc.ne} n/e` : ""}</span></div>
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
-        <div class="sku-metaline">${precoLine}${estoqueBadge}</div>
+        ${precoLine}
         <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}" data-tip="${isChosen ? "Remover seleção" : "Definir como produto escolhido para a proposta"}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
   });
