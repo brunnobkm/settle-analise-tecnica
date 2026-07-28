@@ -354,9 +354,11 @@ th.col-sku.best { background: var(--success-bg); }
 .sku-metaline .sku-preco { margin-top: 0; }
 /* topo do card: badge/rank à esquerda, ícone de fonte (globo=internet / catálogo) clicável à direita */
 .sku-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; }
-.sku-srcico { width: 24px; height: 24px; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); color: var(--muted-foreground); display: grid; place-items: center; padding: 0; cursor: pointer; flex-shrink: 0; }
-.sku-srcico:hover { background: var(--muted); color: var(--brand-600); border-color: #D4D4D4; }
+.sku-srcico { width: 24px; height: 24px; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); color: var(--muted-foreground); display: grid; place-items: center; padding: 0; cursor: default; flex-shrink: 0; }
 .sku-srcico svg { width: 15px; height: 15px; }
+/* azul quando tem link (clicável), cinza quando não */
+button.sku-srcico.haslink { color: #2563EB; cursor: pointer; }
+button.sku-srcico.haslink:hover { background: #EFF4FF; border-color: #BFD3FF; color: #1D4ED8; }
 /* rótulos das colunas de linha colados nas linhas de dados (sem o vazio no topo); cards de produto ficam no topo */
 .cmp thead .col-req, .cmp thead .col-val, .cmp thead .col-acoes { vertical-align: bottom; }
 .cmp thead .col-sku { vertical-align: top; }
@@ -367,7 +369,9 @@ th.col-sku.best { background: var(--success-bg); }
 .score-pct { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .score-bar { display: block; width: 100%; height: 6px; border-radius: var(--r-full); background: #E5E5E5; overflow: hidden; margin-top: 6px; }
 .score-fill { height: 100%; border-radius: var(--r-full); background: #171717; }
-.best .score-fill { background: var(--success); }
+.score-fill.full { background: var(--success); }
+.score-fill.mid { background: var(--warning); }
+.score-fill.low { background: var(--destructive); }
 .best-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--r-full); background: var(--success-bg); color: var(--success); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
 .chosen-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--r-full); background: var(--brand); color: #FFF; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
 /* preço / estoque / origem do SKU */

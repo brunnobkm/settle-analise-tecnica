@@ -39,7 +39,7 @@ Contratação de empresa especializada para fornecimento de equipamentos de vide
 const SKUS = [
   { model: "DS-2CD2143G2-I",  brand: "Hikvision", preco: 1890, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2143g2-i.pdf" },
   { model: "DS-2CD2043G2-IU", brand: "Hikvision", preco: 1650, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2043g2-iu.pdf" },
-  { model: "VIP-3230-B-IA",   brand: "Intelbras", preco: 1420, estoque: false, origem: "catalogo", datasheet: "vip-3230-b-ia.pdf" },
+  { model: "VIP-3230-B-IA",   brand: "Intelbras", preco: 1420, estoque: false, origem: "catalogo", datasheet: null },
   { model: "IPC-HFW2431S-S2", brand: "Dahua",     preco: 1290, estoque: true,  origem: "internet", datasheet: null },
   { model: "DS-2CD2086G2-IU", brand: "Hikvision", preco: 2350, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2086g2-iu.pdf" },
   { model: "VIP-1230-B",      brand: "Intelbras", preco: 980,  estoque: false, origem: "internet", datasheet: null },
