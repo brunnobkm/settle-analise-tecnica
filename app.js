@@ -528,17 +528,20 @@ function renderChecklist(host, clArr, sec) {
   if (!host) return;
   const rows = clArr.map((r, ri) => {
     const st = CL_ST[r.st] || CL_ST.ne;
+    const nota = r.notas
+      ? `<span class="cl-nota">${esc(r.notas)}</span>`
+      : `<button class="cell-add" data-clnote="${sec}:${ri}" data-tip="Adicionar uma nota interna a este requisito">+ Nota</button>`;
     return `<tr>
-      <td class="col-req"><span class="req-name">${esc(r.req)}</span></td>
-      <td class="col-val"><div class="val-head"><span class="val-text">${esc(r.exig || "—")}</span><button class="req-ico val-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button></div></td>
-      <td class="col-meta"><span class="badge soft">${esc(r.modulo || "—")}</span></td>
+      <td class="col-req"><div class="req-head"><span class="req-name">${esc(r.req)}</span><button class="req-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button></div></td>
       <td class="col-meta"><button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para escolher o status">${st.ico}${st.label}<span class="cl-caret">▾</span></button></td>
       <td class="col-meta">${confBadge(r.c)}</td>
       <td class="col-meta c-just">${esc(r.just || "—")}</td>
+      <td class="col-meta"><span class="badge soft">${esc(r.modulo || "—")}</span></td>
       <td class="col-meta"><span class="badge soft with-avatar">Selecionar</span></td>
+      <td class="col-meta col-notas">${nota}</td>
     </tr>`;
   }).join("");
-  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-val">Valor requerido</th><th class="col-meta">Módulo</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Responsável</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  host.innerHTML = `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Módulo</th><th class="col-meta">Responsável</th><th class="col-meta">Notas</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 /* ============================================================
@@ -707,6 +710,7 @@ function wire() {
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
     const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
+    const cn = e.target.closest("[data-clnote]"); if (cn) { const [s, r] = cn.dataset.clnote.split(":").map(Number); toast(`Adicionar nota interna — "${currentChecklists[s][r].req}"`); return; }
   });
   tb.addEventListener("keydown", e => {
     const inp = e.target.closest(".val-inline-input"); if (!inp) return;

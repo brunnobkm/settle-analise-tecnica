@@ -506,6 +506,11 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .dt .col-meta { font-size: 13px; }
 .dt .c-just { width: 24%; white-space: normal; color: var(--muted-foreground); font-size: 13px; line-height: 1.5; }
 .dt .req-name { font-weight: 500; }
+.dt .col-notas { min-width: 120px; }
+.cl-nota { font-size: 13px; color: var(--foreground); }
+.cell-add { font-size: 13px; color: var(--muted-foreground); background: transparent; border: 1px dashed var(--border-strong); border-radius: var(--r-md); padding: 3px 9px; cursor: pointer; opacity: 0; transition: opacity .12s; }
+.dt tr:hover .cell-add, .cell-add:focus { opacity: 1; }
+.cell-add:hover { color: var(--brand-600); border-color: var(--brand); background: var(--brand-100); }
 .cbox { width: 16px; height: 16px; border: 1.5px solid #C4C4C4; border-radius: var(--r-sm); display: inline-block; }
 .dt-foot { display: flex; align-items: center; gap: 8px; padding: 14px 16px; color: var(--brand-600); font-size: 13px; font-weight: 600; border-top: 1px solid var(--border); cursor: pointer; }
 .dt-foot:hover { background: var(--muted); }
