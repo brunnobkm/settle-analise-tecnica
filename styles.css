@@ -130,7 +130,7 @@ button { font-family: inherit; cursor: pointer; }
 /* seções do item misto = accordion em card (mesmo visual do collapse .cps) */
 .to-sections { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
 .comp-acc, .comp-card { border: 1px solid var(--border); border-radius: var(--r-box); background: #FFF; }
-.comp-head { display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 52px; box-sizing: border-box; cursor: pointer; list-style: none; user-select: none; }
+.comp-head { display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 52px; box-sizing: border-box; cursor: pointer; list-style: none; user-select: none; position: sticky; top: 0; z-index: 6; background: var(--card); border-top-left-radius: var(--r-box); border-top-right-radius: var(--r-box); }
 .comp-head::-webkit-details-marker { display: none; }
 .comp-acc[open] > .comp-head { border-bottom: 1px solid var(--border); }
 .comp-head .caret-svg { color: var(--muted-foreground); transition: transform .15s; flex-shrink: 0; }
@@ -222,7 +222,7 @@ button { font-family: inherit; cursor: pointer; }
 /* ---------- Overlay tela cheia "Tabela" ---------- */
 .table-overlay { position: fixed; inset: 0; background: #FFF; z-index: 25; display: flex; flex-direction: column; }
 .table-overlay[hidden] { display: none; }
-.to-head { height: 64px; flex-shrink: 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+.to-head { height: 64px; flex-shrink: 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--background); position: relative; z-index: 10; }
 .to-title { font-size: 16px; font-weight: 600; }
 .to-actions { display: flex; align-items: center; gap: 8px; }
 /* navegação Anterior/Próximo entre itens */
