@@ -535,13 +535,12 @@ function tagList(items, note) {
 function collapsiblesHTML(it) {
   // "Descrição completa" só quando o item tem Produto (software não tem descrição — decisão Alice 28/07)
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
-  // recolhidos por padrão para a tabela ocupar a altura da tela; ficam a um clique
-  let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, false) : "";
-  // "Especificações não exigidas pelo edital": o seu produto oferece, o edital não pede.
+  let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true) : "";
+  // "Especificações não exigidas pelo edital": o seu produto oferece, o edital não pede. Aberto por padrão.
   const naoExig = [...new Set(it.componentes.filter(c => c.mecanica === "produto").flatMap(c => c.catalogoNaoEdital || []))];
   if (naoExig.length) {
     const note = "Especificações que o seu produto oferece e o edital não exige. Ficam aqui só como referência, não entram na comparação. Se alguma passar a ser exigida, você pode adicioná-la pelo Editar.";
-    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, false);
+    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, true);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
@@ -753,7 +752,17 @@ function wire() {
   // redimensiona a tabela ao mudar o tamanho da janela ou abrir/fechar uma seção
   window.addEventListener("resize", sizeMatrixHeight);
   tb.addEventListener("toggle", sizeMatrixHeight, true);
-  // a barra "Quantidade/Valores" agora é header estável (não some ao rolar), pois o card se dimensiona por ela
+  // barra "Quantidade/Valores": some ao rolar para baixo, reaparece ao subir. Quando some, o card recalcula e ganha o espaço.
+  let lastToScroll = 0;
+  tb.addEventListener("scroll", () => {
+    const st = tb.scrollTop, sum = $("#toSummary"); if (!sum) return;
+    const was = sum.classList.contains("is-hidden");
+    if (st <= 4) sum.classList.remove("is-hidden");
+    else if (st > lastToScroll + 4) sum.classList.add("is-hidden");
+    else if (st < lastToScroll - 4) sum.classList.remove("is-hidden");
+    lastToScroll = st;
+    if (sum.classList.contains("is-hidden") !== was) sizeMatrixHeight();
+  });
   tb.addEventListener("pointerdown", e => {
     const rz = e.target.closest("[data-resize]"); if (!rz) return;
     e.preventDefault(); rz.classList.add("active");
