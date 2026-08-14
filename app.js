@@ -262,15 +262,23 @@ function openTable(i) {
   $("#tableOverlay").hidden = false;
   sizeMatrixHeight();
 }
-// dimensiona a(s) tabela(s) para preencher a altura do viewport (deixando só o padding), sem depender de flex no <details>
+// altura FIXA do card = viewport menos os dois cabeçalhos (item + "Quantidade"), independente da Descrição/Especificações acima.
+// Assim o card da tabela sempre ocupa o máximo da tela. (Contorna o quirk de flex no <details>.)
 function sizeMatrixHeight() {
   const ov = $("#tableOverlay"); if (!ov || ov.hidden) return;
   const multi = active != null && ITEMS[active] && ITEMS[active].componentes.length > 1;
-  ov.querySelectorAll(".comp-acc[open] .table-wrap, .comp-acc[open] .dt-wrap").forEach(el => {
-    if (multi) { el.style.maxHeight = "60vh"; return; }
-    el.style.maxHeight = "none";
-    const avail = window.innerHeight - el.getBoundingClientRect().top - 20;
-    el.style.maxHeight = Math.max(220, avail) + "px";
+  const headH = $(".to-head") ? $(".to-head").getBoundingClientRect().height : 64;
+  const metaEl = $("#toSummary");
+  const metaH = (metaEl && !metaEl.classList.contains("is-hidden")) ? metaEl.getBoundingClientRect().height : 0;
+  ov.querySelectorAll(".comp-acc[open]").forEach(card => {
+    const tw = card.querySelector(".table-wrap, .dt-wrap"); if (!tw) return;
+    if (multi) { tw.style.height = ""; tw.style.maxHeight = "60vh"; return; }
+    const chEl = card.querySelector(".comp-head");
+    const chH = chEl ? chEl.getBoundingClientRect().height : 52;
+    // 32 = padding vertical do corpo do card; 28 = padding/gap da área de seções
+    const h = window.innerHeight - headH - metaH - chH - 32 - 28;
+    tw.style.maxHeight = "none";
+    tw.style.height = Math.max(240, Math.round(h)) + "px";
   });
 }
 const closeTable = () => { $("#tableOverlay").hidden = true; active = null; renderGrid(); };
@@ -745,15 +753,7 @@ function wire() {
   // redimensiona a tabela ao mudar o tamanho da janela ou abrir/fechar uma seção
   window.addEventListener("resize", sizeMatrixHeight);
   tb.addEventListener("toggle", sizeMatrixHeight, true);
-  // meta do item (Quantidade/Unidade/Valores): oculta ao rolar para baixo, reaparece ao subir
-  let lastToScroll = 0;
-  tb.addEventListener("scroll", () => {
-    const st = tb.scrollTop, sum = $("#toSummary"); if (!sum) return;
-    if (st <= 4) sum.classList.remove("is-hidden");
-    else if (st > lastToScroll + 4) sum.classList.add("is-hidden");
-    else if (st < lastToScroll - 4) sum.classList.remove("is-hidden");
-    lastToScroll = st;
-  });
+  // a barra "Quantidade/Valores" agora é header estável (não some ao rolar), pois o card se dimensiona por ela
   tb.addEventListener("pointerdown", e => {
     const rz = e.target.closest("[data-resize]"); if (!rz) return;
     e.preventDefault(); rz.classList.add("active");
