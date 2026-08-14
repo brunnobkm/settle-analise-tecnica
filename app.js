@@ -306,12 +306,12 @@ function renderItemSummary() {
   // chip com borda (clicável para editar); a LABEL e o prefixo fixo (ex.: R$) ficam dentro do chip, não editáveis
   const chip = (key, opts) => {
     opts = opts || {};
-    const label = `<span class="ts-chip-label">${opts.label}</span>`;
+    const label = `<span class="ts-chip-label">${opts.label}:</span>`;
     const rs = opts.money ? `<span class="ts-chip-prefix">R$</span>` : "";
     const disp = opts.money ? `<span class="ts-chip-num">${opts.display}</span>` : opts.display;
     if (key && editingMeta === key) {
       const field = `<input class="ts-chip-input${opts.money ? " mono" : ""}" id="metaInput" value="${esc(opts.inputVal)}" inputmode="${opts.money ? "decimal" : (opts.text ? "text" : "numeric")}" aria-label="${opts.label}" style="width:${opts.w || 70}px">`;
-      return `<span class="ts-chip-edit">${label}${rs}${field}</span>${okcancel}`;
+      return `<span class="ts-chip-edit">${label}${rs}${field}${okcancel}</span>`;
     }
     if (!key) return `<span class="ts-total" data-tip="Calculado automaticamente: quantidade × valor unitário">${label}${rs}${disp}</span>`;
     return `<button class="ts-chip" data-metaedit="${key}" data-tip="Clique para editar">${label}${rs}${disp}</button>`;
