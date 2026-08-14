@@ -260,6 +260,18 @@ function openTable(i) {
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
   renderNav(); renderItemSummary(); renderEditControls();
   $("#tableOverlay").hidden = false;
+  sizeMatrixHeight();
+}
+// dimensiona a(s) tabela(s) para preencher a altura do viewport (deixando só o padding), sem depender de flex no <details>
+function sizeMatrixHeight() {
+  const ov = $("#tableOverlay"); if (!ov || ov.hidden) return;
+  const multi = active != null && ITEMS[active] && ITEMS[active].componentes.length > 1;
+  ov.querySelectorAll(".comp-acc[open] .table-wrap, .comp-acc[open] .dt-wrap").forEach(el => {
+    if (multi) { el.style.maxHeight = "60vh"; return; }
+    el.style.maxHeight = "none";
+    const avail = window.innerHeight - el.getBoundingClientRect().top - 20;
+    el.style.maxHeight = Math.max(220, avail) + "px";
+  });
 }
 const closeTable = () => { $("#tableOverlay").hidden = true; active = null; renderGrid(); };
 /* itens visíveis segundo o filtro ativo (para a navegação Anterior/Próximo) */
@@ -484,6 +496,7 @@ function renderMatrix() {
   });
   host.innerHTML = `<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
   if (editingRow != null) { const inp = host.querySelector(".val-inline-input"); if (inp) { inp.focus(); inp.select(); } }
+  sizeMatrixHeight();
 }
 /* edição inline do "Valor requerido" (matriz): editar direto na célula com confirmação (check) antes de recalcular */
 function startInlineEdit(ri) { editingRow = ri; renderMatrix(); }
@@ -533,7 +546,7 @@ function renderChecklist(host, clArr, sec) {
       <button class="clview-tab${view === "requisito" ? " on" : ""}" data-clview="${sec}:requisito" data-tip="Ver os requisitos em tabela">Visão em requisito</button>
       <button class="clview-tab${view === "bloco" ? " on" : ""}" data-clview="${sec}:bloco" data-tip="Agrupar os requisitos por módulo">Visão em bloco</button>
     </div>`;
-  if (view === "bloco") { host.innerHTML = seg + renderChecklistBlocks(clArr, sec); return; }
+  if (view === "bloco") { host.innerHTML = seg + renderChecklistBlocks(clArr, sec); sizeMatrixHeight(); return; }
   const rows = clArr.map((r, ri) => {
     const st = CL_ST[r.st] || CL_ST.ne;
     const nota = r.notas
@@ -552,6 +565,7 @@ function renderChecklist(host, clArr, sec) {
   }).join("");
   const addColTh = `<th class="col-addcol"><button class="addcol-btn" data-addcol data-tip="Adicionar uma coluna à tabela">${ICO_PLUS}</button></th>`;
   host.innerHTML = seg + `<div class="dt-wrap"><table class="dt"><thead><tr><th class="col-req">Requisito</th><th class="col-meta">Status</th><th class="col-meta">Confiança IA</th><th class="col-meta c-just">Justificativa IA</th><th class="col-meta">Módulo</th><th class="col-meta">Responsável</th><th class="col-meta">Notas</th>${addColTh}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  sizeMatrixHeight();
 }
 /* Visão em bloco: tabela agregada por módulo (contagem por status), espelha produção */
 function renderChecklistBlocks(clArr, sec) {
@@ -727,6 +741,9 @@ function wire() {
   $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
 
   const tb = $("#toBody");
+  // redimensiona a tabela ao mudar o tamanho da janela ou abrir/fechar uma seção
+  window.addEventListener("resize", sizeMatrixHeight);
+  tb.addEventListener("toggle", sizeMatrixHeight, true);
   // meta do item (Quantidade/Unidade/Valores): oculta ao rolar para baixo, reaparece ao subir
   let lastToScroll = 0;
   tb.addEventListener("scroll", () => {
