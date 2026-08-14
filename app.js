@@ -313,7 +313,7 @@ function renderItemSummary() {
       const field = `<input class="ts-chip-input${opts.money ? " mono" : ""}" id="metaInput" value="${esc(opts.inputVal)}" inputmode="${opts.money ? "decimal" : (opts.text ? "text" : "numeric")}" aria-label="${opts.label}" style="width:${opts.w || 70}px">`;
       return `<span class="ts-chip-edit">${label}${rs}${field}${okcancel}</span>`;
     }
-    if (!key) return `<span class="ts-total" data-tip="Calculado automaticamente: quantidade × valor unitário">${label}${rs}${disp}</span>`;
+    if (!key) return `<span class="ts-chip ts-chip-static" data-tip="Calculado automaticamente: quantidade × valor unitário">${label}${rs}${disp}</span>`;
     return `<button class="ts-chip" data-metaedit="${key}" data-tip="Clique para editar">${label}${rs}${disp}</button><span class="icon-pill"><button class="pill-btn" data-metaedit="${key}" title="Editar">${ICO_PENCIL}</button></span>`;
   };
   el.innerHTML = `<div class="ts-metas">
