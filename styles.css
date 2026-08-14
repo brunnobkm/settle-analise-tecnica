@@ -242,8 +242,9 @@ button { font-family: inherit; cursor: pointer; }
 /* valor editável = chip com borda (estilo Câmera (hardware), sem caret); prefixo fixo dentro */
 .ts-chip { display: inline-flex; align-items: center; gap: 5px; font: inherit; color: var(--foreground); background: #FFF; border: 1px solid var(--border); border-radius: var(--r-field); padding: 2px 9px; cursor: pointer; }
 .ts-chip:hover { background: var(--muted); border-color: var(--border-strong); }
-.ts-chip.mono { font-family: var(--mono); }
+.ts-chip-label { color: var(--muted-foreground); }
 .ts-chip-prefix { color: var(--muted-foreground); }
+.ts-chip-num { font-family: var(--mono); }
 /* valor não editável (Total) = texto simples, para contrastar com os editáveis */
 .ts-total { display: inline-flex; align-items: center; gap: 5px; color: var(--foreground); cursor: help; }
 .ts-total.mono { font-family: var(--mono); }

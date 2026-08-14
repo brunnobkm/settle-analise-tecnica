@@ -303,25 +303,24 @@ function renderItemSummary() {
   const it = ITEMS[active];
   const num = v => parseBRL(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
   const okcancel = `<button class="ts-ok" data-metaok data-tip="Confirmar">${ICO_OK}</button><button class="ts-cancel" data-metacancel data-tip="Cancelar">${ICO_NO}</button>`;
-  // valor = chip com borda (clicável para editar); prefixo fixo (ex.: R$) fica dentro do chip
+  // chip com borda (clicável para editar); a LABEL e o prefixo fixo (ex.: R$) ficam dentro do chip, não editáveis
   const chip = (key, opts) => {
     opts = opts || {};
-    const prefix = opts.prefix ? `<span class="ts-chip-prefix">${opts.prefix}</span>` : "";
-    const mono = opts.money ? " mono" : "";
+    const label = `<span class="ts-chip-label">${opts.label}</span>`;
+    const rs = opts.money ? `<span class="ts-chip-prefix">R$</span>` : "";
+    const disp = opts.money ? `<span class="ts-chip-num">${opts.display}</span>` : opts.display;
     if (key && editingMeta === key) {
-      const field = opts.select
-        ? `<select class="ts-chip-input ts-select" id="metaInput" aria-label="${opts.label}">${UNI_OPTS.map(o => `<option${o === opts.inputVal ? " selected" : ""}>${o}</option>`).join("")}</select>`
-        : `<input class="ts-chip-input${mono}" id="metaInput" value="${esc(opts.inputVal)}" inputmode="${opts.money ? "decimal" : "numeric"}" aria-label="${opts.label}" style="width:${opts.w || 70}px">`;
-      return `<span class="ts-chip-edit${mono}">${prefix}${field}</span>${okcancel}`;
+      const field = `<input class="ts-chip-input${opts.money ? " mono" : ""}" id="metaInput" value="${esc(opts.inputVal)}" inputmode="${opts.money ? "decimal" : (opts.text ? "text" : "numeric")}" aria-label="${opts.label}" style="width:${opts.w || 70}px">`;
+      return `<span class="ts-chip-edit">${label}${rs}${field}</span>${okcancel}`;
     }
-    if (!key) return `<span class="ts-total${mono}" data-tip="Calculado automaticamente: quantidade × valor unitário">${prefix}${opts.display}</span>`;
-    return `<button class="ts-chip${mono}" data-metaedit="${key}" data-tip="Clique para editar">${prefix}${opts.display}</button>`;
+    if (!key) return `<span class="ts-total" data-tip="Calculado automaticamente: quantidade × valor unitário">${label}${rs}${disp}</span>`;
+    return `<button class="ts-chip" data-metaedit="${key}" data-tip="Clique para editar">${label}${rs}${disp}</button>`;
   };
   el.innerHTML = `<div class="ts-metas">
-      <span class="ts-field"><b>Quantidade:</b> ${chip("quantidade", { label: "Quantidade", display: esc(it.quantidade), inputVal: it.quantidade, w: 56 })}</span>
-      <span class="ts-field"><b>Unidade de medida:</b> ${chip("unidade", { label: "Unidade de medida", display: esc(it.unidadeMedida || "unidade"), inputVal: it.unidadeMedida || "unidade", select: true })}</span>
-      <span class="ts-field"><b>Valor unitário:</b> ${chip("preco", { label: "Valor unitário", money: true, prefix: "R$", display: esc(num(it.valorUnitario.v)), inputVal: num(it.valorUnitario.v), w: 88 })}</span>
-      <span class="ts-field"><b>Valor total:</b> ${chip(null, { money: true, prefix: "R$", display: esc(num(it.valorTotal.v)) })}</span>
+      <span class="ts-field">${chip("unidade", { label: "Unidade de medida", display: esc(it.unidadeMedida || "unidade"), inputVal: it.unidadeMedida || "unidade", text: true, w: 96 })}</span>
+      <span class="ts-field">${chip("quantidade", { label: "Quantidade", display: esc(it.quantidade), inputVal: it.quantidade, w: 56 })}</span>
+      <span class="ts-field">${chip("preco", { label: "Valor unitário", money: true, display: esc(num(it.valorUnitario.v)), inputVal: num(it.valorUnitario.v), w: 88 })}</span>
+      <span class="ts-field">${chip(null, { label: "Valor total", money: true, display: esc(num(it.valorTotal.v)) })}</span>
     </div>`;
   if (editingMeta) { const inp = $("#metaInput"); if (inp) { inp.focus(); if (inp.select) inp.select(); } }
 }
@@ -808,7 +807,6 @@ function wire() {
     if (e.key === "Enter") { e.preventDefault(); commitMeta(); }
     else if (e.key === "Escape") { e.preventDefault(); editingMeta = null; renderItemSummary(); }
   });
-  $("#toSummary").addEventListener("change", e => { if (editingMeta === "unidade" && e.target.id === "metaInput") commitMeta(); });
   document.addEventListener("click", e => { if (editingMeta && !e.target.closest("#toSummary")) commitMeta(); });
   tb.addEventListener("pointerdown", e => {
     const rz = e.target.closest("[data-resize]"); if (!rz) return;
