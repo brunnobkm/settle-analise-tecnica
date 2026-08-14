@@ -314,7 +314,7 @@ function renderItemSummary() {
       return `<span class="ts-chip-edit">${label}${rs}${field}${okcancel}</span>`;
     }
     if (!key) return `<span class="ts-chip ts-chip-static" data-tip="Calculado automaticamente: quantidade × valor unitário">${label}${rs}${disp}</span>`;
-    return `<button class="ts-chip" data-metaedit="${key}" data-tip="Clique para editar">${label}${rs}${disp}</button><span class="icon-pill"><button class="pill-btn" data-metaedit="${key}" title="Editar">${ICO_PENCIL}</button></span>`;
+    return `<button class="ts-chip" data-metaedit="${key}">${label}${rs}${disp}</button>`;
   };
   el.innerHTML = `<div class="ts-metas">
       <span class="ts-field">${chip("unidade", { label: "Unidade de medida", display: esc(it.unidadeMedida || "unidade"), inputVal: it.unidadeMedida || "unidade", text: true, w: 96 })}</span>
@@ -336,6 +336,31 @@ function commitMeta() {
   editingMeta = null; renderItemSummary(); renderGrid();
   toast("Informações do item atualizadas");
 }
+/* icon-pill flutuante (fixo, tipo tooltip): não ocupa espaço e reposiciona pra cima quando não cabe embaixo */
+let pillActions = [], pillHideT = null;
+function actionsForChip(chip) {
+  if (chip.matches(".val-chip")) {
+    const ri = +chip.dataset.vstart;
+    return [
+      { ico: ICO_PENCIL, title: "Editar o valor requerido", act: () => startInlineEdit(ri) },
+      { ico: ICO_ARROW, title: "Ver de onde a IA extraiu no edital (página e trecho)", act: () => openOriginSpec(SPECS[ri], ri) },
+      { ico: ICO_COPY, title: "Copiar o valor requerido", act: () => { const t = SPECS[ri].exig; if (navigator.clipboard) navigator.clipboard.writeText(t).catch(() => {}); toast(`Valor copiado: "${t}"`); } },
+    ];
+  }
+  const key = chip.dataset.metaedit;
+  return [{ ico: ICO_PENCIL, title: "Editar", act: () => { editingMeta = key; renderItemSummary(); } }];
+}
+function showActionPill(chip) {
+  const pill = $("#actionPill"); if (!pill) return;
+  pillActions = actionsForChip(chip);
+  pill.innerHTML = pillActions.map((a, i) => `<button class="pill-btn" data-pillidx="${i}" title="${esc(a.title)}">${a.ico}</button>`).join("");
+  pill.hidden = false;
+  const r = chip.getBoundingClientRect(), pw = pill.offsetWidth, ph = pill.offsetHeight;
+  let top = r.bottom + 3; if (top + ph > innerHeight - 6) top = r.top - ph - 3;
+  let left = Math.min(r.left, innerWidth - pw - 6);
+  pill.style.top = Math.max(6, top) + "px"; pill.style.left = Math.max(6, left) + "px";
+}
+function hideActionPill() { const pill = $("#actionPill"); if (pill) pill.hidden = true; pillActions = []; }
 /* atualiza ao vivo o resumo da seção de produto (accordion) quando o SKU escolhido muda */
 function updateProdSecSummary() {
   const details = [...document.querySelectorAll(".comp-acc")].find(d => d.querySelector("#matrixHost"));
@@ -523,9 +548,8 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="ts-chip-edit val-chip-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}">${vrUnit}<button class="ts-ok" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="ts-cancel" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></span></div></td>`;
         } else {
           const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-          const chip = `<button class="ts-chip val-chip" data-vstart="${ri}" data-tip="Editar o valor requerido (recalcula ao confirmar)">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</button>`;
-          const pill = `<span class="icon-pill"><button class="pill-btn" data-vstart="${ri}" title="Editar o valor requerido">${ICO_PENCIL}</button><button class="pill-btn" data-origin="${ri}" title="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button><button class="pill-btn" data-copytext="${esc(spec.exig)}" title="Copiar o valor requerido">${ICO_COPY}</button></span>`;
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${chip}${pill}</div></td>`;
+          const chip = `<button class="ts-chip val-chip" data-vstart="${ri}">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</button>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${chip}</div></td>`;
         }
       }
       else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do seu produto disponível, mas ainda sem correspondência: falta extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
@@ -806,6 +830,18 @@ function wire() {
     else if (e.key === "Escape") { e.preventDefault(); editingMeta = null; renderItemSummary(); }
   });
   document.addEventListener("click", e => { if (editingMeta && !e.target.closest("#toSummary")) commitMeta(); });
+  // icon-pill flutuante (tooltip de ações): criar elemento + hover/click
+  if (!$("#actionPill")) { const p = document.createElement("div"); p.id = "actionPill"; p.className = "action-pill"; p.hidden = true; document.body.appendChild(p); }
+  document.addEventListener("mouseover", e => {
+    if (e.target.closest("#actionPill")) { clearTimeout(pillHideT); return; }
+    const chip = e.target.closest('#toSummary .ts-chip[data-metaedit], #toBody .val-chip[data-vstart]');
+    if (chip) { clearTimeout(pillHideT); showActionPill(chip); }
+    else { clearTimeout(pillHideT); pillHideT = setTimeout(hideActionPill, 140); }
+  });
+  $("#actionPill").addEventListener("click", e => {
+    const b = e.target.closest("[data-pillidx]"); if (!b) return;
+    const a = pillActions[+b.dataset.pillidx]; hideActionPill(); if (a) a.act();
+  });
   tb.addEventListener("pointerdown", e => {
     const rz = e.target.closest("[data-resize]"); if (!rz) return;
     e.preventDefault(); rz.classList.add("active");

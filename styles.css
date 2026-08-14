@@ -242,13 +242,13 @@ button { font-family: inherit; cursor: pointer; }
 /* valor editável = chip com borda (estilo Câmera (hardware), sem caret); prefixo fixo dentro */
 .ts-chip { display: inline-flex; align-items: center; gap: 5px; font: inherit; color: var(--foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 3px 9px; cursor: pointer; }
 .ts-chip:hover { border-color: var(--border-strong); }
-/* icon-pill: grupo de ações que FLUTUA no hover (não ocupa espaço, aparece abaixo como um tooltip) */
-.icon-pill { position: absolute; top: calc(100% - 1px); left: 0; z-index: 25; display: inline-flex; align-items: center; background: #FFF; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; opacity: 0; pointer-events: none; transition: opacity .12s; box-shadow: 0 4px 14px rgba(0,0,0,.14); }
+/* icon-pill flutuante FIXO (tooltip de ações): não ocupa espaço, não é cortado por overflow, reposiciona por JS */
+.action-pill { position: fixed; z-index: 90; display: inline-flex; align-items: center; background: #FFF; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,.16); }
+.action-pill[hidden] { display: none; }
 .pill-btn { width: 26px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted-foreground); cursor: pointer; padding: 0; }
 .pill-btn + .pill-btn { border-left: 1px solid var(--border); }
 .pill-btn:hover { background: var(--muted); color: var(--brand-600); }
 .pill-btn svg { width: 13px; height: 13px; }
-.ts-field:hover .icon-pill, .col-val:hover .icon-pill, .icon-pill:hover { opacity: 1; pointer-events: auto; }
 /* badge não editável (Valor total): mesmo design, sem interação/hover */
 .ts-chip-static { cursor: help; }
 .ts-chip-static:hover { border-color: var(--border); background: var(--muted); }
