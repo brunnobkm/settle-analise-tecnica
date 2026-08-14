@@ -520,14 +520,13 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-missing" data-tip="O edital exige este requisito, mas a IA não conseguiu extrair o valor. Preencha para liberar a comparação.">${ICO_WARN} Não extraído</span>${originBtn}</div></td>`;
         } else if (editingRow === ri) {
           const core = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head val-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}">${vrUnit}<button class="val-confirm" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="val-cancelbtn" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></div></td>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="ts-chip-edit val-chip-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}">${vrUnit}<button class="ts-ok" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="ts-cancel" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></span></div></td>`;
         } else {
           const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
           const copyBtn = `<button class="req-ico val-copybtn" data-copytext="${esc(spec.exig)}" data-tip="Copiar o valor requerido">${ICO_COPY}</button>`;
-          const editBtn = `<button class="req-ico val-editbtn" data-vstart="${ri}" data-tip="Editar o valor requerido (recalcula ao confirmar)">${ICO_PENCIL}</button>`;
           const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>`;
-          const valInner = `<span class="val-text">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</span>`;
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${valInner}${copyBtn}${editBtn}${originBtn}</div></td>`;
+          const chip = `<button class="ts-chip val-chip" data-vstart="${ri}" data-tip="Editar o valor requerido (recalcula ao confirmar)">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}<span class="ts-chip-pencil">${ICO_PENCIL}</span></button>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${chip}${copyBtn}${originBtn}</div></td>`;
         }
       }
       else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do seu produto disponível, mas ainda sem correspondência: falta extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;

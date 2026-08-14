@@ -475,6 +475,13 @@ td.col-req { padding: 12px 16px; }
 .col-val:hover .val-head .val-editbtn, .val-head .val-editbtn:focus { opacity: 1; }
 .val-head .val-copybtn { opacity: 0; flex-shrink: 0; }
 .col-val:hover .val-head .val-copybtn, .val-head .val-copybtn:focus { opacity: 1; }
+/* Valor requerido como chip editável (mesma linguagem da barra) */
+.val-chip { max-width: 100%; }
+.val-chip .val-plain { font-family: var(--mono); font-size: 13px; }
+.val-chip .op-fixed, .val-chip .unit-fixed { color: var(--muted-foreground); }
+.val-head .val-copybtn { margin-left: auto; }
+.val-chip-edit .val-inline-input { border: 0; background: transparent; padding: 0; width: 58px; box-shadow: none; border-radius: 0; }
+.val-chip-edit .val-inline-input:focus { outline: none; box-shadow: none; }
 .cell-line { position: relative; }
 .cell-copy { opacity: 0; flex-shrink: 0; width: 22px; height: 22px; margin-left: auto; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); color: var(--muted-foreground); display: grid; place-items: center; padding: 0; cursor: pointer; }
 .cell-copy:hover { background: var(--muted); color: var(--brand-600); border-color: #D4D4D4; }
