@@ -527,12 +527,13 @@ function tagList(items, note) {
 function collapsiblesHTML(it) {
   // "Descrição completa" só quando o item tem Produto (software não tem descrição — decisão Alice 28/07)
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
-  let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true) : "";
-  // "Especificações não exigidas pelo edital": o seu produto oferece, o edital não pede. Aberto por padrão, com texto explicativo.
+  // recolhidos por padrão para a tabela ocupar a altura da tela; ficam a um clique
+  let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, false) : "";
+  // "Especificações não exigidas pelo edital": o seu produto oferece, o edital não pede.
   const naoExig = [...new Set(it.componentes.filter(c => c.mecanica === "produto").flatMap(c => c.catalogoNaoEdital || []))];
   if (naoExig.length) {
     const note = "Especificações que o seu produto oferece e o edital não exige. Ficam aqui só como referência, não entram na comparação. Se alguma passar a ser exigida, você pode adicioná-la pelo Editar.";
-    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, true);
+    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, false);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
