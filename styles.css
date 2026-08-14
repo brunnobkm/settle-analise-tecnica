@@ -252,6 +252,11 @@ button { font-family: inherit; cursor: pointer; }
 /* badge não editável (Valor total): mesmo design, sem interação/hover */
 .ts-chip-static { cursor: help; }
 .ts-chip-static:hover { border-color: var(--border); background: var(--muted); }
+/* badge "no edital não analisados" com botão + para adicionar à comparação */
+.na-tag { display: inline-flex; align-items: center; gap: 4px; padding-right: 3px; }
+.na-add { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 0; background: transparent; color: var(--brand-600); border-radius: var(--r-md); cursor: pointer; padding: 0; }
+.na-add:hover { background: var(--brand-100); }
+.na-add svg { width: 12px; height: 12px; }
 .ts-chip-label { color: var(--foreground); font-weight: 600; }
 .ts-chip-prefix { color: var(--muted-foreground); }
 .ts-chip-num { font-family: var(--mono); }

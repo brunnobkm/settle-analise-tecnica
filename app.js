@@ -248,7 +248,7 @@ function openTable(i) {
     const editLabel = comp.mecanica === "produto" ? "Editar" : "Revisar Requisitos";
     const editTip = comp.mecanica === "produto" ? "Editar as exigências desta seção" : "Revisar os requisitos deste software";
     const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="${editTip}">${editLabel}</button>`;
-    const kebabBtn = `<button class="comp-kebab" data-kebab data-tip="Mais ações">${ICO_KEBAB}</button>`;
+    const kebabBtn = `<button class="comp-kebab" data-kebab data-kebabmech="${comp.mecanica}" data-tip="Mais ações">${ICO_KEBAB}</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
     secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}<span class="comp-sum">${secSummary(cs)}</span><span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span>${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
@@ -587,17 +587,41 @@ function collapsible(title, inner, count, open) {
 function tagList(items, note) {
   return `${note ? `<div class="ex-note">${note}</div>` : ""}<div class="tag-list">${items.map(t => `<span class="tag-item">${esc(t)}</span>`).join("")}</div>`;
 }
+const addedNA = {}; // por item: specs "no edital não analisados" que o usuário adicionou à comparação
 function collapsiblesHTML(it) {
   // "Descrição completa" só quando o item tem Produto (software não tem descrição — decisão Alice 28/07)
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
   let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true) : "";
-  // "Especificações não exigidas pelo edital": o seu produto oferece, o edital não pede. Aberto por padrão.
-  const naoExig = [...new Set(it.componentes.filter(c => c.mecanica === "produto").flatMap(c => [...(c.catalogoNaoEdital || []), ...((c.naoAnalisadas || []).map(n => n.req))]))];
+  const prodComps = it.componentes.filter(c => c.mecanica === "produto");
+  // (1) não exigidas pelo edital: o SKU tem o valor, o edital não pede
+  const naoExig = [...new Set(prodComps.flatMap(c => c.catalogoNaoEdital || []))];
   if (naoExig.length) {
-    const note = "Especificações que o seu produto oferece e o edital não exige. Ficam aqui só como referência, não entram na comparação. Se alguma passar a ser exigida, você pode adicioná-la pelo Editar.";
+    const note = "Especificações que o seu produto oferece e o edital não exige. Ficam aqui só como referência, não entram na comparação.";
     html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, true);
   }
+  // (2) no edital não analisados: o edital exige, mas ainda não foi analisado (falta o valor do SKU). "+" adiciona à comparação.
+  const added = addedNA[active] || new Set();
+  const na = prodComps.flatMap(c => c.naoAnalisadas || []).filter(n => !added.has(n.req));
+  if (na.length) {
+    const note = "Especificações exigidas pelo edital que ainda não foram analisadas (falta o valor no seu catálogo). Clique no + para adicionar à comparação.";
+    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${na.map(n => `<span class="tag-item na-tag">${esc(n.req)}<button class="na-add" data-addna="${esc(n.req)}" title="Adicionar à comparação">${ICO_PLUS}</button></span>`).join("")}</div>`;
+    html += collapsible("Especificações no edital não analisados", tags, na.length, true);
+  }
   return `<div class="to-collapsibles">${html}</div>`;
+}
+/* "+" numa spec "no edital não analisados": adiciona ao fim da comparação e some da seção */
+function addNaoAnalisado(reqName) {
+  if (active == null || !SPECS) return;
+  const prodComp = ITEMS[active].componentes.find(c => c.mecanica === "produto");
+  const n = prodComp && (prodComp.naoAnalisadas || []).find(x => x.req === reqName);
+  if (!n) return;
+  const exig = n.valorEdital || "";
+  SPECS.push({ req: n.req, exig, unidade: n.unidade || "", modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: n.trecho || exig }, cells: MX_SKUS.map((_, i) => { const v = (n.vals && n.vals[i]) || "—"; return { st: evalCell(v, exig), v, c: "alta" }; }) });
+  (addedNA[active] || (addedNA[active] = new Set())).add(reqName);
+  recompute(); renderMatrix();
+  const host = document.querySelector("#toBody .to-collapsibles");
+  if (host) host.outerHTML = collapsiblesHTML(ITEMS[active]);
+  toast(`"${reqName}" adicionado à comparação`);
 }
 
 /* ---------- Mecânica: checklist (serviço / software) ---------- */
@@ -750,6 +774,11 @@ function closeStatusMenu() { const m = $("#statusMenu"); if (m) m.hidden = true;
 
 function openKebabMenu(anchor) {
   const menu = $("#kebabMenu"); if (!menu) return;
+  // "Concluir análise" só no software (em produto não existe — Brunno)
+  const items = anchor.dataset.kebabmech === "produto"
+    ? [["importar", "Importar"], ["exportar", "Exportar"]]
+    : [["concluir", "Concluir análise"], ["importar", "Importar"], ["exportar", "Exportar"]];
+  menu.innerHTML = items.map(([k, l]) => `<button class="km-item" data-kbact="${k}">${l}</button>`).join("");
   menu.hidden = false;
   const r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
   let top = r.bottom + 6; if (top + mh > innerHeight - 8) top = Math.max(8, r.top - mh - 6);
@@ -840,6 +869,7 @@ function wire() {
   });
   $("#actionPill").addEventListener("click", e => {
     const b = e.target.closest("[data-pillidx]"); if (!b) return;
+    e.stopPropagation(); // não deixar o "clicar fora confirma" fechar a edição recém-aberta
     const a = pillActions[+b.dataset.pillidx]; hideActionPill(); if (a) a.act();
   });
   tb.addEventListener("pointerdown", e => {
@@ -851,6 +881,7 @@ function wire() {
     window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
   });
   tb.addEventListener("click", e => {
+    const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const vs = e.target.closest("[data-vstart]"); if (vs) { startInlineEdit(+vs.dataset.vstart); return; }
     const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }
