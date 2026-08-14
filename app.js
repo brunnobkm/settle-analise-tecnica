@@ -314,7 +314,7 @@ function renderItemSummary() {
       return `<span class="ts-chip-edit">${label}${rs}${field}${okcancel}</span>`;
     }
     if (!key) return `<span class="ts-total" data-tip="Calculado automaticamente: quantidade × valor unitário">${label}${rs}${disp}</span>`;
-    return `<button class="ts-chip" data-metaedit="${key}" data-tip="Clique para editar">${label}${rs}${disp}<span class="ts-chip-pencil">${ICO_PENCIL}</span></button>`;
+    return `<button class="ts-chip" data-metaedit="${key}" data-tip="Clique para editar">${label}${rs}${disp}</button><span class="icon-pill"><button class="pill-btn" data-metaedit="${key}" title="Editar">${ICO_PENCIL}</button></span>`;
   };
   el.innerHTML = `<div class="ts-metas">
       <span class="ts-field">${chip("unidade", { label: "Unidade de medida", display: esc(it.unidadeMedida || "unidade"), inputVal: it.unidadeMedida || "unidade", text: true, w: 96 })}</span>
@@ -523,10 +523,9 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="ts-chip-edit val-chip-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}">${vrUnit}<button class="ts-ok" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="ts-cancel" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></span></div></td>`;
         } else {
           const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-          const copyBtn = `<button class="req-ico val-copybtn" data-copytext="${esc(spec.exig)}" data-tip="Copiar o valor requerido">${ICO_COPY}</button>`;
-          const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button>`;
-          const chip = `<button class="ts-chip val-chip" data-vstart="${ri}" data-tip="Editar o valor requerido (recalcula ao confirmar)">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}<span class="ts-chip-pencil">${ICO_PENCIL}</span></button>`;
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${chip}${copyBtn}${originBtn}</div></td>`;
+          const chip = `<button class="ts-chip val-chip" data-vstart="${ri}" data-tip="Editar o valor requerido (recalcula ao confirmar)">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</button>`;
+          const pill = `<span class="icon-pill"><button class="pill-btn" data-vstart="${ri}" title="Editar o valor requerido">${ICO_PENCIL}</button><button class="pill-btn" data-origin="${ri}" title="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button><button class="pill-btn" data-copytext="${esc(spec.exig)}" title="Copiar o valor requerido">${ICO_COPY}</button></span>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${chip}${pill}</div></td>`;
         }
       }
       else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do seu produto disponível, mas ainda sem correspondência: falta extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;

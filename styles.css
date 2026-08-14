@@ -242,9 +242,14 @@ button { font-family: inherit; cursor: pointer; }
 /* valor editável = chip com borda (estilo Câmera (hardware), sem caret); prefixo fixo dentro */
 .ts-chip { display: inline-flex; align-items: center; gap: 5px; font: inherit; color: var(--foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 3px 9px; cursor: pointer; }
 .ts-chip:hover { border-color: var(--border-strong); }
-.ts-chip-pencil { display: inline-flex; width: 11px; height: 11px; opacity: 0; color: var(--muted-foreground); flex-shrink: 0; }
-.ts-chip-pencil svg { width: 11px; height: 11px; }
-.ts-chip:hover .ts-chip-pencil, .ts-chip:focus .ts-chip-pencil { opacity: 1; }
+/* icon-pill: grupo de ações que aparece no hover (editar/origem/copiar), como no card-licitacao */
+.icon-pill { display: inline-flex; align-items: center; background: #FFF; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; opacity: 0; transition: opacity .12s; flex-shrink: 0; box-shadow: var(--shadow-xs, 0 1px 2px rgba(0,0,0,.05)); }
+.pill-btn { width: 26px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted-foreground); cursor: pointer; padding: 0; }
+.pill-btn + .pill-btn { border-left: 1px solid var(--border); }
+.pill-btn:hover { background: var(--muted); color: var(--brand-600); }
+.pill-btn svg { width: 13px; height: 13px; }
+.ts-field:hover .icon-pill, .col-val:hover .icon-pill, .icon-pill:focus-within { opacity: 1; }
+.val-head .icon-pill { margin-left: auto; }
 .ts-chip-label { color: var(--foreground); font-weight: 600; }
 .ts-chip-prefix { color: var(--muted-foreground); }
 .ts-chip-num { font-family: var(--mono); }
