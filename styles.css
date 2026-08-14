@@ -140,8 +140,8 @@ button { font-family: inherit; cursor: pointer; }
 .comp-dot.ok { color: var(--success); background: var(--success-bg); }
 .comp-dot.no { color: var(--destructive); background: var(--destructive-bg); }
 .comp-rotulo { font-size: 15px; font-weight: 600; color: var(--foreground); }
-.comp-cat { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--foreground); background: #FFF; border: 1px solid var(--border); border-radius: var(--r-field); padding: 4px 9px; cursor: pointer; }
-.comp-cat:hover { background: var(--muted); border-color: var(--border-strong); }
+.comp-cat { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 4px 10px; cursor: pointer; }
+.comp-cat:hover { border-color: var(--border-strong); }
 .comp-cat .caret-sm { color: var(--muted-foreground); flex-shrink: 0; }
 .comp-sum { margin-left: auto; font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comp-edit { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--brand); background: var(--brand); color: #FFF; border-radius: var(--r-field); padding: 6px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
@@ -240,8 +240,11 @@ button { font-family: inherit; cursor: pointer; }
 .ts-metas b { font-weight: 600; }
 .ts-field { display: inline-flex; align-items: center; gap: 6px; }
 /* valor editável = chip com borda (estilo Câmera (hardware), sem caret); prefixo fixo dentro */
-.ts-chip { display: inline-flex; align-items: center; gap: 5px; font: inherit; color: var(--foreground); background: #FFF; border: 1px solid var(--border); border-radius: var(--r-field); padding: 2px 9px; cursor: pointer; }
-.ts-chip:hover { background: var(--muted); border-color: var(--border-strong); }
+.ts-chip { display: inline-flex; align-items: center; gap: 5px; font: inherit; color: var(--foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 3px 9px; cursor: pointer; }
+.ts-chip:hover { border-color: var(--border-strong); }
+.ts-chip-pencil { display: inline-flex; width: 11px; height: 11px; opacity: 0; color: var(--muted-foreground); flex-shrink: 0; }
+.ts-chip-pencil svg { width: 11px; height: 11px; }
+.ts-chip:hover .ts-chip-pencil, .ts-chip:focus .ts-chip-pencil { opacity: 1; }
 .ts-chip-label { color: var(--foreground); font-weight: 600; }
 .ts-chip-prefix { color: var(--muted-foreground); }
 .ts-chip-num { font-family: var(--mono); }

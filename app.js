@@ -314,7 +314,7 @@ function renderItemSummary() {
       return `<span class="ts-chip-edit">${label}${rs}${field}${okcancel}</span>`;
     }
     if (!key) return `<span class="ts-total" data-tip="Calculado automaticamente: quantidade × valor unitário">${label}${rs}${disp}</span>`;
-    return `<button class="ts-chip" data-metaedit="${key}" data-tip="Clique para editar">${label}${rs}${disp}</button>`;
+    return `<button class="ts-chip" data-metaedit="${key}" data-tip="Clique para editar">${label}${rs}${disp}<span class="ts-chip-pencil">${ICO_PENCIL}</span></button>`;
   };
   el.innerHTML = `<div class="ts-metas">
       <span class="ts-field">${chip("unidade", { label: "Unidade de medida", display: esc(it.unidadeMedida || "unidade"), inputVal: it.unidadeMedida || "unidade", text: true, w: 96 })}</span>
