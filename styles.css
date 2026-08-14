@@ -238,27 +238,27 @@ button { font-family: inherit; cursor: pointer; }
 .to-summary.is-hidden { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; border-bottom-color: transparent; }
 .ts-metas { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 12.5px; color: var(--foreground); }
 .ts-metas b { font-weight: 600; }
-.ts-field { display: inline-flex; align-items: center; gap: 5px; }
-/* valor editável inline */
-.ts-val { display: inline-flex; align-items: center; gap: 4px; font: inherit; color: var(--foreground); background: transparent; border: 1px solid transparent; border-radius: var(--r-md); padding: 1px 6px; margin: -1px -2px; cursor: pointer; }
-.ts-val.mono { font-family: var(--mono); }
-.ts-val:hover { background: var(--muted); border-color: var(--border); }
-.ts-val svg { width: 11px; height: 11px; opacity: 0; color: var(--muted-foreground); flex-shrink: 0; }
-.ts-val:hover svg, .ts-val:focus svg { opacity: 1; }
-.ts-edit { display: inline-flex; align-items: center; gap: 4px; }
-.ts-input { font: inherit; border: 1px solid var(--brand); border-radius: var(--r-md); padding: 2px 6px; width: 96px; color: var(--foreground); background: #FFF; }
-/* input group (prefixo colado ao campo, borda única) */
-.ts-inputgroup { display: inline-flex; align-items: stretch; border: 1px solid var(--brand); border-radius: var(--r-md); overflow: hidden; background: #FFF; }
+.ts-field { display: inline-flex; align-items: center; gap: 4px; }
+/* cada campo = input group: [ label ][ (R$) ][ valor ] */
+.ts-inputgroup { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: #FFF; }
+.ts-field.editing .ts-inputgroup, .ts-inputgroup:focus-within { border-color: var(--brand); }
 .ts-inputgroup:focus-within { box-shadow: 0 0 0 3px var(--brand-100); }
-.ts-ig-addon { display: inline-flex; align-items: center; padding: 0 8px; background: var(--muted); color: var(--muted-foreground); font-family: var(--mono); font-size: 12px; border-right: 1px solid var(--border); }
-.ts-input.ts-ig-input { border: 0; border-radius: 0; }
+.ts-ig-addon { display: inline-flex; align-items: center; padding: 3px 8px; background: var(--muted); color: var(--muted-foreground); font-size: 12px; font-weight: 600; border-right: 1px solid var(--border); white-space: nowrap; }
+.ts-ig-rs { font-family: var(--mono); font-weight: 400; }
+.ts-ig-value { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; font: inherit; color: var(--foreground); background: transparent; border: 0; cursor: pointer; }
+.ts-ig-value.mono { font-family: var(--mono); }
+.ts-ig-value:hover { background: var(--muted); }
+.ts-ig-value svg { width: 11px; height: 11px; opacity: 0; color: var(--muted-foreground); flex-shrink: 0; }
+.ts-ig-value:hover svg, .ts-ig-value:focus svg { opacity: 1; }
+.ts-ig-readonly { cursor: help; }
+.ts-ig-readonly:hover { background: transparent; }
+.ts-input.ts-ig-input { font: inherit; border: 0; border-radius: 0; padding: 3px 8px; width: 92px; color: var(--foreground); background: #FFF; }
+.ts-input.ts-ig-input.mono { font-family: var(--mono); }
+.ts-input.ts-ig-input.ts-select { width: auto; }
 .ts-input.ts-ig-input:focus { outline: none; box-shadow: none; }
-.ts-input.ts-select { width: auto; }
-.ts-input:focus { outline: none; box-shadow: 0 0 0 3px var(--brand-100); }
-.ts-ok, .ts-cancel { width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); cursor: pointer; padding: 0; }
+.ts-ok, .ts-cancel { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); cursor: pointer; padding: 0; flex-shrink: 0; }
 .ts-ok { color: var(--success); }
 .ts-ok svg, .ts-cancel svg { width: 12px; height: 12px; }
-.ts-total { cursor: help; }
 .ts-chosen { font-size: 12.5px; font-weight: 600; color: var(--brand-600); background: var(--brand-100); border: 1px solid var(--brand); border-radius: var(--r-full); padding: 3px 12px; white-space: nowrap; }
 .ts-chosen.none { color: var(--muted-foreground); background: var(--muted); border-color: var(--border); font-weight: 500; }
 .mono { font-family: var(--mono); }

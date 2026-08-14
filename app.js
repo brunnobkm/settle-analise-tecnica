@@ -32,9 +32,8 @@ const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stro
 function matrixOf(comp) {
   if (!comp._m) {
     const s = clone(comp.reqs); (comp.overrides || []).forEach(o => s[o.ri].cells[o.ci] = { st: o.st, v: o.v, c: o.c });
-    // requisitos exigidos pelo edital: se o edital exige, o valor É extraído (o estado "não extraído" não existe — decisão Alice 04/08).
-    // Entram como linhas normais, já com o valor exigido e comparadas contra os SKUs.
-    (comp.naoAnalisadas || []).forEach(n => { const exig = n.valorEdital || ""; s.push({ req: n.req, exig, unidade: n.unidade || "", modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: n.trecho || exig }, cells: comp.skus.map((_, i) => { const v = (n.vals && n.vals[i]) || "—"; return { st: evalCell(v, exig), v, c: "alta" }; }) }); });
+    // "Não extraído" não existe (decisão Alice 04/08): specs que o SKU tem mas o edital não exige NÃO entram na comparação.
+    // Elas vão para a seção "Especificações não exigidas pelo edital" (ver collapsiblesHTML).
     comp._m = s;
   }
   return comp._m;
@@ -302,22 +301,30 @@ let editingMeta = null; // "quantidade" | "unidade" | "preco"
 function renderItemSummary() {
   const el = $("#toSummary"); if (!el || active == null) return;
   const it = ITEMS[active];
-  const val = (key, text, mono) => editingMeta === key ? "" : `<button class="ts-val${mono ? " mono" : ""}" data-metaedit="${key}" data-tip="Clique para editar">${text}${ICO_PENCIL}</button>`;
+  const num = v => parseBRL(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
   const okcancel = `<button class="ts-ok" data-metaok data-tip="Confirmar">${ICO_OK}</button><button class="ts-cancel" data-metacancel data-tip="Cancelar">${ICO_NO}</button>`;
-  const qtd = editingMeta === "quantidade"
-    ? `<span class="ts-edit"><input class="ts-input" id="metaInput" value="${esc(it.quantidade)}" inputmode="numeric" aria-label="Quantidade">${okcancel}</span>`
-    : val("quantidade", esc(it.quantidade));
-  const uni = editingMeta === "unidade"
-    ? `<span class="ts-edit"><select class="ts-input ts-select" id="metaInput" aria-label="Unidade de medida">${UNI_OPTS.map(o => `<option${o === (it.unidadeMedida || "unidade") ? " selected" : ""}>${o}</option>`).join("")}</select>${okcancel}</span>`
-    : val("unidade", esc(it.unidadeMedida || "unidade"));
-  const vu = editingMeta === "preco"
-    ? `<span class="ts-edit"><span class="ts-inputgroup"><span class="ts-ig-addon">R$</span><input class="ts-input ts-ig-input" id="metaInput" value="${esc(parseBRL(it.valorUnitario.v).toLocaleString("pt-BR", { minimumFractionDigits: 2 }))}" inputmode="decimal" aria-label="Valor unitário"></span>${okcancel}</span>`
-    : val("preco", esc(it.valorUnitario.v), true);
+  // cada campo é um input-group: [ label ][ (R$) ][ valor editável ]
+  const group = (key, label, opts) => {
+    opts = opts || {};
+    const labelAddon = `<span class="ts-ig-addon">${label}</span>`;
+    const rs = opts.money ? `<span class="ts-ig-addon ts-ig-rs">R$</span>` : "";
+    let inner;
+    if (key && editingMeta === key) {
+      inner = opts.select
+        ? `<select class="ts-input ts-ig-input ts-select" id="metaInput" aria-label="${label}">${UNI_OPTS.map(o => `<option${o === opts.inputVal ? " selected" : ""}>${o}</option>`).join("")}</select>`
+        : `<input class="ts-input ts-ig-input${opts.money ? " mono" : ""}" id="metaInput" value="${esc(opts.inputVal)}" inputmode="${opts.money ? "decimal" : "numeric"}" aria-label="${label}">`;
+      return `<span class="ts-field editing"><span class="ts-inputgroup">${labelAddon}${rs}${inner}</span>${okcancel}</span>`;
+    }
+    inner = key
+      ? `<button class="ts-ig-value${opts.money ? " mono" : ""}" data-metaedit="${key}" data-tip="Clique para editar">${opts.display}${ICO_PENCIL}</button>`
+      : `<span class="ts-ig-value ts-ig-readonly${opts.money ? " mono" : ""}" data-tip="Calculado automaticamente: quantidade × valor unitário">${opts.display}</span>`;
+    return `<span class="ts-field"><span class="ts-inputgroup">${labelAddon}${rs}${inner}</span></span>`;
+  };
   el.innerHTML = `<div class="ts-metas">
-      <span class="ts-field"><b>Quantidade:</b> ${qtd}</span>
-      <span class="ts-field"><b>Unidade de medida:</b> ${uni}</span>
-      <span class="ts-field"><b>Valor unitário:</b> ${vu}</span>
-      <span class="ts-field"><b>Valor total:</b> <span class="mono ts-total" data-tip="Calculado automaticamente: quantidade × valor unitário">${esc(it.valorTotal.v)}</span></span>
+      ${group("quantidade", "Quantidade", { display: esc(it.quantidade), inputVal: it.quantidade })}
+      ${group("unidade", "Unidade de medida", { display: esc(it.unidadeMedida || "unidade"), inputVal: it.unidadeMedida || "unidade", select: true })}
+      ${group("preco", "Valor unitário", { money: true, display: esc(num(it.valorUnitario.v)), inputVal: num(it.valorUnitario.v) })}
+      ${group(null, "Valor total", { money: true, display: esc(num(it.valorTotal.v)) })}
     </div>`;
   if (editingMeta) { const inp = $("#metaInput"); if (inp) { inp.focus(); if (inp.select) inp.select(); } }
 }
@@ -567,7 +574,7 @@ function collapsiblesHTML(it) {
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
   let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true) : "";
   // "Especificações não exigidas pelo edital": o seu produto oferece, o edital não pede. Aberto por padrão.
-  const naoExig = [...new Set(it.componentes.filter(c => c.mecanica === "produto").flatMap(c => c.catalogoNaoEdital || []))];
+  const naoExig = [...new Set(it.componentes.filter(c => c.mecanica === "produto").flatMap(c => [...(c.catalogoNaoEdital || []), ...((c.naoAnalisadas || []).map(n => n.req))]))];
   if (naoExig.length) {
     const note = "Especificações que o seu produto oferece e o edital não exige. Ficam aqui só como referência, não entram na comparação. Se alguma passar a ser exigida, você pode adicioná-la pelo Editar.";
     html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, true);
