@@ -225,7 +225,7 @@ function renderGrid() {
    Overlay — despacha por mecânica
    ============================================================ */
 function openTable(i) {
-  active = i; const it = ITEMS[i];
+  active = i; const it = ITEMS[i]; editingMeta = null;
   currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
   closeEditDrawer();
   $("#toTitle").textContent = (it.numero ? "Item " + it.numero + " · " : "") + (it.titulo || it.nome);
@@ -293,15 +293,44 @@ function renderNav() {
     <span class="to-navcount">Item ${pos + 1} de ${list.length}</span>
     <button class="to-navbtn" data-nav="next"${hasNext ? "" : " disabled"} data-tip="Próximo item">${ICO_CHEV_R}</button>`;
 }
+/* edição inline dos valores do item na própria barra (sem precisar do "Editar informações do item") */
+const UNI_OPTS = ["unidade", "licença", "caixa", "lote", "metro", "peça", "conjunto", "serviço"];
+const parseBRL = s => { const n = parseFloat(String(s).replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".")); return isNaN(n) ? 0 : n; };
+const parseQty = s => { const n = parseFloat(String(s).replace(/\./g, "").replace(",", ".")); return isNaN(n) ? 0 : n; };
+let editingMeta = null; // "quantidade" | "unidade" | "preco"
 function renderItemSummary() {
   const el = $("#toSummary"); if (!el || active == null) return;
   const it = ITEMS[active];
+  const val = (key, text, mono) => editingMeta === key ? "" : `<button class="ts-val${mono ? " mono" : ""}" data-metaedit="${key}" data-tip="Clique para editar">${text}${ICO_PENCIL}</button>`;
+  const okcancel = `<button class="ts-ok" data-metaok data-tip="Confirmar">${ICO_OK}</button><button class="ts-cancel" data-metacancel data-tip="Cancelar">${ICO_NO}</button>`;
+  const qtd = editingMeta === "quantidade"
+    ? `<span class="ts-edit"><input class="ts-input" id="metaInput" value="${esc(it.quantidade)}" inputmode="numeric" aria-label="Quantidade">${okcancel}</span>`
+    : val("quantidade", esc(it.quantidade));
+  const uni = editingMeta === "unidade"
+    ? `<span class="ts-edit"><select class="ts-input ts-select" id="metaInput" aria-label="Unidade de medida">${UNI_OPTS.map(o => `<option${o === (it.unidadeMedida || "unidade") ? " selected" : ""}>${o}</option>`).join("")}</select>${okcancel}</span>`
+    : val("unidade", esc(it.unidadeMedida || "unidade"));
+  const vu = editingMeta === "preco"
+    ? `<span class="ts-edit"><span class="ts-prefix">R$</span><input class="ts-input" id="metaInput" value="${esc(parseBRL(it.valorUnitario.v).toLocaleString("pt-BR", { minimumFractionDigits: 2 }))}" inputmode="decimal" aria-label="Valor unitário">${okcancel}</span>`
+    : val("preco", esc(it.valorUnitario.v), true);
   el.innerHTML = `<div class="ts-metas">
-      <span><b>Quantidade:</b> ${esc(it.quantidade)}</span>
-      <span><b>Unidade de medida:</b> ${esc(it.unidadeMedida || "unidade")}</span>
-      <span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span>
-      <span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span>
+      <span class="ts-field"><b>Quantidade:</b> ${qtd}</span>
+      <span class="ts-field"><b>Unidade de medida:</b> ${uni}</span>
+      <span class="ts-field"><b>Valor unitário:</b> ${vu}</span>
+      <span class="ts-field"><b>Valor total:</b> <span class="mono ts-total" data-tip="Calculado automaticamente: quantidade × valor unitário">${esc(it.valorTotal.v)}</span></span>
     </div>`;
+  if (editingMeta) { const inp = $("#metaInput"); if (inp) { inp.focus(); if (inp.select) inp.select(); } }
+}
+function commitMeta() {
+  const inp = $("#metaInput"), key = editingMeta;
+  if (!inp || !key || active == null) { editingMeta = null; renderItemSummary(); return; }
+  const it = ITEMS[active], raw = inp.value.trim();
+  if (key === "quantidade") { if (raw !== "") it.quantidade = raw.replace(/[^\d.,]/g, ""); }
+  else if (key === "unidade") { if (raw) it.unidadeMedida = raw; }
+  else if (key === "preco") { const n = parseBRL(raw); it.precoUnit = n; it.valorUnitario = { v: fmtBRL(n) }; }
+  const q = parseQty(it.quantidade), unit = parseBRL(it.valorUnitario.v);
+  it.valorTotal = { v: fmtBRL(unit * q) };
+  editingMeta = null; renderItemSummary(); renderGrid();
+  toast("Informações do item atualizadas");
 }
 /* atualiza ao vivo o resumo da seção de produto (accordion) quando o SKU escolhido muda */
 function updateProdSecSummary() {
@@ -763,6 +792,19 @@ function wire() {
     lastToScroll = st;
     if (sum.classList.contains("is-hidden") !== was) sizeMatrixHeight();
   });
+  // edição inline dos valores do item na barra "Quantidade/Valores"
+  $("#toSummary").addEventListener("click", e => {
+    const ed = e.target.closest("[data-metaedit]"); if (ed) { e.stopPropagation(); editingMeta = ed.dataset.metaedit; renderItemSummary(); return; }
+    if (e.target.closest("[data-metaok]")) { e.stopPropagation(); commitMeta(); return; }
+    if (e.target.closest("[data-metacancel]")) { e.stopPropagation(); editingMeta = null; renderItemSummary(); return; }
+  });
+  $("#toSummary").addEventListener("keydown", e => {
+    if (!editingMeta) return;
+    if (e.key === "Enter") { e.preventDefault(); commitMeta(); }
+    else if (e.key === "Escape") { e.preventDefault(); editingMeta = null; renderItemSummary(); }
+  });
+  $("#toSummary").addEventListener("change", e => { if (editingMeta === "unidade" && e.target.id === "metaInput") commitMeta(); });
+  document.addEventListener("click", e => { if (editingMeta && !e.target.closest("#toSummary")) commitMeta(); });
   tb.addEventListener("pointerdown", e => {
     const rz = e.target.closest("[data-resize]"); if (!rz) return;
     e.preventDefault(); rz.classList.add("active");
