@@ -32,8 +32,9 @@ const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stro
 function matrixOf(comp) {
   if (!comp._m) {
     const s = clone(comp.reqs); (comp.overrides || []).forEach(o => s[o.ri].cells[o.ci] = { st: o.st, v: o.v, c: o.c });
-    // requisitos identificados no edital cujo valor não foi extraído → entram como linhas com placeholder
-    (comp.naoAnalisadas || []).forEach(n => s.push({ req: n.req, exig: "", unidade: n.unidade || "", naoExtraido: true, modulo: "—", _valorEdital: n.valorEdital, _trecho: n.trecho, origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: "A IA identificou a exigência deste requisito no edital, mas não conseguiu extrair o valor automaticamente." }, cells: comp.skus.map((_, i) => ({ st: "nm", v: (n.vals && n.vals[i]) || "—" })) }));
+    // requisitos exigidos pelo edital: se o edital exige, o valor É extraído (o estado "não extraído" não existe — decisão Alice 04/08).
+    // Entram como linhas normais, já com o valor exigido e comparadas contra os SKUs.
+    (comp.naoAnalisadas || []).forEach(n => { const exig = n.valorEdital || ""; s.push({ req: n.req, exig, unidade: n.unidade || "", modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: n.trecho || exig }, cells: comp.skus.map((_, i) => { const v = (n.vals && n.vals[i]) || "—"; return { st: evalCell(v, exig), v, c: "alta" }; }) }); });
     comp._m = s;
   }
   return comp._m;
@@ -310,7 +311,7 @@ function renderItemSummary() {
     ? `<span class="ts-edit"><select class="ts-input ts-select" id="metaInput" aria-label="Unidade de medida">${UNI_OPTS.map(o => `<option${o === (it.unidadeMedida || "unidade") ? " selected" : ""}>${o}</option>`).join("")}</select>${okcancel}</span>`
     : val("unidade", esc(it.unidadeMedida || "unidade"));
   const vu = editingMeta === "preco"
-    ? `<span class="ts-edit"><span class="ts-prefix">R$</span><input class="ts-input" id="metaInput" value="${esc(parseBRL(it.valorUnitario.v).toLocaleString("pt-BR", { minimumFractionDigits: 2 }))}" inputmode="decimal" aria-label="Valor unitário">${okcancel}</span>`
+    ? `<span class="ts-edit"><span class="ts-inputgroup"><span class="ts-ig-addon">R$</span><input class="ts-input ts-ig-input" id="metaInput" value="${esc(parseBRL(it.valorUnitario.v).toLocaleString("pt-BR", { minimumFractionDigits: 2 }))}" inputmode="decimal" aria-label="Valor unitário"></span>${okcancel}</span>`
     : val("preco", esc(it.valorUnitario.v), true);
   el.innerHTML = `<div class="ts-metas">
       <span class="ts-field"><b>Quantidade:</b> ${qtd}</span>
