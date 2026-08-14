@@ -275,8 +275,8 @@ function sizeMatrixHeight() {
     if (multi) { tw.style.height = ""; tw.style.maxHeight = "60vh"; return; }
     const chEl = card.querySelector(".comp-head");
     const chH = chEl ? chEl.getBoundingClientRect().height : 52;
-    // 32 = padding vertical do corpo do card; 28 = padding/gap da área de seções
-    const h = window.innerHeight - headH - metaH - chH - 32 - 28;
+    // 32 = padding vertical do corpo do card; 32 = 16 (gap acima do card) + 16 (gap abaixo)
+    const h = window.innerHeight - headH - metaH - chH - 32 - 32;
     tw.style.maxHeight = "none";
     tw.style.height = Math.max(240, Math.round(h)) + "px";
   });

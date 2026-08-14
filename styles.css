@@ -111,7 +111,7 @@ button { font-family: inherit; cursor: pointer; }
 .rs-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--brand-600); margin-bottom: 4px; }
 .to-resumo p { margin: 0; font-size: 13px; color: var(--foreground); line-height: 1.55; max-width: 960px; }
 /* seções colapsáveis no topo do overlay (Figma 8732-22531) */
-.to-collapsibles { padding: 16px 20px 4px; display: flex; flex-direction: column; gap: 12px; }
+.to-collapsibles { padding: 16px 16px 0; display: flex; flex-direction: column; gap: 16px; }
 .cps { border: 1px solid var(--border); border-radius: var(--r-box); background: #FFF; }
 .cps > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 52px; box-sizing: border-box; font-size: 14px; font-weight: 600; color: var(--foreground); }
 .cps > summary::-webkit-details-marker { display: none; }
@@ -128,7 +128,7 @@ button { font-family: inherit; cursor: pointer; }
 .section-head { display: flex; align-items: center; gap: 10px; padding: 18px 20px 4px; font-size: 14px; font-weight: 600; }
 /* cabeçalho de cada componente do item (composição) */
 /* seções do item misto = accordion em card (mesmo visual do collapse .cps) */
-.to-sections { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+.to-sections { padding: 16px 16px 16px; display: flex; flex-direction: column; gap: 16px; }
 .comp-acc, .comp-card { border: 1px solid var(--border); border-radius: var(--r-box); background: #FFF; }
 .comp-head { display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 52px; box-sizing: border-box; cursor: pointer; list-style: none; user-select: none; flex-shrink: 0; }
 .comp-head::-webkit-details-marker { display: none; }
