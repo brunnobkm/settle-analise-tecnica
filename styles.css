@@ -238,24 +238,21 @@ button { font-family: inherit; cursor: pointer; }
 .to-summary.is-hidden { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; border-bottom-color: transparent; }
 .ts-metas { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 12.5px; color: var(--foreground); }
 .ts-metas b { font-weight: 600; }
-.ts-field { display: inline-flex; align-items: center; gap: 4px; }
-/* cada campo = input group: [ label ][ (R$) ][ valor ] */
-.ts-inputgroup { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: #FFF; }
-.ts-field.editing .ts-inputgroup, .ts-inputgroup:focus-within { border-color: var(--brand); }
-.ts-inputgroup:focus-within { box-shadow: 0 0 0 3px var(--brand-100); }
-.ts-ig-addon { display: inline-flex; align-items: center; padding: 3px 8px; background: var(--muted); color: var(--muted-foreground); font-size: 12px; font-weight: 600; border-right: 1px solid var(--border); white-space: nowrap; }
-.ts-ig-rs { font-family: var(--mono); font-weight: 400; }
-.ts-ig-value { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; font: inherit; color: var(--foreground); background: transparent; border: 0; cursor: pointer; }
-.ts-ig-value.mono { font-family: var(--mono); }
-.ts-ig-value:hover { background: var(--muted); }
-.ts-ig-value svg { width: 11px; height: 11px; opacity: 0; color: var(--muted-foreground); flex-shrink: 0; }
-.ts-ig-value:hover svg, .ts-ig-value:focus svg { opacity: 1; }
-.ts-ig-readonly { cursor: help; }
-.ts-ig-readonly:hover { background: transparent; }
-.ts-input.ts-ig-input { font: inherit; border: 0; border-radius: 0; padding: 3px 8px; width: 92px; color: var(--foreground); background: #FFF; }
-.ts-input.ts-ig-input.mono { font-family: var(--mono); }
-.ts-input.ts-ig-input.ts-select { width: auto; }
-.ts-input.ts-ig-input:focus { outline: none; box-shadow: none; }
+.ts-field { display: inline-flex; align-items: center; gap: 6px; }
+/* valor editável = chip com borda (estilo Câmera (hardware), sem caret); prefixo fixo dentro */
+.ts-chip { display: inline-flex; align-items: center; gap: 5px; font: inherit; color: var(--foreground); background: #FFF; border: 1px solid var(--border); border-radius: var(--r-field); padding: 2px 9px; cursor: pointer; }
+.ts-chip:hover { background: var(--muted); border-color: var(--border-strong); }
+.ts-chip.mono { font-family: var(--mono); }
+.ts-chip-prefix { color: var(--muted-foreground); }
+/* valor não editável (Total) = texto simples, para contrastar com os editáveis */
+.ts-total { display: inline-flex; align-items: center; gap: 5px; color: var(--foreground); cursor: help; }
+.ts-total.mono { font-family: var(--mono); }
+/* estado de edição: chip com borda de marca + input sem borda dentro */
+.ts-chip-edit { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--brand); border-radius: var(--r-field); padding: 2px 9px; background: #FFF; }
+.ts-chip-edit:focus-within { box-shadow: 0 0 0 3px var(--brand-100); }
+.ts-chip-input { font: inherit; border: 0; outline: none; background: transparent; padding: 0; color: var(--foreground); }
+.ts-chip-input.mono { font-family: var(--mono); }
+.ts-chip-input.ts-select { min-width: 90px; }
 .ts-ok, .ts-cancel { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--border); background: #FFF; border-radius: var(--r-md); cursor: pointer; padding: 0; flex-shrink: 0; }
 .ts-ok { color: var(--success); }
 .ts-ok svg, .ts-cancel svg { width: 12px; height: 12px; }
