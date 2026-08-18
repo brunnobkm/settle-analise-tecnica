@@ -136,7 +136,13 @@ const NAO_ANALISADAS = [
   { req: "Garantia mínima",                     unidade: "meses", valorEdital: "36 meses", trecho: "Garantia mínima de 36 (trinta e seis) meses.", vals: ["36 meses", "36 meses", "24 meses", "36 meses", "36 meses", "12 meses", "24 meses"] },
   { req: "Certificação Anatel",                 valorEdital: "Homologado", trecho: "Equipamentos homologados pela Anatel.", vals: ["Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado", "Homologado"] },
 ];
-const CATALOGO_NAO_EDITAL = ["Zoom digital 16×","Microfone embutido","Sirene integrada"];
+/* Specs que o SKU tem mas o edital NÃO exige. Viram linha de "diferencial" na tabela (opção B):
+   comparam os SKUs entre si, sem atende/não atende, e não contam no match. vals segue a ordem de SKUS. */
+const CATALOGO_NAO_EDITAL = [
+  { req: "Zoom digital 16×",   vals: ["16×", "16×", "8×", "16×", "4×", "8×", "16×"] },
+  { req: "Microfone embutido", vals: ["Sim", "Sim", "Não", "Sim", "Sim", "Não", "Não"] },
+  { req: "Sirene integrada",   vals: ["Não", "Não", "Não", "Sim", "Não", "Não", "Sim"] },
+];
 
 /* ============================================================
    CATÁLOGO de especificações (vocabulário controlado).

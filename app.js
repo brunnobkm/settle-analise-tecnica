@@ -42,7 +42,7 @@ function scoresFor(specs, skus) {
   return skus.map((sku, i) => {
     let ok = 0, evaluable = 0, ne = 0; const diverg = [];
     specs.forEach(spec => {
-      if (spec.exigNa || spec.naoExtraido) return;
+      if (spec.exigNa || spec.naoExtraido || spec.diferencial) return;
       const cell = spec.cells[i];
       if (cell.st === "ok") { ok++; evaluable++; }
       else if (cell.st === "no") { evaluable++; diverg.push(spec.req); }
@@ -388,6 +388,7 @@ const fzStyle = c => c.frozen ? ` style="left:${c.left}px"` : "";
 const colCtrls = c => `<span class="col-resize" data-resize="${c.key}" data-tip="Arraste para redimensionar a largura"></span>`;
 function cellTd(cell, ri, ci, exigNa, c, unidade) {
   if (exigNa) return `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-val">${esc(cell.v)}</span></td>`;
+  if (cell.st === "diff") return `<td class="cell diff${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico diff" data-tip="Diferencial do produto: o edital não exige, então não conta no atende">•</span><span class="cell-val" data-tip="Valor do produto (diferencial, não exigido pelo edital)">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK_C : cell.st === "no" ? ICO_NO_C : "";
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}" data-tip="Confiança da IA na extração deste valor"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
   const cpy = `<button class="cell-copy" data-copytext="${esc(cell.v)}" data-tip="Copiar o valor da célula">${ICO_COPY}</button>`;
@@ -535,12 +536,13 @@ function renderMatrix() {
   let body = "";
   SPECS.forEach((spec, ri) => {
     if (spec.exigNa) return;
-    const nx = !!spec.naoExtraido;
-    let row = `<tr class="${nx ? "nx-row" : (isConcordant(spec) ? "concordant" : "")}">`;
+    const nx = !!spec.naoExtraido, df = !!spec.diferencial;
+    let row = `<tr class="${df ? "diff-row" : nx ? "nx-row" : (isConcordant(spec) ? "concordant" : "")}">`;
     cols.forEach(c => {
-      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="Requisito exigido pelo edital">${esc(spec.req)}</span></td>`;
+      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="${df ? "Diferencial do produto (o edital não exige)" : "Requisito exigido pelo edital"}">${esc(spec.req)}</span>${df ? `<span class="diff-badge" data-tip="Diferencial: o edital não exige, não conta no atende">Diferencial</span>` : ""}</td>`;
       else if (c.key === "val") {
-        if (nx) {
+        if (df) row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-diff" data-tip="O edital não exige este requisito">Não exigido</span></div></td>`;
+        else if (nx) {
           const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Abrir o edital para localizar e extrair o valor exigido">${ICO_ARROW}</button>`;
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-missing" data-tip="O edital exige este requisito, mas a IA não conseguiu extrair o valor. Preencha para liberar a comparação.">${ICO_WARN} Não extraído</span>${originBtn}</div></td>`;
         } else if (editingRow === ri) {
@@ -588,16 +590,22 @@ function tagList(items, note) {
   return `${note ? `<div class="ex-note">${note}</div>` : ""}<div class="tag-list">${items.map(t => `<span class="tag-item">${esc(t)}</span>`).join("")}</div>`;
 }
 const addedNA = {}; // por item: specs "no edital não analisados" que o usuário adicionou à comparação
+const addedDiff = {}; // por item: specs "não exigidas" que o usuário trouxe como diferencial (opção B)
 function collapsiblesHTML(it) {
   // "Descrição completa" só quando o item tem Produto (software não tem descrição — decisão Alice 28/07)
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
   let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true) : "";
   const prodComps = it.componentes.filter(c => c.mecanica === "produto");
-  // (1) não exigidas pelo edital: o SKU tem o valor, o edital não pede
-  const naoExig = [...new Set(prodComps.flatMap(c => c.catalogoNaoEdital || []))];
+  // (1) não exigidas pelo edital: o SKU tem o valor, o edital não pede → diferencial (opção B: "+" leva à tabela)
+  const dset = addedDiff[active] || new Set();
+  const seenD = new Set();
+  const naoExig = prodComps.flatMap(c => c.catalogoNaoEdital || [])
+    .map(t => typeof t === "string" ? { req: t } : t)
+    .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
   if (naoExig.length) {
-    const note = "Especificações que o seu produto oferece e o edital não exige. Ficam aqui só como referência, não entram na comparação.";
-    html += collapsible("Especificações não exigidas pelo edital", tagList(naoExig, note), naoExig.length, true);
+    const note = "Especificações que o seu produto oferece e o edital não exige. Clique no + para comparar os produtos neste diferencial (não conta no atende).";
+    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<span class="tag-item na-tag diff-tag">${esc(d.req)}<button class="na-add" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${ICO_PLUS}</button></span>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
+    html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
   }
   // (2) no edital não analisados: o edital exige, mas ainda não foi analisado (falta o valor do SKU). "+" adiciona à comparação.
   const added = addedNA[active] || new Set();
@@ -622,6 +630,20 @@ function addNaoAnalisado(reqName) {
   const host = document.querySelector("#toBody .to-collapsibles");
   if (host) host.outerHTML = collapsiblesHTML(ITEMS[active]);
   toast(`"${reqName}" adicionado à comparação`);
+}
+/* "+" numa spec "não exigida pelo edital": entra na tabela como linha de diferencial (opção B).
+   Compara os SKUs entre si, sem atende/não atende, e NÃO conta no match. */
+function addDiferencial(reqName) {
+  if (active == null || !SPECS) return;
+  const prodComp = ITEMS[active].componentes.find(c => c.mecanica === "produto");
+  const d = prodComp && (prodComp.catalogoNaoEdital || []).map(t => typeof t === "string" ? { req: t } : t).find(x => x.req === reqName);
+  if (!d || !d.vals) return;
+  SPECS.push({ req: d.req, exig: "Não exigido", diferencial: true, unidade: "", modulo: "Diferencial", origem: { doc: "Catálogo do produto", pag: "—", trecho: "Diferencial oferecido pelo produto, não exigido pelo edital." }, cells: MX_SKUS.map((_, i) => ({ st: "diff", v: (d.vals && d.vals[i]) || "—", c: null })) });
+  (addedDiff[active] || (addedDiff[active] = new Set())).add(reqName);
+  recompute(); renderMatrix();
+  const host = document.querySelector("#toBody .to-collapsibles");
+  if (host) host.outerHTML = collapsiblesHTML(ITEMS[active]);
+  toast(`"${reqName}" adicionado como diferencial (não conta no atende)`);
 }
 
 /* ---------- Mecânica: checklist (serviço / software) ---------- */
@@ -882,6 +904,7 @@ function wire() {
   });
   tb.addEventListener("click", e => {
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
+    const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const vs = e.target.closest("[data-vstart]"); if (vs) { startInlineEdit(+vs.dataset.vstart); return; }
     const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }
