@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=101" />
+  <link rel="stylesheet" href="styles.css?v=102" />
 </head>
 <body>
   <!-- Sidebar -->
@@ -156,6 +156,14 @@
     <div class="warn-actions"><button class="btn" id="warnCancel">Cancelar</button><button class="btn primary" id="warnOk">Confirmar e recalcular</button></div>
   </div>
 
+  <!-- Confirmar troca de categoria (reprocessa requisitos) -->
+  <div class="warn-overlay" id="catConfirmOverlay" hidden></div>
+  <div class="warn-modal" id="catConfirmModal" hidden>
+    <h3>Trocar a categoria?</h3>
+    <p>Trocar para <b id="catConfirmName">…</b> vai <b>reprocessar os requisitos</b> deste componente com o novo catálogo. Os requisitos analisados podem mudar e o <b>match será recalculado</b>.</p>
+    <div class="warn-actions"><button class="btn" id="catConfirmCancel">Cancelar</button><button class="btn primary" id="catConfirmOk">Reprocessar requisitos</button></div>
+  </div>
+
   <!-- Tour guiado -->
   <button class="tour-fab" id="tourFab" data-tip="Fazer um tour guiado para entender o protótipo">
     <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.5"/><path d="M8 8a2 2 0 1 1 2.6 1.9c-.6.2-.9.6-.9 1.2v.4"/><path d="M10 14v.01"/></svg>
@@ -172,6 +180,6 @@
   </div>
 
   <script src="data.js?v=25"></script>
-  <script src="app.js?v=122"></script>
+  <script src="app.js?v=123"></script>
 </body>
 </html>

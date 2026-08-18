@@ -826,6 +826,23 @@ function openCatMenu(anchor) {
 }
 function closeCatMenu() { const m = $("#catMenu"); if (m) m.hidden = true; catMenuAnchor = null; }
 
+/* Trocar categoria re-roda a extração dos requisitos (Alice 17/08): não é instantâneo.
+   Simulamos: confirmar → loading "reprocessando" sobre o componente → label atualizado + match recalculado. */
+let pendingCat = null;
+function reprocessCategory(anchor, val) {
+  const body = anchor.closest(".comp-acc") ? anchor.closest(".comp-acc").querySelector(".comp-acc-body") : null;
+  if (!body) { anchor.childNodes[0].nodeValue = val; toast(`Categoria alterada para "${val}"`); return; }
+  const ov = document.createElement("div");
+  ov.className = "cat-loading";
+  ov.innerHTML = `<div class="cat-spin"></div><div class="cat-loading-txt">Reprocessando requisitos para "${esc(val)}"…<span>A IA está relendo o edital com o novo catálogo. Isso pode levar alguns segundos.</span></div>`;
+  body.appendChild(ov);
+  setTimeout(() => {
+    anchor.childNodes[0].nodeValue = val;
+    ov.remove();
+    toast(`Requisitos reprocessados para "${val}" — match recalculado`);
+  }, 1900);
+}
+
 /* ============================================================
    Wire
    ============================================================ */
@@ -952,11 +969,17 @@ function wire() {
   // dropdown de categoria da seção (com qual catálogo compara)
   $("#catMenu").addEventListener("click", e => {
     const b = e.target.closest("[data-catval]"); if (!b || !catMenuAnchor) return;
-    const val = b.dataset.catval;
-    catMenuAnchor.childNodes[0].nodeValue = val;
-    toast(`Categoria alterada para "${val}" (recalcula a comparação com o catálogo)`);
+    const val = b.dataset.catval, anchor = catMenuAnchor;
     closeCatMenu();
+    if (val === anchor.childNodes[0].nodeValue.trim()) return; // mesma categoria: nada a fazer
+    pendingCat = { anchor, val };
+    $("#catConfirmName").textContent = val;
+    $("#catConfirmOverlay").hidden = false; $("#catConfirmModal").hidden = false;
   });
+  const closeCatConfirm = () => { $("#catConfirmOverlay").hidden = true; $("#catConfirmModal").hidden = true; pendingCat = null; };
+  $("#catConfirmCancel").onclick = closeCatConfirm;
+  $("#catConfirmOverlay").onclick = closeCatConfirm;
+  $("#catConfirmOk").onclick = () => { if (pendingCat) reprocessCategory(pendingCat.anchor, pendingCat.val); $("#catConfirmOverlay").hidden = true; $("#catConfirmModal").hidden = true; pendingCat = null; };
   document.addEventListener("click", e => {
     if ($("#catMenu").hidden) return;
     if (e.target.closest("#catMenu") || e.target.closest("[data-catdrop]")) return;
