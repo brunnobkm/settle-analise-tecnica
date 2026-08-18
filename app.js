@@ -630,13 +630,11 @@ function collapsiblesHTML(it) {
     const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<span class="tag-item na-tag diff-tag">${esc(d.req)}<button class="na-add" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${ICO_PLUS}</button></span>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
     html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
   }
-  // (2) no edital não analisados: o edital exige, mas ainda não foi analisado (falta o valor do SKU). "+" adiciona à comparação.
-  const added = addedNA[active] || new Set();
-  const na = prodComps.flatMap(c => c.naoAnalisadas || []).filter(n => !added.has(n.req));
+  // (2) no edital não analisados: o edital exige, mas ainda não foi analisado. Só referência (badges), SEM "+" (decisão da reunião ~8:01).
+  const na = prodComps.flatMap(c => c.naoAnalisadas || []);
   if (na.length) {
-    const note = "Especificações exigidas pelo edital que ainda não foram analisadas (falta o valor no seu catálogo). Clique no + para adicionar à comparação.";
-    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${na.map(n => `<span class="tag-item na-tag">${esc(n.req)}<button class="na-add" data-addna="${esc(n.req)}" title="Adicionar à comparação">${ICO_PLUS}</button></span>`).join("")}</div>`;
-    html += collapsible("Especificações no edital não analisados", tags, na.length, true);
+    const note = "Especificações exigidas pelo edital que ainda não foram analisadas (falta o valor no seu catálogo).";
+    html += collapsible("Especificações no edital não analisados", tagList(na.map(n => n.req), note), na.length, true);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }

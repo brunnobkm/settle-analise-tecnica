@@ -15,6 +15,7 @@
   --muted: #F5F5F5;
   --muted-foreground: #737373;
   --border: #E5E5E5;
+  --border-strong: #D4D4D4;
   --input: #E5E5E5;
   /* semantic */
   --success: #16A34A;     --success-bg: #EBF7F0;
@@ -247,7 +248,7 @@ button { font-family: inherit; cursor: pointer; }
 .action-pill[hidden] { display: none; }
 .pill-btn { width: 26px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted-foreground); cursor: pointer; padding: 0; }
 .pill-btn + .pill-btn { border-left: 1px solid var(--border-strong); }
-.pill-btn:hover { background: #FFF; color: var(--brand-600); }
+.pill-btn:hover { background: #E4E4E2; color: var(--brand-600); }
 .pill-btn svg { width: 13px; height: 13px; }
 /* badge não editável (Valor total): mesmo design, sem interação/hover */
 .ts-chip-static { cursor: default; }
@@ -773,10 +774,11 @@ tr.diff-row:hover .diff-remove { opacity: 1; }
 .desc-block { background: #FFF; border: 1px solid var(--border); border-radius: var(--r-box); }
 .desc-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; user-select: none; }
 .desc-head .cps-title { font-size: 14px; font-weight: 600; color: var(--foreground); }
-.desc-hover-actions { display: inline-flex; gap: 2px; margin-left: auto; opacity: 0; transition: opacity .12s; }
+.desc-hover-actions { display: inline-flex; margin-left: auto; opacity: 0; transition: opacity .12s; background: #EFEFEE; border: 1px solid var(--border-strong); border-radius: var(--r-md); overflow: hidden; }
 .desc-head:hover .desc-hover-actions { opacity: 1; }
-.desc-ico { width: 28px; height: 28px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted-foreground); border-radius: var(--r-md); cursor: pointer; }
-.desc-ico:hover { background: var(--muted); color: var(--foreground); }
+.desc-ico { width: 28px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted-foreground); cursor: pointer; padding: 0; }
+.desc-ico + .desc-ico { border-left: 1px solid var(--border-strong); }
+.desc-ico:hover { background: #E4E4E2; color: var(--brand-600); }
 .desc-ico svg { width: 15px; height: 15px; }
 .desc-caret { color: var(--muted-foreground); display: inline-grid; place-items: center; transition: transform .15s; }
 .desc-block:not(.open) .desc-caret { transform: rotate(180deg); }
