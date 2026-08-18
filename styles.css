@@ -250,8 +250,8 @@ button { font-family: inherit; cursor: pointer; }
 .pill-btn:hover { background: var(--muted); color: var(--brand-600); }
 .pill-btn svg { width: 13px; height: 13px; }
 /* badge não editável (Valor total): mesmo design, sem interação/hover */
-.ts-chip-static { cursor: help; }
-.ts-chip-static:hover { border-color: var(--border); background: var(--muted); }
+.ts-chip-static { cursor: default; background: #EFEFEE; border-color: #E2E2E0; }
+.ts-chip-static:hover { border-color: var(--border-strong); background: #EAEAE8; }
 /* badge "no edital não analisados" com botão + para adicionar à comparação */
 .na-tag { display: inline-flex; align-items: center; gap: 4px; padding-right: 3px; }
 .na-add { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 0; background: transparent; color: var(--brand-600); border-radius: var(--r-md); cursor: pointer; padding: 0; }

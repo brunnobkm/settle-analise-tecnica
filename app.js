@@ -303,19 +303,19 @@ function renderItemSummary() {
   const el = $("#toSummary"); if (!el || active == null) return;
   const it = ITEMS[active];
   const num = v => parseBRL(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-  // v1 (card): valores em formato BADGE, somente leitura (sem edição na barra)
-  const badge = (label, disp, opts) => {
+  // v1 (card): valores em formato BADGE, somente leitura; hover mostra o icon group (ver origem + copiar), igual à célula
+  const badge = (key, label, disp, copy, opts) => {
     opts = opts || {};
     const rs = opts.money ? `<span class="ts-chip-prefix">R$</span>` : "";
     const val = opts.money ? `<span class="ts-chip-num">${disp}</span>` : disp;
     const tip = opts.tip ? ` data-tip="${opts.tip}"` : "";
-    return `<span class="ts-chip ts-chip-static"${tip}><span class="ts-chip-label">${label}:</span>${rs}${val}</span>`;
+    return `<span class="ts-chip ts-chip-static" data-metasrc="${key}" data-copyval="${esc(copy)}"${tip}><span class="ts-chip-label">${label}:</span>${rs}${val}</span>`;
   };
   el.innerHTML = `<div class="ts-metas">
-      <span class="ts-field">${badge("Unidade de medida", esc(it.unidadeMedida || "unidade"))}</span>
-      <span class="ts-field">${badge("Quantidade", esc(it.quantidade))}</span>
-      <span class="ts-field">${badge("Valor unitário", esc(num(it.valorUnitario.v)), { money: true })}</span>
-      <span class="ts-field">${badge("Valor total", esc(num(it.valorTotal.v)), { money: true, tip: "Calculado automaticamente: quantidade × valor unitário" })}</span>
+      <span class="ts-field">${badge("unidade", "Unidade de medida", esc(it.unidadeMedida || "unidade"), it.unidadeMedida || "unidade")}</span>
+      <span class="ts-field">${badge("quantidade", "Quantidade", esc(it.quantidade), it.quantidade)}</span>
+      <span class="ts-field">${badge("preco", "Valor unitário", esc(num(it.valorUnitario.v)), "R$ " + num(it.valorUnitario.v), { money: true })}</span>
+      <span class="ts-field">${badge("total", "Valor total", esc(num(it.valorTotal.v)), "R$ " + num(it.valorTotal.v), { money: true, tip: "Calculado automaticamente: quantidade × valor unitário" })}</span>
     </div>`;
 }
 function commitMeta() {
@@ -341,8 +341,22 @@ function actionsForChip(chip) {
       { ico: ICO_COPY, title: "Copiar o valor requerido", act: () => { const t = SPECS[ri].exig; if (navigator.clipboard) navigator.clipboard.writeText(t).catch(() => {}); toast(`Valor copiado: "${t}"`); } },
     ];
   }
-  const key = chip.dataset.metaedit;
-  return [{ ico: ICO_PENCIL, title: "Editar", act: () => { editingMeta = key; renderItemSummary(); } }];
+  if (chip.matches("[data-metasrc]")) {
+    const k = chip.dataset.metasrc, v = chip.dataset.copyval;
+    return [
+      { ico: ICO_ARROW, title: "Ver a origem deste valor", act: () => openMetaOrigin(k) },
+      { ico: ICO_COPY, title: "Copiar o valor", act: () => { if (navigator.clipboard) navigator.clipboard.writeText(v).catch(() => {}); toast(`Valor copiado: "${v}"`); } },
+    ];
+  }
+  return [];
+}
+/* origem de um valor da meta do item (barra "Quantidade/Valores") */
+function openMetaOrigin(key) {
+  const label = { unidade: "Unidade de medida", quantidade: "Quantidade", preco: "Valor unitário", total: "Valor total" }[key] || "Valor do item";
+  const nota = key === "total" ? "Valor total é calculado: quantidade × valor unitário." : "Extraído do edital (Termo de Referência) e da planilha de itens.";
+  $("#drawerHead").textContent = `Origem — ${label}`;
+  $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>${esc(nota)}</span></div>`;
+  $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
 }
 function showActionPill(chip) {
   const pill = $("#actionPill"); if (!pill) return;
@@ -927,6 +941,7 @@ function wire() {
     if (more) { const d = $("#editBody .ed-desc"); d.classList.toggle("clamp"); more.textContent = d.classList.contains("clamp") ? "Ver mais" : "Ver menos"; }
   });
   $("#toExport").onclick = () => toast("Baixando o item inteiro (PDF · planilha · resumo técnico)…");
+  { const sh = $("#toShare"); if (sh) sh.onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)"); }
 
   const tb = $("#toBody");
   // redimensiona a tabela ao mudar o tamanho da janela ou abrir/fechar uma seção
@@ -959,7 +974,7 @@ function wire() {
   if (!$("#actionPill")) { const p = document.createElement("div"); p.id = "actionPill"; p.className = "action-pill"; p.hidden = true; document.body.appendChild(p); }
   document.addEventListener("mouseover", e => {
     if (e.target.closest("#actionPill")) { clearTimeout(pillHideT); return; }
-    const chip = e.target.closest('#toSummary .ts-chip[data-metaedit], #toBody .val-chip[data-vstart]');
+    const chip = e.target.closest('#toSummary .ts-chip[data-metasrc], #toBody .val-chip[data-vstart]');
     if (chip) { clearTimeout(pillHideT); showActionPill(chip); }
     else { clearTimeout(pillHideT); pillHideT = setTimeout(hideActionPill, 140); }
   });
