@@ -441,6 +441,7 @@ button.sku-source.net { display: inline-flex; align-items: center; gap: 3px; bac
 .sku-tag.cat { color: var(--secondary-foreground); background: var(--muted); }
 .sku-tag.net { color: var(--muted-foreground); background: #FFF; border-color: var(--border); }
 .sku-tag.src { color: var(--muted-foreground); background: var(--muted); }
+.sku-tag.soft { color: var(--muted-foreground); background: var(--muted); border-color: var(--border); }
 button.sku-tag { font: inherit; font-size: 10px; font-weight: 600; line-height: 1.4; cursor: pointer; }
 .sku-tag.src.net { display: inline-flex; align-items: center; gap: 3px; }
 .sku-tag.src.net svg { width: 11px; height: 11px; }

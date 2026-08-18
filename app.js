@@ -518,10 +518,12 @@ function renderMatrix() {
       const sku = sc.sku;
       // fonte do dado qualifica o estoque: catálogo = seu estoque; internet = fonte externa (com link para a origem)
       const isNet = sku.origem === "internet";
-      // estoque = só disponibilidade (verde/âmbar), independente da fonte
-      const estoqueBadge = sku.estoque
+      // estoque = disponibilidade em 3 estados: com estoque / sem estoque / não informado (nem todo cliente passa essa info)
+      const estoqueBadge = sku.estoque === true
         ? `<span class="sku-tag ok" data-tip="Com estoque">Com estoque</span>`
-        : `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar ou terceirizar">Sem estoque</span>`;
+        : sku.estoque === false
+          ? `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar ou terceirizar">Sem estoque</span>`
+          : `<span class="sku-tag soft" data-tip="O fornecedor não informou a disponibilidade em estoque deste produto">Estoque não informado</span>`;
       // fonte = ÍCONE de origem: livro = catálogo do cliente, globo = internet (externo). Azul quando tem link (clicável), cinza quando não.
       const hasLink = isNet || !!sku.datasheet;
       const srcIco = isNet ? ICO_GLOBE : ICO_CATALOG;
