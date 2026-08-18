@@ -14,6 +14,7 @@ const ICO_ARROW = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" st
 const ICO_CHAT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h10v7H8l-3 2v-2H3z"/></svg>`;
 const ICO_PLUS = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>`;
 const ICO_CARET = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
+const ICO_REDO = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3v3.5H9.5"/><path d="M12.5 8a5 5 0 1 1-1.3-4.2L13 6.5"/></svg>`;
 const ICO_PENCIL = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5L6 12.5 3 13l.5-3z"/></svg>`;
 const ICO_CHEV_L = `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>`;
 const ICO_CHEV_R = `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
@@ -396,7 +397,7 @@ function cellTd(cell, ri, ci, exigNa, c, unidade) {
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
 let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
-function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = active == null ? "" : `<button class="to-editbtn primary" id="btnEditItem" data-tip="Editar as informações do item (quantidade, unidade de medida, valores)">Editar informações do item</button>`; } // header edita o item; cada seção tem seu próprio Editar
+function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = ""; } // "Editar informações do item" removido na v1 (card): a meta é editável inline; cada seção tem seu próprio Editar
 function editSecLabel() {
   const it = ITEMS[active];
   if (editTarget.type === "produto") return (it.componentes.find(c => c.mecanica === "produto") || {}).rotulo || "";
@@ -539,7 +540,7 @@ function renderMatrix() {
     const nx = !!spec.naoExtraido, df = !!spec.diferencial;
     let row = `<tr class="${df ? "diff-row" : nx ? "nx-row" : (isConcordant(spec) ? "concordant" : "")}">`;
     cols.forEach(c => {
-      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="${df ? "Diferencial do produto (o edital não exige)" : "Requisito exigido pelo edital"}">${esc(spec.req)}</span>${df ? `<span class="diff-badge" data-tip="Diferencial: o edital não exige, não conta no atende">Diferencial</span>` : ""}</td>`;
+      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="${df ? "Diferencial do produto (o edital não exige)" : "Requisito exigido pelo edital"}">${esc(spec.req)}</span>${df ? `<span class="diff-badge" data-tip="Diferencial: o edital não exige, não conta no atende">Diferencial</span><button class="diff-remove" data-rmdiff="${esc(spec.req)}" data-tip="Remover este diferencial da comparação">${ICO_NO}</button>` : ""}</td>`;
       else if (c.key === "val") {
         if (df) row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-diff" data-tip="O edital não exige este requisito">Não exigido</span></div></td>`;
         else if (nx) {
@@ -594,7 +595,8 @@ const addedDiff = {}; // por item: specs "não exigidas" que o usuário trouxe c
 function collapsiblesHTML(it) {
   // "Descrição completa" só quando o item tem Produto (software não tem descrição — decisão Alice 28/07)
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
-  let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>`, null, true) : "";
+  const descActions = `<div class="desc-actions"><button class="desc-btn" data-descedital data-tip="Abrir o edital na parte onde aparece a descrição deste item">${ICO_ARROW}Ver no edital</button><button class="desc-btn" data-descextrair data-tip="Reler o edital e extrair a descrição novamente">${ICO_REDO}Extrair novamente</button></div>`;
+  let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>${descActions}`, null, false) : "";
   const prodComps = it.componentes.filter(c => c.mecanica === "produto");
   // (1) não exigidas pelo edital: o SKU tem o valor, o edital não pede → diferencial (opção B: "+" leva à tabela)
   const dset = addedDiff[active] || new Set();
@@ -644,6 +646,17 @@ function addDiferencial(reqName) {
   const host = document.querySelector("#toBody .to-collapsibles");
   if (host) host.outerHTML = collapsiblesHTML(ITEMS[active]);
   toast(`"${reqName}" adicionado como diferencial (não conta no atende)`);
+}
+/* remover um diferencial da tabela: some da comparação e volta para a seção "não exigidas" */
+function removeDiferencial(reqName) {
+  if (active == null || !SPECS) return;
+  const i = SPECS.findIndex(s => s.diferencial && s.req === reqName);
+  if (i >= 0) SPECS.splice(i, 1);
+  const set = addedDiff[active]; if (set) set.delete(reqName);
+  recompute(); renderMatrix();
+  const host = document.querySelector("#toBody .to-collapsibles");
+  if (host) host.outerHTML = collapsiblesHTML(ITEMS[active]);
+  toast(`"${reqName}" removido da comparação`);
 }
 
 /* ---------- Mecânica: checklist (serviço / software) ---------- */
@@ -711,6 +724,22 @@ function openOriginSpec(spec, ri) {
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
 }
 const closeOrigin = () => { $("#drawer").hidden = true; $("#tableOverlay").classList.remove("sidebar-open"); extractRi = null; pendingExtract = null; };
+/* Descrição (card v1): "Ver no edital" abre o drawer na origem; "Extrair novamente" re-roda a extração da descrição */
+function openDescOrigin() {
+  extractRi = null; pendingExtract = null;
+  $("#drawerHead").textContent = "Descrição no edital";
+  $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>Descrição do item no Termo de Referência</span></div>`;
+  $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
+}
+function extractDescricao() {
+  const det = document.querySelector("#toBody .to-collapsibles .cps");
+  const body = det && det.querySelector(".cps-body"); if (!body) return;
+  if (!det.open) det.open = true;
+  const orig = body.innerHTML;
+  body.innerHTML = `<div class="sk-box" style="margin:0 0 8px"><div class="sk-line" style="width:82%"></div></div><div class="sk-box" style="margin:0"><div class="sk-line" style="width:58%"></div></div>`;
+  toast("Relendo o edital e reextraindo a descrição…");
+  setTimeout(() => { body.innerHTML = orig; toast("Descrição atualizada a partir do edital"); }, 1600);
+}
 
 let toastT;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
@@ -798,8 +827,8 @@ function openKebabMenu(anchor) {
   const menu = $("#kebabMenu"); if (!menu) return;
   // "Concluir análise" só no software (em produto não existe — Brunno)
   const items = anchor.dataset.kebabmech === "produto"
-    ? [["importar", "Importar"], ["exportar", "Exportar"]]
-    : [["concluir", "Concluir análise"], ["importar", "Importar"], ["exportar", "Exportar"]];
+    ? [["importar", "Importar"], ["exportar", "Exportar esta seção"]]
+    : [["concluir", "Concluir análise"], ["importar", "Importar"], ["exportar", "Exportar esta seção"]];
   menu.innerHTML = items.map(([k, l]) => `<button class="km-item" data-kbact="${k}">${l}</button>`).join("");
   menu.hidden = false;
   const r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
@@ -890,7 +919,7 @@ function wire() {
     const more = e.target.closest("#edMore");
     if (more) { const d = $("#editBody .ed-desc"); d.classList.toggle("clamp"); more.textContent = d.classList.contains("clamp") ? "Ver mais" : "Ver menos"; }
   });
-  $("#toExport").onclick = () => toast("Exportando análise (PDF · planilha · resumo técnico)…");
+  $("#toExport").onclick = () => toast("Exportando o item inteiro (PDF · planilha · resumo técnico)…");
   $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
 
   const tb = $("#toBody");
@@ -944,6 +973,9 @@ function wire() {
   tb.addEventListener("click", e => {
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
+    const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
+    if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
+    if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const vs = e.target.closest("[data-vstart]"); if (vs) { startInlineEdit(+vs.dataset.vstart); return; }
     const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }
