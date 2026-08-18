@@ -303,27 +303,20 @@ function renderItemSummary() {
   const el = $("#toSummary"); if (!el || active == null) return;
   const it = ITEMS[active];
   const num = v => parseBRL(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-  const okcancel = `<button class="ts-ok" data-metaok data-tip="Confirmar">${ICO_OK}</button><button class="ts-cancel" data-metacancel data-tip="Cancelar">${ICO_NO}</button>`;
-  // chip com borda (clicável para editar); a LABEL e o prefixo fixo (ex.: R$) ficam dentro do chip, não editáveis
-  const chip = (key, opts) => {
+  // v1 (card): valores em formato BADGE, somente leitura (sem edição na barra)
+  const badge = (label, disp, opts) => {
     opts = opts || {};
-    const label = `<span class="ts-chip-label">${opts.label}:</span>`;
     const rs = opts.money ? `<span class="ts-chip-prefix">R$</span>` : "";
-    const disp = opts.money ? `<span class="ts-chip-num">${opts.display}</span>` : opts.display;
-    if (key && editingMeta === key) {
-      const field = `<input class="ts-chip-input${opts.money ? " mono" : ""}" id="metaInput" value="${esc(opts.inputVal)}" inputmode="${opts.money ? "decimal" : (opts.text ? "text" : "numeric")}" aria-label="${opts.label}" style="width:${opts.w || 70}px">`;
-      return `<span class="ts-chip-edit">${label}${rs}${field}${okcancel}</span>`;
-    }
-    if (!key) return `<span class="ts-chip ts-chip-static" data-tip="Calculado automaticamente: quantidade × valor unitário">${label}${rs}${disp}</span>`;
-    return `<button class="ts-chip" data-metaedit="${key}">${label}${rs}${disp}</button>`;
+    const val = opts.money ? `<span class="ts-chip-num">${disp}</span>` : disp;
+    const tip = opts.tip ? ` data-tip="${opts.tip}"` : "";
+    return `<span class="ts-chip ts-chip-static"${tip}><span class="ts-chip-label">${label}:</span>${rs}${val}</span>`;
   };
   el.innerHTML = `<div class="ts-metas">
-      <span class="ts-field">${chip("unidade", { label: "Unidade de medida", display: esc(it.unidadeMedida || "unidade"), inputVal: it.unidadeMedida || "unidade", text: true, w: 96 })}</span>
-      <span class="ts-field">${chip("quantidade", { label: "Quantidade", display: esc(it.quantidade), inputVal: it.quantidade, w: 56 })}</span>
-      <span class="ts-field">${chip("preco", { label: "Valor unitário", money: true, display: esc(num(it.valorUnitario.v)), inputVal: num(it.valorUnitario.v), w: 88 })}</span>
-      <span class="ts-field">${chip(null, { label: "Valor total", money: true, display: esc(num(it.valorTotal.v)) })}</span>
+      <span class="ts-field">${badge("Unidade de medida", esc(it.unidadeMedida || "unidade"))}</span>
+      <span class="ts-field">${badge("Quantidade", esc(it.quantidade))}</span>
+      <span class="ts-field">${badge("Valor unitário", esc(num(it.valorUnitario.v)), { money: true })}</span>
+      <span class="ts-field">${badge("Valor total", esc(num(it.valorTotal.v)), { money: true, tip: "Calculado automaticamente: quantidade × valor unitário" })}</span>
     </div>`;
-  if (editingMeta) { const inp = $("#metaInput"); if (inp) { inp.focus(); if (inp.select) inp.select(); } }
 }
 function commitMeta() {
   const inp = $("#metaInput"), key = editingMeta;
@@ -592,11 +585,25 @@ function tagList(items, note) {
 }
 const addedNA = {}; // por item: specs "no edital não analisados" que o usuário adicionou à comparação
 const addedDiff = {}; // por item: specs "não exigidas" que o usuário trouxe como diferencial (opção B)
+/* "Descrição completa" (card v1): começa aberta; ao passar o mouse mostra um icon group (igual à célula);
+   ao colapsar, o texto vira um preview truncado com reticência (quantidade máx. de caracteres a definir). */
+function descBlockHTML(it) {
+  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descedital data-tip="Ver no edital">${ICO_ARROW}</button><button class="desc-ico" data-descextrair data-tip="Extrair novamente">${ICO_REDO}</button></span>`;
+  return `<div class="desc-block open" data-descblock>
+      <div class="desc-head" data-desctoggle>
+        <span class="cps-title">Descrição completa</span>${actions}<span class="desc-caret">${CARET}</span>
+      </div>
+      <div class="desc-body">
+        <p class="cps-desc desc-full">${esc(it.nome)}</p>
+        <p class="cps-desc desc-full">${esc(it.resumoTR)}</p>
+        <p class="cps-desc desc-preview">${esc(it.nome)} ${esc(it.resumoTR)}</p>
+      </div>
+    </div>`;
+}
 function collapsiblesHTML(it) {
   // "Descrição completa" só quando o item tem Produto (software não tem descrição — decisão Alice 28/07)
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
-  const descActions = `<div class="desc-actions"><button class="desc-btn" data-descedital data-tip="Abrir o edital na parte onde aparece a descrição deste item">${ICO_ARROW}Ver no edital</button><button class="desc-btn" data-descextrair data-tip="Reler o edital e extrair a descrição novamente">${ICO_REDO}Extrair novamente</button></div>`;
-  let html = temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.nome)}</p><p class="cps-desc">${esc(it.resumoTR)}</p>${descActions}`, null, false) : "";
+  let html = temProduto ? descBlockHTML(it) : "";
   const prodComps = it.componentes.filter(c => c.mecanica === "produto");
   // (1) não exigidas pelo edital: o SKU tem o valor, o edital não pede → diferencial (opção B: "+" leva à tabela)
   const dset = addedDiff[active] || new Set();
@@ -732,9 +739,9 @@ function openDescOrigin() {
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
 }
 function extractDescricao() {
-  const det = document.querySelector("#toBody .to-collapsibles .cps");
-  const body = det && det.querySelector(".cps-body"); if (!body) return;
-  if (!det.open) det.open = true;
+  const block = document.querySelector("#toBody .desc-block");
+  const body = block && block.querySelector(".desc-body"); if (!body) return;
+  block.classList.add("open");
   const orig = body.innerHTML;
   body.innerHTML = `<div class="sk-box" style="margin:0 0 8px"><div class="sk-line" style="width:82%"></div></div><div class="sk-box" style="margin:0"><div class="sk-line" style="width:58%"></div></div>`;
   toast("Relendo o edital e reextraindo a descrição…");
@@ -919,8 +926,7 @@ function wire() {
     const more = e.target.closest("#edMore");
     if (more) { const d = $("#editBody .ed-desc"); d.classList.toggle("clamp"); more.textContent = d.classList.contains("clamp") ? "Ver mais" : "Ver menos"; }
   });
-  $("#toExport").onclick = () => toast("Exportando o item inteiro (PDF · planilha · resumo técnico)…");
-  $("#toShare").onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)");
+  $("#toExport").onclick = () => toast("Baixando o item inteiro (PDF · planilha · resumo técnico)…");
 
   const tb = $("#toBody");
   // redimensiona a tabela ao mudar o tamanho da janela ou abrir/fechar uma seção
@@ -976,6 +982,7 @@ function wire() {
     const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
     if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
+    const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const vs = e.target.closest("[data-vstart]"); if (vs) { startInlineEdit(+vs.dataset.vstart); return; }
     const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }

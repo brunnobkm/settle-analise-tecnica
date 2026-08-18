@@ -770,11 +770,21 @@ tr.diff-row .col-req .req-name { color: var(--foreground); }
 tr.diff-row:hover .diff-remove { opacity: 1; }
 .diff-remove:hover { background: var(--destructive-bg, #FEE2E2); color: var(--destructive, #DC2626); }
 .diff-remove svg { width: 12px; height: 12px; }
-/* Descrição (card v1): ações "Ver no edital" / "Extrair novamente" */
-.desc-actions { display: flex; gap: 8px; margin-top: 12px; }
-.desc-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: var(--foreground); background: #FFF; border: 1px solid var(--border); border-radius: var(--r-field); cursor: pointer; }
-.desc-btn:hover { background: var(--muted); border-color: var(--border-strong); }
-.desc-btn svg { width: 14px; height: 14px; color: var(--muted-foreground); }
+/* Descrição (card v1): começa aberta, hover mostra icon group, colapsada vira preview truncado */
+.desc-block { background: #FFF; border: 1px solid var(--border); border-radius: var(--r-box); }
+.desc-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; user-select: none; }
+.desc-head .cps-title { font-size: 14px; font-weight: 600; color: var(--foreground); }
+.desc-hover-actions { display: inline-flex; gap: 2px; margin-left: auto; opacity: 0; transition: opacity .12s; }
+.desc-head:hover .desc-hover-actions { opacity: 1; }
+.desc-ico { width: 28px; height: 28px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted-foreground); border-radius: var(--r-md); cursor: pointer; }
+.desc-ico:hover { background: var(--muted); color: var(--foreground); }
+.desc-ico svg { width: 15px; height: 15px; }
+.desc-caret { color: var(--muted-foreground); display: inline-grid; place-items: center; transition: transform .15s; }
+.desc-block:not(.open) .desc-caret { transform: rotate(180deg); }
+.desc-body { padding: 0 16px 14px; }
+.desc-block:not(.open) .desc-full { display: none; }
+.desc-block.open .desc-preview { display: none; }
+.desc-preview { color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .val-diff { display: inline-block; padding: 2px 9px; font-size: 12px; color: var(--muted-foreground); background: var(--muted); border-radius: var(--r-md); }
 td.cell.diff { background: #FAFAFA; }
 .cell-ico.diff { color: #A3A3A3; font-size: 15px; line-height: 1; }
