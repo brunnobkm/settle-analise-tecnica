@@ -828,19 +828,41 @@ function closeCatMenu() { const m = $("#catMenu"); if (m) m.hidden = true; catMe
 
 /* Trocar categoria re-roda a extração dos requisitos (Alice 17/08): não é instantâneo.
    Simulamos: confirmar → loading "reprocessando" sobre o componente → label atualizado + match recalculado. */
-let pendingCat = null;
+let pendingCat = null, reprocessTimer = null;
+function itemSkeletonHTML() {
+  const row = () => `<div class="sk-row"><div class="sk-cell wide"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div></div>`;
+  return `<div class="to-collapsibles">
+      <div class="sk-box"><div class="sk-line" style="width:38%"></div></div>
+      <div class="sk-box"><div class="sk-line" style="width:52%"></div></div>
+    </div>
+    <div class="to-sections"><div class="sk-table">
+      <div class="sk-row head"><div class="sk-cell wide"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div></div>
+      ${Array.from({ length: 8 }, row).join("")}
+    </div></div>`;
+}
+function showReprocessSonner(val) {
+  let s = document.getElementById("reprocessSonner");
+  if (!s) { s = document.createElement("div"); s.id = "reprocessSonner"; s.className = "reprocess-sonner"; document.body.appendChild(s); }
+  s.innerHTML = `<div class="cat-spin"></div><div class="rs-txt"><b>Reprocessando os requisitos para "${esc(val)}"</b><span>Este processo pode demorar um pouco — você pode sair desta tela. Assim que estiver pronto, avisaremos por e-mail <i>(o canal ainda precisa ser definido: podemos retomar a task de alertas na plataforma, feita há alguns meses)</i>.</span></div>`;
+  s.hidden = false;
+}
+function hideReprocessSonner() { const s = document.getElementById("reprocessSonner"); if (s) s.hidden = true; }
+/* Trocar categoria afeta o ITEM inteiro: skeleton em tudo + sonner fixo. ~30s (Alice: "isso demora"). */
 function reprocessCategory(anchor, val) {
-  const body = anchor.closest(".comp-acc") ? anchor.closest(".comp-acc").querySelector(".comp-acc-body") : null;
-  if (!body) { anchor.childNodes[0].nodeValue = val; toast(`Categoria alterada para "${val}"`); return; }
-  const ov = document.createElement("div");
-  ov.className = "cat-loading";
-  ov.innerHTML = `<div class="cat-spin"></div><div class="cat-loading-txt">Reprocessando requisitos para "${esc(val)}"…<span>A IA está relendo o edital com o novo catálogo. Isso pode levar alguns segundos.</span></div>`;
-  body.appendChild(ov);
-  setTimeout(() => {
-    anchor.childNodes[0].nodeValue = val;
-    ov.remove();
-    toast(`Requisitos reprocessados para "${val}" — match recalculado`);
-  }, 1900);
+  const oldLabel = anchor.childNodes[0].nodeValue.trim();
+  const it = ITEMS[active];
+  const comp = it.componentes.find(c => c.rotulo === oldLabel) || it.componentes.find(c => c.mecanica === anchor.dataset.catmech);
+  const toSum = $("#toSummary"); if (toSum) toSum.classList.add("sk-summary");
+  $("#toBody").innerHTML = itemSkeletonHTML();
+  showReprocessSonner(val);
+  if (comp) comp.rotulo = val;
+  clearTimeout(reprocessTimer);
+  reprocessTimer = setTimeout(() => {
+    hideReprocessSonner();
+    if (toSum) toSum.classList.remove("sk-summary");
+    if (active != null) openTable(active);
+    toast(`Requisitos reprocessados para "${val}" — análise recalculada`);
+  }, 30000);
 }
 
 /* ============================================================
