@@ -974,7 +974,7 @@ function wire() {
   if (!$("#actionPill")) { const p = document.createElement("div"); p.id = "actionPill"; p.className = "action-pill"; p.hidden = true; document.body.appendChild(p); }
   document.addEventListener("mouseover", e => {
     if (e.target.closest("#actionPill")) { clearTimeout(pillHideT); return; }
-    const chip = e.target.closest('#toSummary .ts-chip[data-metasrc], #toBody .val-chip[data-vstart]');
+    const chip = e.target.closest('#toBody .val-chip[data-vstart]'); // metas do subheader: apenas badge por enquanto (sem hover)
     if (chip) { clearTimeout(pillHideT); showActionPill(chip); }
     else { clearTimeout(pillHideT); pillHideT = setTimeout(hideActionPill, 140); }
   });

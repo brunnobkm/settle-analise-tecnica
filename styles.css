@@ -243,15 +243,14 @@ button { font-family: inherit; cursor: pointer; }
 .ts-chip { display: inline-flex; align-items: center; gap: 5px; font: inherit; color: var(--foreground); background: var(--muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 3px 9px; cursor: pointer; }
 .ts-chip:hover { border-color: var(--border-strong); }
 /* icon-pill flutuante FIXO (tooltip de ações): não ocupa espaço, não é cortado por overflow, reposiciona por JS */
-.action-pill { position: fixed; z-index: 90; display: inline-flex; align-items: center; background: #FFF; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,.16); }
+.action-pill { position: fixed; z-index: 90; display: inline-flex; align-items: center; background: #EFEFEE; border: 1px solid var(--border-strong); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,.16); }
 .action-pill[hidden] { display: none; }
 .pill-btn { width: 26px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted-foreground); cursor: pointer; padding: 0; }
-.pill-btn + .pill-btn { border-left: 1px solid var(--border); }
-.pill-btn:hover { background: var(--muted); color: var(--brand-600); }
+.pill-btn + .pill-btn { border-left: 1px solid var(--border-strong); }
+.pill-btn:hover { background: #FFF; color: var(--brand-600); }
 .pill-btn svg { width: 13px; height: 13px; }
 /* badge não editável (Valor total): mesmo design, sem interação/hover */
-.ts-chip-static { cursor: default; background: #EFEFEE; border-color: #E2E2E0; }
-.ts-chip-static:hover { border-color: var(--border-strong); background: #EAEAE8; }
+.ts-chip-static { cursor: default; }
 /* badge "no edital não analisados" com botão + para adicionar à comparação */
 .na-tag { display: inline-flex; align-items: center; gap: 4px; padding-right: 3px; }
 .na-add { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 0; background: transparent; color: var(--brand-600); border-radius: var(--r-md); cursor: pointer; padding: 0; }
