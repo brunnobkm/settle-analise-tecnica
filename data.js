@@ -41,7 +41,7 @@ const SKUS = [
   { model: "DS-2CD2043G2-IU", brand: "Hikvision", preco: 1650, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2043g2-iu.pdf" },
   { model: "VIP-3230-B-IA",   brand: "Intelbras", preco: 1420, estoque: false, origem: "catalogo", datasheet: null },
   { model: "IPC-HFW2431S-S2", brand: "Dahua",     preco: 1290, estoque: null,  origem: "internet", datasheet: null },
-  { model: "DS-2CD2086G2-IU", brand: "Hikvision", preco: 2350, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2086g2-iu.pdf" },
+  { model: "DS-2CD2086G2-IU", brand: "Hikvision", preco: null, estoque: true,  origem: "catalogo", datasheet: "ds-2cd2086g2-iu.pdf" },
   { model: "VIP-1230-B",      brand: "Intelbras", preco: 980,  estoque: false, origem: "internet", datasheet: null },
   { model: "IPC-HDW1431S",    brand: "Dahua",     preco: 1150, estoque: true,  origem: "catalogo", datasheet: "ipc-hdw1431s.pdf" },
 ];

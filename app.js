@@ -26,6 +26,9 @@ const ICO_COPY = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" str
 const ICO_KEBAB = `<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3.2" r="1.35"/><circle cx="8" cy="8" r="1.35"/><circle cx="8" cy="12.8" r="1.35"/></svg>`;
 const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2l6-11z"/><path d="M8 6.5v3.2"/><path d="M8 11.6v.01"/></svg>`;
 const ICO_ALERT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.4" stroke-linecap="round"/><path d="M8 11v.01" stroke-linecap="round"/></svg>`;
+const ICO_CLOCK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.8v3.4l2 1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+// licitação sem arquivo: os scores não foram gerados (Alice 40:33). Aciona via ?pendente=1
+const SEM_ARQUIVO = /[?&]pendente=1/.test(location.search);
 const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 2.5h4l-.8 3.5 2.3 2H4.5l2.3-2L6 2.5z"/><path d="M8 8v5.5"/></svg>`;
 
 /* ---------- matriz (componente "produto") ----------
@@ -161,6 +164,10 @@ ITEMS.forEach(it => { const q = parseFloat(it.quantidade) || 1; it.valorUnitario
    Resumo do edital (stats) + grid de cards
    ============================================================ */
 function renderStats(ofType) {
+  if (SEM_ARQUIVO) {
+    $("#stats").innerHTML = `<div class="stat-pendente"><div class="stat-pendente-ico">${ICO_CLOCK}</div><div class="stat-pendente-txt"><b>Análise pendente</b><span>Esta licitação ainda não tem arquivos identificados. Os scores serão gerados automaticamente assim que os arquivos forem carregados.</span></div></div>`;
+    return;
+  }
   const total = ofType.length;
   const atend = ofType.filter(x => itemSummary(x.i).status === "ok").length;
   const nao = total - atend;
@@ -187,7 +194,7 @@ function renderGrid() {
   renderStats(all);
   const html = all.map(({ it, i }) => {
     const sum = itemSummary(i);
-    if (statusFilter !== "all" && sum.status !== statusFilter) return "";
+    if (!SEM_ARQUIVO && statusFilter !== "all" && sum.status !== statusFilter) return "";
     const chosenIdx = prefs.chosen[i];
     // badge de apoio (fictícia) só para entender o tipo do item durante a validação
     const TIPO_LBL = { produto: "Produto", servico: "Serviço", software: "Software" };
@@ -200,6 +207,14 @@ function renderGrid() {
       ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
       : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
+    if (SEM_ARQUIVO) {
+      // licitação sem arquivo: score ainda não gerado — sem Atende/Não atende, sem recomendação
+      return `<div class="item-card" data-item="${i}" data-tip="Abrir o item">
+        <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}<span class="badge pendente" data-tip="A análise ainda não foi gerada (licitação sem arquivo)">${ICO_CLOCK}Score pendente</span></div>
+        <div class="ic-desc">${esc(it.nome)}</div>
+        <div class="ic-metaline"><span><b>Quantidade:</b> ${qtyTxt}</span><span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span><span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span></div>
+      </div>`;
+    }
     // chip do topo: "Melhor produto · atende X%" quando há produto (a pendência de camada vive na própria badge "Não atende · X/Y")
     const prod = sum.comps.find(c => c.mecanica === "produto");
     let reco = "", recoCls = "";
@@ -241,6 +256,14 @@ function openTable(i) {
   const prodComp = it.componentes.find(comp => comp.mecanica === "produto");
   if (prodComp) { activeComp = prodComp; MX_SKUS = prodComp.skus; SPECS = matrixOf(prodComp); recompute(); }
 
+  // licitação sem arquivo: score pendente para todos os itens (Alice 40:33)
+  if (SEM_ARQUIVO) {
+    renderNav(); renderItemSummary(); renderEditControls();
+    $("#toBody").innerHTML = `<div class="to-sections">${pendenteHTML()}</div>`;
+    $("#tableOverlay").hidden = false;
+    sizeMatrixHeight();
+    return;
+  }
   // item ainda reprocessando (pode levar 1min+): mostra o loading persistente ao voltar para ele
   if (reprocessing[i]) {
     renderNav(); renderItemSummary(); renderEditControls();
@@ -527,6 +550,13 @@ function noProdHTML(comp) {
       <div class="no-prod-actions"><button class="btn primary" data-addmanual>Adicionar produto manualmente</button></div>
     </div>`;
 }
+function pendenteHTML() {
+  return `<div class="no-prod">
+      <div class="no-prod-ico pendente-ico">${ICO_CLOCK}</div>
+      <div class="no-prod-title">Score pendente</div>
+      <div class="no-prod-sub">Esta licitação ainda não tem os arquivos identificados, então a análise não foi gerada. Os scores serão calculados automaticamente assim que os arquivos forem carregados.</div>
+    </div>`;
+}
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
   if (activeComp && activeComp.nenhumProduto) { host.innerHTML = noProdHTML(activeComp); sizeMatrixHeight(); return; }
@@ -554,8 +584,11 @@ function renderMatrix() {
       const srcTip = isNet ? "Fonte: Internet (catálogo externo)" : "Fonte: Catálogo do cliente";
       const sourceIcon = hasLink
         ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip} — clique para abrir">${srcIco}</button>`
-        : `<span class="sku-srcico" data-tip="${srcTip} (sem link disponível)">${srcIco}</span>`;
-      const precoLine = sku.preco != null ? `<div class="sku-preco" data-tip="Preço do produto (conforme a fonte)">${esc(fmtBRL(sku.preco))}</div>` : "";
+        : `<span class="sku-srcico nolink" data-tip="${srcTip} — sem link para abrir (não temos o datasheet deste produto)">${srcIco}</span>`;
+      // preço em 2 estados: informado / não informado (nem toda fonte traz o valor)
+      const precoLine = sku.preco != null
+        ? `<div class="sku-preco" data-tip="Preço do produto (conforme a fonte)">${esc(fmtBRL(sku.preco))}</div>`
+        : `<div class="sku-preco sku-preco-none" data-tip="Não temos a informação sobre o preço deste produto.">Preço não informado</div>`;
       const fitCls = sc.pct === 100 ? "full" : sc.pct >= 50 ? "mid" : "low";
       // nome do SKU primeiro (Alice 28/07); fonte + estoque descem para baixo do preço
       head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
