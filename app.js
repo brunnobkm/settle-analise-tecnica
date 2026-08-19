@@ -208,7 +208,7 @@ function renderGrid() {
     // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor
     const swComp = it.componentes.every(c => c.mecanica === "checklist") ? sum.comps.find(c => c.mecanica === "checklist") : null;
     const statusBadge = swComp
-      ? `<span class="badge ${TIER(swComp.pct)}">${swComp.pct}% de aderência</span>`
+      ? `<span class="badge ${TIER(swComp.pct)}">Aderência ${swComp.pct}%</span>`
       : (sum.status === "ok" ? `<span class="badge ok">Atende</span>` : `<span class="badge bad">Não atende</span>`);
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     if (SEM_ARQUIVO) {
@@ -293,7 +293,7 @@ function openTable(i) {
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
     const compStatus = comp.mecanica === "produto"
       ? `<span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span>`
-      : `<span class="comp-status badge ${TIER(cs.pct)}" data-tip="Aderência: ${cs.ok_n} de ${cs.total} exigências atendidas">${cs.pct}% de aderência</span>`;
+      : `<span class="comp-status badge ${TIER(cs.pct)}" data-tip="Aderência: ${cs.ok_n} de ${cs.total} exigências atendidas">Aderência ${cs.pct}%</span>`;
     secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}<span class="comp-sum">${secSummary(cs)}</span>${compStatus}${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
@@ -404,7 +404,7 @@ function openMetaOrigin(key) {
 function showActionPill(chip) {
   const pill = $("#actionPill"); if (!pill) return;
   pillActions = actionsForChip(chip);
-  pill.innerHTML = pillActions.map((a, i) => `<button class="pill-btn" data-pillidx="${i}" title="${esc(a.title)}">${a.ico}</button>`).join("");
+  pill.innerHTML = pillActions.map((a, i) => `<button class="pill-btn" data-pillidx="${i}">${a.ico}</button>`).join("");
   pill.hidden = false;
   const r = chip.getBoundingClientRect(), pw = pill.offsetWidth, ph = pill.offsetHeight;
   let top = r.bottom + 3; if (top + ph > innerHeight - 6) top = r.top - ph - 3;
@@ -675,7 +675,7 @@ const addedDiff = {}; // por item: specs "não exigidas" que o usuário trouxe c
 /* "Descrição completa" (card v1): começa aberta; ao passar o mouse mostra um icon group (igual à célula);
    ao colapsar, o texto vira um preview truncado com reticência (quantidade máx. de caracteres a definir). */
 function descBlockHTML(it) {
-  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descedital data-tip="Ver no edital">${ICO_ARROW}</button><button class="desc-ico" data-descextrair data-tip="Extrair novamente">${ICO_COPY}</button></span>`;
+  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descedital>${ICO_ARROW}</button><button class="desc-ico" data-descextrair>${ICO_COPY}</button></span>`;
   const full = it.descricao || `${it.nome} ${it.resumoTR}`;
   return `<div class="desc-block open" data-descblock>
       <div class="desc-head" data-desctoggle>
@@ -921,8 +921,8 @@ function openKebabMenu(anchor) {
   const menu = $("#kebabMenu"); if (!menu) return;
   // "Concluir análise" só no software (em produto não existe, Brunno)
   const items = anchor.dataset.kebabmech === "produto"
-    ? [["importar", "Importar"], ["exportar", "Exportar esta seção"]]
-    : [["concluir", "Concluir análise"], ["importar", "Importar"], ["exportar", "Exportar esta seção"]];
+    ? [["importar", "Importar"]]
+    : [["concluir", "Concluir análise"], ["importar", "Importar"]];
   menu.innerHTML = items.map(([k, l]) => `<button class="km-item" data-kbact="${k}">${l}</button>`).join("");
   menu.hidden = false;
   const r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
