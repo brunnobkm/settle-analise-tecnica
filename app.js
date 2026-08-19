@@ -27,6 +27,7 @@ const ICO_KEBAB = `<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" c
 const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2l6-11z"/><path d="M8 6.5v3.2"/><path d="M8 11.6v.01"/></svg>`;
 const ICO_ALERT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.4" stroke-linecap="round"/><path d="M8 11v.01" stroke-linecap="round"/></svg>`;
 const ICO_CLOCK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.8v3.4l2 1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICO_INFO = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 7.2v3.2" stroke-linecap="round"/><path d="M8 5v.01" stroke-linecap="round"/></svg>`;
 // licitação sem arquivo: os scores não foram gerados (Alice 40:33). Aciona via ?pendente=1
 const SEM_ARQUIVO = /[?&]pendente=1/.test(location.search);
 const PIN_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 2.5h4l-.8 3.5 2.3 2H4.5l2.3-2L6 2.5z"/><path d="M8 8v5.5"/></svg>`;
@@ -184,12 +185,12 @@ function renderStats(ofType) {
   // Detalhe por requisito (parcial / com parceiro) vive dentro do item; questionamento/impugnação são de outra superfície.
   const ader = total ? Math.round(atend / total * 100) : 0;
   const cards = [
-    { ico: "brand", svg: I.target, n: ader + "%", label: "Aderência do edital" },
-    { ico: "", svg: I.layers, n: total, label: "Itens analisados" },
-    { ico: "ok", svg: I.check, n: atend, label: "Itens que atende" },
-    { ico: "bad", svg: I.cross, n: nao, label: "Itens que não atende" },
+    { ico: "brand", svg: I.target, n: ader + "%", label: "Aderência do edital", tip: "Percentual dos itens do edital que você atende." },
+    { ico: "", svg: I.layers, n: total, label: "Itens analisados", tip: "Itens do edital que já passaram por análise técnica." },
+    { ico: "ok", svg: I.check, n: atend, label: "Itens que atende", tip: "Itens em que você cumpre todas as exigências do edital." },
+    { ico: "bad", svg: I.cross, n: nao, label: "Itens que não atende", tip: "Itens em que há ao menos uma exigência não cumprida." },
   ];
-  $("#stats").innerHTML = cards.map(c => `<div class="stat"><div class="stat-top"><div class="stat-ico ${c.ico}">${c.svg}</div><div class="stat-n">${c.n}</div></div><div class="stat-label">${c.label}</div></div>`).join("");
+  $("#stats").innerHTML = cards.map(c => `<div class="stat"><div class="stat-top"><div class="stat-ico ${c.ico}">${c.svg}</div><div class="stat-n">${c.n}</div></div><div class="stat-label">${c.label}<button class="stat-info" aria-label="${esc(c.tip)}" data-tip="${esc(c.tip)}">${ICO_INFO}</button></div></div>`).join("");
 }
 function renderGrid() {
   $("#crumbId").textContent = `Edital ${EDITAL.numero}`;
