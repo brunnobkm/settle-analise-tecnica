@@ -132,6 +132,7 @@ const savePrefs = () => localStorage.setItem(LS, JSON.stringify(prefs));
 prefs.chosen = prefs.chosen || {};
 let statusFilter = prefs.filter || "all";
 let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeComp = null, MX_SKUS = [];
+let miniTourStart = null; // mini tour: começa a explicar quando o item é aberto (definido em initTour se ?tour=diferencial)
 let editingRow = null, pendingCommitRi = null; // edição inline do "Valor requerido" na matriz (com confirmação)
 let currentChecklists = [];
 /* "Atualizar informações": re-analisa o item e a IA tenta extrair os valores que faltam (linhas "Valor não extraído") */
@@ -297,6 +298,7 @@ function openTable(i) {
   renderNav(); renderItemSummary(); renderEditControls();
   $("#tableOverlay").hidden = false;
   sizeMatrixHeight();
+  if (miniTourStart && i === 2) miniTourStart(); // mini tour: começa a explicar ao abrir o item
 }
 // altura FIXA do card = viewport menos os dois cabeçalhos (item + "Quantidade"), independente da Descrição/Especificações acima.
 // Assim o card da tabela sempre ocupa o máximo da tela. (Contorna o quirk de flex no <details>.)
@@ -1272,7 +1274,11 @@ function initTour() {
   $("#tourNext").onclick = () => { if (idx >= STEPS.length - 1) end(); else show(idx + 1); };
   window.addEventListener("resize", () => { if (!layer.hidden) place(); });
   document.addEventListener("keydown", e => { if (!layer.hidden) { if (e.key === "Escape") end(); else if (e.key === "ArrowRight") $("#tourNext").click(); else if (e.key === "ArrowLeft") $("#tourPrev").click(); } });
-  if (isMini) { document.body.classList.add("mini-tour"); setTimeout(() => show(0), 250); } // mini tour para gravação
+  if (isMini) {
+    document.body.classList.add("mini-tour");
+    let started = false;
+    miniTourStart = () => { if (!started) { started = true; setTimeout(() => show(0), 150); } }; // dispara ao abrir o item (atraso p/ o layout assentar)
+  }
 }
 
 /* boot */
