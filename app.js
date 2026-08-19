@@ -282,12 +282,9 @@ function openTable(i) {
     let hostHTML, editSec;
     if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; editSec = "produto"; }
     else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); hostHTML = `<div class="mech-host" id="clHost-${idx}"></div>`; editSec = "cl:" + idx; }
-    // toda seção é um accordion colapsável (aberto por padrão) com seu próprio botão de edição
     const cs = sum.comps[ci];
-    // Produto = "Editar"; Software/checklist = "Revisar requisitos"
-    const editLabel = comp.mecanica === "produto" ? "Editar" : "Revisar requisitos";
-    const editTip = comp.mecanica === "produto" ? "Editar as exigências desta seção" : "Revisar os requisitos deste software";
-    const editBtn = `<button class="comp-edit" data-editsec="${editSec}">${editLabel}</button>`;
+    // Produto: sem botão "Editar" (a célula "Valor requerido" já é editável inline). Software: "Revisar requisitos".
+    const editBtn = comp.mecanica === "produto" ? "" : `<button class="comp-edit" data-editsec="${editSec}">Revisar requisitos</button>`;
     const kebabBtn = `<button class="comp-kebab" data-kebab data-kebabmech="${comp.mecanica}" data-tip="Mais ações">${ICO_KEBAB}</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
