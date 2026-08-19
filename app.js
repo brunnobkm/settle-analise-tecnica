@@ -97,6 +97,8 @@ function checklistSummary(cl) {
   return { ok, total: ev.length, no, status: no === 0 ? "ok" : "no", pct: ev.length ? Math.round(ok / ev.length * 100) : 0 };
 }
 const CL_ST = { ok: { cls: "ok", label: "Atende", ico: ICO_OK }, no: { cls: "bad", label: "Não atende", ico: ICO_NO }, parcial: { cls: "warn", label: "Atende parcialmente", ico: "" }, parceiro: { cls: "warn", label: "Atende com parceiro", ico: "" }, ne: { cls: "soft", label: "Não avaliado", ico: "" } };
+// software (checklist): status por faixa de aderência — <50% vermelho, >80% verde, 50-80% neutro
+const TIER = pct => pct < 50 ? "bad" : pct > 80 ? "ok" : "mid";
 const confBadge = c => c ? `<span class="badge ${c === "alta" ? "ok" : c === "media" ? "warn" : "bad"}" data-tip="Confiança da IA na extração">${cap(c === "media" ? "média" : c)}</span>` : `<span class="state-na">—</span>`;
 
 /* ---------- resumo por item (adapta ao tipo) ---------- */
@@ -104,7 +106,7 @@ function itemSummary(i) {
   const it = ITEMS[i];
   const comps = it.componentes.map(comp => {
     if (comp.mecanica === "produto") { const ps = prodSummary(comp); return { mecanica: "produto", rotulo: comp.rotulo, ok: comp.nenhumProduto ? false : ps.ok, best: ps.best, comp }; }
-    const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, ok: s.status === "ok", ok_n: s.ok, total: s.total, comp };
+    const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, ok: s.status === "ok", ok_n: s.ok, total: s.total, pct: s.pct, comp };
   });
   return { comps, multi: comps.length > 1, status: comps.every(c => c.ok) ? "ok" : "no" };
 }
@@ -151,7 +153,7 @@ function updateInfo() {
 }
 let colW = prefs.colW || {};
 let frozen = new Set(prefs.frozen || ["req", "val"]);
-const COLW = k => colW[k] || (k === "check" ? 44 : k === "req" ? 300 : k === "val" ? 160 : k === "acoes" ? 84 : 176);
+const COLW = k => colW[k] || (k === "check" ? 44 : k === "req" ? 300 : k === "val" ? 160 : k === "acoes" ? 84 : 192);
 const saveCols = () => { prefs.colW = colW; prefs.frozen = [...frozen]; savePrefs(); };
 let renderPending = false;
 const scheduleRender = () => { if (!renderPending) { renderPending = true; requestAnimationFrame(() => { renderPending = false; renderMatrix(); }); } };
@@ -203,10 +205,11 @@ function renderGrid() {
     const segLabel = tipos.length > 1 ? `Misto (${tipos.map(t => TIPO_LBL[t]).join(" + ")})` : TIPO_LBL[tipos[0]];
     const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
     const segBadge = `<span class="badge seg" data-tip="${esc(segTip)}">${esc(segLabel)}</span>`;
-    // status do card: só "Atende" / "Não atende" (decisão Alice 28/07 — sem a fração X/Y)
-    const statusBadge = sum.status === "ok"
-      ? `<span class="badge ok" data-tip="Você consegue atender este item">Atende</span>`
-      : `<span class="badge bad" data-tip="Há exigência(s) que você não atende">Não atende</span>`;
+    // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor
+    const swComp = it.componentes.every(c => c.mecanica === "checklist") ? sum.comps.find(c => c.mecanica === "checklist") : null;
+    const statusBadge = swComp
+      ? `<span class="badge ${TIER(swComp.pct)}">${swComp.pct}% de aderência</span>`
+      : (sum.status === "ok" ? `<span class="badge ok">Atende</span>` : `<span class="badge bad">Não atende</span>`);
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     if (SEM_ARQUIVO) {
       // licitação sem arquivo: score ainda não gerado — sem Atende/Não atende, sem recomendação
@@ -288,7 +291,10 @@ function openTable(i) {
     const kebabBtn = `<button class="comp-kebab" data-kebab data-kebabmech="${comp.mecanica}" data-tip="Mais ações">${ICO_KEBAB}</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
-    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}<span class="comp-sum">${secSummary(cs)}</span><span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span>${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+    const compStatus = comp.mecanica === "produto"
+      ? `<span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span>`
+      : `<span class="comp-status badge ${TIER(cs.pct)}" data-tip="Aderência: ${cs.ok_n} de ${cs.total} exigências atendidas">${cs.pct}% de aderência</span>`;
+    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}<span class="comp-sum">${secSummary(cs)}</span>${compStatus}${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
@@ -435,12 +441,12 @@ const fzCls = c => c.frozen ? ` frozen${c.edge ? " frozen-edge" : ""}` : "";
 const fzStyle = c => c.frozen ? ` style="left:${c.left}px"` : "";
 const colCtrls = c => `<span class="col-resize" data-resize="${c.key}" data-tip="Arraste para redimensionar a largura"></span>`;
 function cellTd(cell, ri, ci, exigNa, c, unidade) {
-  if (exigNa) return `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-val">${esc(cell.v)}</span></td>`;
-  if (cell.st === "diff") return `<td class="cell diff${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico diff" data-tip="Diferencial do produto: o edital não exige, então não conta no atende">•</span><span class="cell-val" data-tip="Valor do produto (diferencial, não exigido pelo edital)">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div></td>`;
+  if (exigNa) return `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-val" data-full="${esc(cell.v)}">${esc(cell.v)}</span></td>`;
+  if (cell.st === "diff") return `<td class="cell diff${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico diff">•</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK_C : cell.st === "no" ? ICO_NO_C : "";
-  const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}" data-tip="Confiança da IA na extração deste valor"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
-  const cpy = `<button class="cell-copy" data-copytext="${esc(cell.v)}" data-tip="Copiar o valor da célula">${ICO_COPY}</button>`;
-  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}" data-tip="Atendimento calculado pelo sistema (valor do produto × exigência do edital)">${icoInner}</span><span class="cell-val" data-tip="Valor do produto (vem do seu catálogo, somente leitura). Só a exigência do edital é editável.">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}${cpy}</div>${conf}</td>`;
+  const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
+  const cpy = `<button class="cell-copy" data-copytext="${esc(cell.v)}" data-tip="Copiar">${ICO_COPY}</button>`;
+  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}">${icoInner}</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}${cpy}</div>${conf}</td>`;
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
 let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
@@ -594,7 +600,7 @@ function renderMatrix() {
       const fitCls = sc.pct === 100 ? "full" : sc.pct >= 50 ? "mid" : "low";
       // nome do SKU primeiro (Alice 28/07); fonte + estoque descem para baixo do preço
       head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do produto, não é requisito)">${esc(sku.brand)}</div>
+        <div class="sku-model" data-full="${esc(sku.model)}">${esc(sku.model)}</div><div class="sku-brand" data-full="${esc(sku.brand)}">${esc(sku.brand)}</div>
         <div class="sku-fit" data-tip="Aderência: requisitos atendidos e percentual"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}</span></div>
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
         ${precoLine}
@@ -608,7 +614,7 @@ function renderMatrix() {
     const nx = !!spec.naoExtraido, df = !!spec.diferencial, fromDiff = !!spec.fromDiff;
     let row = `<tr class="${df ? "diff-row" : nx ? "nx-row" : (isConcordant(spec) ? "concordant" : "")}">`;
     cols.forEach(c => {
-      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="${df ? "Diferencial do produto (o edital não exige)" : "Requisito exigido pelo edital"}">${esc(spec.req)}</span>${df ? `<span class="diff-badge" data-tip="Diferencial: o edital não exige, não conta no atende">Diferencial</span>` : ""}${fromDiff ? `<button class="diff-remove" data-rmdiff="${esc(spec.req)}" data-tip="Remover esta linha da comparação">${ICO_NO}</button>` : ""}</td>`;
+      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-full="${esc(spec.req)}">${esc(spec.req)}</span>${df ? `<span class="diff-badge" data-tip="Diferencial: o edital não exige, não conta no atende">Diferencial</span>` : ""}${fromDiff ? `<button class="diff-remove" data-rmdiff="${esc(spec.req)}" data-tip="Remover da comparação">${ICO_NO}</button>` : ""}</td>`;
       else if (c.key === "val") {
         if (editingRow === ri) {
           const core = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
@@ -693,7 +699,7 @@ function collapsiblesHTML(it) {
     .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
   if (naoExig.length) {
     const note = "Especificações que o seu produto oferece e o edital não exige. Clique no + para comparar os produtos neste diferencial (não conta no atende).";
-    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<span class="tag-item na-tag diff-tag">${esc(d.req)}<button class="na-add" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${ICO_PLUS}</button></span>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
+    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
     html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
   }
   // (2) no edital não analisados: o edital exige, mas ainda não foi analisado. Só referência (badges), SEM "+" (decisão da reunião ~8:01).
@@ -964,9 +970,13 @@ function showReprocessSonner(val) {
   s.hidden = false;
 }
 function hideReprocessSonner() { const s = document.getElementById("reprocessSonner"); if (s) s.hidden = true; }
-/* mostra o estado de reprocessamento (skeleton do item + sonner) na tela atual */
+function metaSkeletonHTML() {
+  const chip = w => `<span class="ts-field"><span class="sk-chip" style="width:${w}px"></span></span>`;
+  return `<div class="ts-metas">${chip(150)}${chip(108)}${chip(140)}${chip(140)}</div>`;
+}
+/* mostra o estado de reprocessamento (skeleton do item inteiro, inclusive o sub-header, + sonner) na tela atual */
 function showItemReprocessing(val) {
-  const toSum = $("#toSummary"); if (toSum) toSum.classList.add("sk-summary");
+  const toSum = $("#toSummary"); if (toSum) { toSum.classList.remove("sk-summary"); toSum.innerHTML = metaSkeletonHTML(); }
   $("#toBody").innerHTML = itemSkeletonHTML();
   showReprocessSonner(val);
   sizeMatrixHeight();
@@ -1196,9 +1206,12 @@ function initTooltip() {
   const place = el => { const r = el.getBoundingClientRect(); let top = r.top - tip.offsetHeight - 8; if (top < 6) top = r.bottom + 8; let left = r.left + r.width / 2 - tip.offsetWidth / 2; left = Math.max(6, Math.min(left, innerWidth - tip.offsetWidth - 6)); tip.style.top = top + "px"; tip.style.left = left + "px"; };
   const hide = () => { tip.classList.remove("show"); cur = null; };
   document.addEventListener("mouseover", e => {
-    const el = e.target.closest("[data-tip],[title]"); if (!el || el === cur) return;
+    const el = e.target.closest("[data-tip],[data-full],[title]"); if (!el || el === cur) return;
     if (el.hasAttribute("title")) { const t = el.getAttribute("title"); if (t) el.setAttribute("data-tip", t); el.removeAttribute("title"); }
-    const txt = el.getAttribute("data-tip"); if (!txt) return;
+    let txt = el.getAttribute("data-tip");
+    // data-full: mostra o valor completo SÓ quando o texto está truncado (reticência)
+    if (!txt && el.hasAttribute("data-full") && el.scrollWidth > el.clientWidth + 1) txt = el.dataset.full;
+    if (!txt) return;
     cur = el; tip.textContent = txt; tip.classList.add("show"); place(el);
   });
   document.addEventListener("mouseout", e => { if (cur && (!e.relatedTarget || !cur.contains(e.relatedTarget))) hide(); });
