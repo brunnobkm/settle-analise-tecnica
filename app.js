@@ -1210,7 +1210,20 @@ function initTour() {
   const ensureGrid = () => { if (!$("#tableOverlay").hidden) closeTable(); if (!$("#drawer").hidden) closeOrigin(); };
   const MISTO = ITEMS.length - 1; // último item = misto completo (produto + software + serviço)
   const ensureMisto = () => { if ($("#tableOverlay").hidden || active !== MISTO) openTable(MISTO); };
-  const STEPS = [
+  // mini tour (para gravação): fluxo das especificações não exigidas pelo edital. Aciona via ?tour=diferencial
+  const openItem3 = () => { if ($("#tableOverlay").hidden || active !== 2) openTable(2); };
+  const addDemoDiff = () => { openItem3(); if (!document.querySelector("tr.diff-row")) { const b = document.querySelector('[data-adddiff="Zoom digital 16×"]'); if (b) b.click(); } };
+  const MINI_STEPS = [
+    { before: openItem3, title: "Especificações não exigidas pelo edital", text: "Vou mostrar rapidinho o que acontece com as especificações que o seu produto tem, mas que o edital não pediu." },
+    { before: openItem3, sel: ".diff-tag", title: "Onde elas ficam", text: "Ficam aqui, numa seção à parte, como referência. Por padrão não entram na tabela e não contam no atende, porque o edital não exigiu." },
+    { before: openItem3, sel: "[data-adddiff]", title: "Você decide, uma a uma", text: "A tabela mostra só o que o edital pediu. Mas cada uma tem esse '+'. Se você quiser comparar alguma, é só clicar." },
+    { before: addDemoDiff, sel: "#matrixHost .val-inline-input", title: "Preencha o valor, ou não", text: "Ao clicar no '+', a especificação entra no fim da tabela e abre este campo. Aqui você tem duas escolhas." },
+    { before: addDemoDiff, sel: "tr.diff-row", title: "Vira requisito ou fica como extra", text: "Se você preencher um valor, ela vira um requisito de verdade e passa a contar no atende. Se deixar em branco, fica como 'Não exigido', só para comparar entre os produtos, sem contar." },
+    { before: addDemoDiff, sel: "tr.diff-row .diff-remove", title: "Dá para remover", text: "E se mudar de ideia, esse 'X' tira a especificação da tabela e devolve para a seção. Nada é irreversível." },
+    { before: openItem3, title: "É isso", text: "Resumindo: por padrão elas ficam fora da conta (é o produto oferecendo a mais), e você decide, uma a uma, se quer puxar para a tabela e transformar em requisito." },
+  ];
+  const isMini = /[?&]tour=diferencial/.test(location.search);
+  const MAIN_STEPS = [
     { before: ensureGrid, title: "Bem-vindo à Análise Técnica", text: "Em cerca de 1 minuto eu mostro como o protótipo transforma o edital em decisão: o que você atende, o que falta e qual produto indicar. Use Próximo para avançar." },
     { before: ensureGrid, sel: "#stats", title: "Resumo executivo", text: "Os indicadores do edital ficam aqui. Estão como 'A definir' porque vamos redefinir juntos quais números fazem mais sentido." },
     { before: ensureGrid, sel: "#filterTabs", title: "Filtro por status", text: "Filtre os itens do edital por Atende / Não atende, para focar no que precisa de ação." },
@@ -1224,6 +1237,7 @@ function initTour() {
     { before: ensureMisto, sel: ".sku-select", title: "Escolha o produto da proposta", text: "Quando decidir, selecione o SKU que vai para a proposta. É o encerramento do fluxo de análise do item." },
     { before: ensureGrid, title: "Pronto!", text: "Esse é o fluxo: entender o item, ver o que falta, corrigir a extração e escolher o produto. Você pode refazer o tour quando quiser pelo botão no canto inferior direito." },
   ];
+  const STEPS = isMini ? MINI_STEPS : MAIN_STEPS;
   let idx = 0;
   function place() {
     const step = STEPS[idx], el = step.sel ? $(step.sel) : null;
@@ -1258,6 +1272,7 @@ function initTour() {
   $("#tourNext").onclick = () => { if (idx >= STEPS.length - 1) end(); else show(idx + 1); };
   window.addEventListener("resize", () => { if (!layer.hidden) place(); });
   document.addEventListener("keydown", e => { if (!layer.hidden) { if (e.key === "Escape") end(); else if (e.key === "ArrowRight") $("#tourNext").click(); else if (e.key === "ArrowLeft") $("#tourPrev").click(); } });
+  if (isMini) { document.body.classList.add("mini-tour"); setTimeout(() => show(0), 250); } // mini tour para gravação
 }
 
 /* boot */
