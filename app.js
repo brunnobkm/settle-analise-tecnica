@@ -210,7 +210,7 @@ function renderGrid() {
     if (SEM_ARQUIVO) {
       // licitação sem arquivo: score ainda não gerado — sem Atende/Não atende, sem recomendação
       return `<div class="item-card" data-item="${i}" data-tip="Abrir o item">
-        <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}<span class="badge pendente" data-tip="A análise ainda não foi gerada (licitação sem arquivo)">${ICO_CLOCK}Score pendente</span></div>
+        <div class="ic-badges">${segBadge}<span class="badge pendente" data-tip="A análise ainda não foi gerada (licitação sem arquivo)">${ICO_CLOCK}Score pendente</span></div>
         <div class="ic-desc">${esc(it.nome)}</div>
         <div class="ic-metaline"><span><b>Quantidade:</b> ${qtyTxt}</span><span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span><span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span></div>
       </div>`;
@@ -227,7 +227,7 @@ function renderGrid() {
       recoCls = " chosen";
     }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
-      <div class="ic-badges"><span class="ic-num" data-tip="Número do item no edital">Item ${esc(it.numero || "—")}</span>${segBadge}${statusBadge}${reco ? `<span class="ic-reco-inline${recoCls}">${reco}</span>` : ""}</div>
+      <div class="ic-badges">${segBadge}${statusBadge}${reco ? `<span class="ic-reco-inline${recoCls}">${reco}</span>` : ""}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-metaline">
         <span><b>Quantidade:</b> ${qtyTxt}</span>
@@ -247,7 +247,7 @@ function openTable(i) {
   active = i; const it = ITEMS[i]; editingMeta = null;
   currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
   closeEditDrawer();
-  $("#toTitle").textContent = (it.numero ? "Item " + it.numero + " · " : "") + (it.titulo || it.nome);
+  $("#toTitle").textContent = it.titulo || it.nome;
   const toSum = $("#toSummary"); if (toSum) toSum.classList.remove("is-hidden");
   const toBodyEl = $("#toBody"); if (toBodyEl) toBodyEl.scrollTop = 0;
   const sum = itemSummary(i), multi = it.componentes.length > 1;
@@ -326,7 +326,7 @@ function renderNav() {
   if (pos === -1 || list.length <= 1) { nav.innerHTML = ""; return; }
   const hasPrev = pos > 0, hasNext = pos < list.length - 1;
   nav.innerHTML = `<button class="to-navbtn" data-nav="prev"${hasPrev ? "" : " disabled"} data-tip="Item anterior">${ICO_CHEV_L}</button>
-    <span class="to-navcount">Item ${pos + 1} de ${list.length}</span>
+    <span class="to-navcount">${pos + 1} de ${list.length}</span>
     <button class="to-navbtn" data-nav="next"${hasNext ? "" : " disabled"} data-tip="Próximo item">${ICO_CHEV_R}</button>`;
 }
 /* edição inline dos valores do item na própria barra (sem precisar do "Editar informações do item") */
@@ -667,15 +667,15 @@ const addedDiff = {}; // por item: specs "não exigidas" que o usuário trouxe c
 /* "Descrição completa" (card v1): começa aberta; ao passar o mouse mostra um icon group (igual à célula);
    ao colapsar, o texto vira um preview truncado com reticência (quantidade máx. de caracteres a definir). */
 function descBlockHTML(it) {
-  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descedital data-tip="Ver no edital">${ICO_ARROW}</button><button class="desc-ico" data-descextrair data-tip="Extrair novamente">${ICO_REDO}</button></span>`;
+  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descedital data-tip="Ver no edital">${ICO_ARROW}</button><button class="desc-ico" data-descextrair data-tip="Extrair novamente">${ICO_COPY}</button></span>`;
+  const full = it.descricao || `${it.nome} ${it.resumoTR}`;
   return `<div class="desc-block open" data-descblock>
       <div class="desc-head" data-desctoggle>
         <span class="cps-title">Descrição completa</span>${actions}<span class="desc-caret">${CARET}</span>
       </div>
       <div class="desc-body">
-        <p class="cps-desc desc-full">${esc(it.nome)}</p>
-        <p class="cps-desc desc-full">${esc(it.resumoTR)}</p>
-        <p class="cps-desc desc-preview">${esc(it.nome)} ${esc(it.resumoTR)}</p>
+        <p class="cps-desc desc-full">${esc(full)}</p>
+        <p class="cps-desc desc-preview">${esc(full)}</p>
       </div>
     </div>`;
 }

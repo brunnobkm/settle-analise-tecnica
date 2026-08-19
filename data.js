@@ -224,6 +224,7 @@ const ITEMS = [
     nome: "Fornecimento de 80 câmeras IP modelo LPR (leitura de placas) para o anel viário, conforme Termo de Referência.",
     quantidade: "80", precoUnit: 2980, unidadeMedida: "unidade",
     resumoTR: "Aquisição de 80 câmeras IP com leitura de placas (LPR). Compare os SKUs do seu catálogo com a exigência do edital.",
+    descricao: "Fornecimento, instalação e configuração de 80 (oitenta) câmeras IP com tecnologia de leitura automática de placas (LPR), destinadas ao monitoramento do anel viário do município, com resolução mínima de 4 MP, lente adequada à captura de placas de veículos em movimento, iluminação infravermelha, grau de proteção IP67 e alimentação via PoE, incluindo suportes de fixação, cabeamento estruturado e todos os acessórios necessários à perfeita instalação, conforme especificações técnicas detalhadas no Termo de Referência (Anexo I) e demais condições estabelecidas no edital.",
     componentes: [ PROD_CAM(false) ] },
 
   // 2) SÓ PRODUTO · ATENDE (recomendado, sem escolha feita)
@@ -231,6 +232,7 @@ const ITEMS = [
     nome: "Fornecimento de 60 câmeras dome fixas 4MP para ambientes internos.",
     quantidade: "60", precoUnit: 1740, unidadeMedida: "unidade",
     resumoTR: "Aquisição de 60 câmeras dome fixas. Há SKU no catálogo que atende a todos os requisitos.",
+    descricao: "Fornecimento e instalação de 60 (sessenta) câmeras IP tipo dome fixas de 4 MP para ambientes internos, com lente fixa, iluminação infravermelha, análise inteligente embarcada e alimentação via PoE, incluindo suportes de fixação, cabeamento e demais acessórios necessários, conforme especificações técnicas detalhadas no Termo de Referência (Anexo I) e nas demais condições estabelecidas no edital.",
     componentes: [ PROD_CAM(true) ] },
 
   // 3) SÓ PRODUTO · ATENDE · com PRODUTO ESCOLHIDO (seed no boot)
@@ -238,6 +240,7 @@ const ITEMS = [
     nome: "Fornecimento de 100 câmeras bullet fixas para o perímetro externo.",
     quantidade: "100", precoUnit: 2210, unidadeMedida: "unidade",
     resumoTR: "Aquisição de 100 câmeras bullet. Um SKU já foi escolhido para a proposta.",
+    descricao: "Fornecimento, instalação e configuração de 100 (cem) câmeras IP tipo bullet fixas destinadas ao monitoramento do perímetro externo da unidade, com resolução mínima de 4 MP, lente fixa, iluminação infravermelha com alcance mínimo de 30 metros, grau de proteção IP67, proteção contra impacto IK10, alimentação via PoE e slot para cartão microSD, incluindo suportes de fixação, cabeamento estruturado e todos os acessórios necessários à perfeita instalação, conforme especificações técnicas detalhadas no Termo de Referência (Anexo I) e demais condições estabelecidas no edital.",
     componentes: [ PROD_CAM(true) ] },
 
   // 4) SÓ SOFTWARE · ATENDE (checklist tudo atende)
@@ -259,6 +262,7 @@ const ITEMS = [
     nome: "Fornecimento de câmeras speed dome PTZ e a licença do software de gestão de vídeo (VMS).",
     quantidade: "1", precoUnit: 260000, unidadeMedida: "lote",
     resumoTR: "Item misto (produto + software). O produto atende e o software atende: item completo.",
+    descricao: "Fornecimento de câmeras IP tipo speed dome PTZ e da licença do software de gestão de vídeo (VMS), contemplando a integração entre os equipamentos e a plataforma, a instalação, a configuração e o treinamento operacional da equipe, incluindo suportes, cabeamento e todos os acessórios necessários, conforme as especificações técnicas detalhadas no Termo de Referência (Anexo I) e nas demais condições estabelecidas no edital.",
     componentes: [ PROD_CAM(true), CHK("Licença do software VMS", true) ] },
 
   // 7) MISTO · NÃO ATENDE · pendência SÓ no software (produto atende 100%) — recomendação condicionada
@@ -266,5 +270,6 @@ const ITEMS = [
     nome: "Fornecimento de câmeras e a licença do VMS com LPR e reconhecimento facial.",
     quantidade: "1", precoUnit: 310000, unidadeMedida: "lote",
     resumoTR: "Item misto. O produto (câmera) atende 100%, mas o software tem exigência não atendida: pendência fora do produto.",
+    descricao: "Fornecimento de câmeras IP e da licença do software de gestão de vídeo (VMS) com módulos de leitura automática de placas (LPR) e reconhecimento facial, incluindo a integração dos equipamentos à plataforma, a instalação, a configuração e o treinamento da equipe, conforme as especificações técnicas detalhadas no Termo de Referência (Anexo I) e nas demais condições estabelecidas no edital.",
     componentes: [ PROD_CAM(true), CHK("Software de gestão de vídeo (VMS)", false) ] },
 ];
