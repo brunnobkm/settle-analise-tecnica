@@ -115,6 +115,7 @@ function secSummary(cs) {
       const s = cs.comp.skus[chosenIdx];
       return `<span class="ic-reco-inline chosen"><b>✓ Produto escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}</span>`;
     }
+    if (!cs.ok) return ""; // não atende: sem produto recomendado
     return `<span class="ic-reco-inline prod"><b>Melhor produto:</b> ${mono(cs.best.sku.model)} · ${esc(cs.best.sku.brand)}</span>`;
   }
   return `Atende ${cs.ok_n} de ${cs.total} exigências`;
@@ -201,7 +202,7 @@ function renderGrid() {
     // chip do topo: "Melhor produto · atende X%" quando há produto (a pendência de camada vive na própria badge "Não atende · X/Y")
     const prod = sum.comps.find(c => c.mecanica === "produto");
     let reco = "", recoCls = "";
-    if (prod) { reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`; recoCls = " prod"; }
+    if (prod && sum.status === "ok") { reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`; recoCls = " prod"; } // não atende: sem produto recomendado
     // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
     const chosenSku = (prod && chosenIdx != null && prod.comp.skus[chosenIdx]) ? prod.comp.skus[chosenIdx] : null;
     if (chosenSku) {
@@ -245,8 +246,8 @@ function openTable(i) {
     else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); hostHTML = `<div class="mech-host" id="clHost-${idx}"></div>`; editSec = "cl:" + idx; }
     // toda seção é um accordion colapsável (aberto por padrão) com seu próprio botão de edição
     const cs = sum.comps[ci];
-    // Produto = "Editar"; Software/checklist = "Revisar Requisitos" (decisão Alice 28/07)
-    const editLabel = comp.mecanica === "produto" ? "Editar" : "Revisar Requisitos";
+    // Produto = "Editar"; Software/checklist = "Revisar requisitos"
+    const editLabel = comp.mecanica === "produto" ? "Editar" : "Revisar requisitos";
     const editTip = comp.mecanica === "produto" ? "Editar as exigências desta seção" : "Revisar os requisitos deste software";
     const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="${editTip}">${editLabel}</button>`;
     const kebabBtn = `<button class="comp-kebab" data-kebab data-kebabmech="${comp.mecanica}" data-tip="Mais ações">${ICO_KEBAB}</button>`;
@@ -377,6 +378,7 @@ function updateProdSecSummary() {
   const ok = BEST.diverg.length === 0;
   let html;
   if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<span class="ic-reco-inline chosen"><b>✓ Produto escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}</span>`; }
+  else if (!ok) html = ""; // não atende: sem produto recomendado
   else html = `<span class="ic-reco-inline prod"><b>Melhor produto:</b> ${mono(BEST.sku.model)} · ${esc(BEST.sku.brand)}</span>`;
   const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = html;
   const st = details.querySelector(".comp-status"); if (st) { st.className = "comp-status badge " + (ok ? "ok" : "bad"); st.textContent = ok ? "Atende" : "Não atende"; }
