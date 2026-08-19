@@ -523,7 +523,7 @@ function renderMatrix() {
         ? `<span class="sku-tag ok" data-tip="Com estoque">Com estoque</span>`
         : sku.estoque === false
           ? `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar ou terceirizar">Sem estoque</span>`
-          : `<span class="sku-tag soft" data-tip="O fornecedor não informou a disponibilidade em estoque deste produto">Estoque não informado</span>`;
+          : `<span class="sku-tag soft" data-tip="Não temos a informação sobre o estoque deste produto.">Estoque não informado</span>`;
       // fonte = ÍCONE de origem: livro = catálogo do cliente, globo = internet (externo). Azul quando tem link (clicável), cinza quando não.
       const hasLink = isNet || !!sku.datasheet;
       const srcIco = isNet ? ICO_GLOBE : ICO_CATALOG;
