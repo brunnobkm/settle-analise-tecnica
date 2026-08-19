@@ -788,9 +788,7 @@ tr.diff-row:hover .diff-remove { opacity: 1; }
 .desc-caret { color: var(--muted-foreground); display: inline-grid; place-items: center; transition: transform .15s; }
 .desc-block:not(.open) .desc-caret { transform: rotate(180deg); }
 .desc-body { padding: 0 16px 14px; }
-.desc-block:not(.open) .desc-full { display: none; }
-.desc-block.open .desc-preview { display: none; }
-.desc-preview { color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.desc-block:not(.open) .desc-body { display: none; } /* colapsado = só o header (colapsa tudo, inclusive o texto de apoio) */
 .val-diff { display: inline-block; padding: 2px 9px; font-size: 12px; color: var(--muted-foreground); background: var(--muted); border-radius: var(--r-md); }
 /* estado "nenhum produto se aplica" (categoria não corresponde aos produtos do catálogo) */
 .ic-reco-inline.none { color: var(--warning); font-weight: 600; }

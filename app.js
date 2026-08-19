@@ -675,7 +675,6 @@ function descBlockHTML(it) {
       </div>
       <div class="desc-body">
         <p class="cps-desc desc-full">${esc(full)}</p>
-        <p class="cps-desc desc-preview">${esc(full)}</p>
       </div>
     </div>`;
 }
