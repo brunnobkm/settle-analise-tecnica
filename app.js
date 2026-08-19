@@ -109,7 +109,7 @@ function itemSummary(i) {
 function secSummary(cs) {
   const mono = m => `<span style="font-family:var(--mono)">${esc(m)}</span>`;
   if (cs.mecanica === "produto") {
-    if (cs.comp.nenhumProduto) return `<span class="ic-reco-inline none">Nenhum produto se aplica</span>`;
+    if (cs.comp.nenhumProduto) return ""; // texto fica só na tela vazia da tabela, não no header
     // a escolha substitui a recomendação
     const chosenIdx = prefs.chosen[active];
     if (chosenIdx != null && cs.comp.skus[chosenIdx]) {
@@ -203,7 +203,7 @@ function renderGrid() {
     // chip do topo: "Melhor produto · atende X%" quando há produto (a pendência de camada vive na própria badge "Não atende · X/Y")
     const prod = sum.comps.find(c => c.mecanica === "produto");
     let reco = "", recoCls = "";
-    if (prod && prod.comp.nenhumProduto) { reco = "Nenhum produto se aplica"; recoCls = " none"; }
+    if (prod && prod.comp.nenhumProduto) { reco = ""; recoCls = ""; } // nenhum produto: sem texto no card (só o status "Não atende")
     else if (prod && sum.status === "ok") { reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`; recoCls = " prod"; } // não atende: sem produto recomendado
     // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
     const chosenSku = (prod && chosenIdx != null && prod.comp.skus[chosenIdx]) ? prod.comp.skus[chosenIdx] : null;
@@ -240,6 +240,15 @@ function openTable(i) {
   // componente produto é processado antes (collapsiblesHTML usa SPECS)
   const prodComp = it.componentes.find(comp => comp.mecanica === "produto");
   if (prodComp) { activeComp = prodComp; MX_SKUS = prodComp.skus; SPECS = matrixOf(prodComp); recompute(); }
+
+  // item ainda reprocessando (pode levar 1min+): mostra o loading persistente ao voltar para ele
+  if (reprocessing[i]) {
+    renderNav(); renderItemSummary(); renderEditControls();
+    $("#tableOverlay").hidden = false;
+    showItemReprocessing(reprocessing[i].val);
+    return;
+  }
+  hideReprocessSonner();
 
   let body = collapsiblesHTML(it), secs = "";
   it.componentes.forEach((comp, ci) => {
@@ -285,7 +294,7 @@ function sizeMatrixHeight() {
     tw.style.height = Math.max(240, Math.round(h)) + "px";
   });
 }
-const closeTable = () => { $("#tableOverlay").hidden = true; active = null; renderGrid(); };
+const closeTable = () => { $("#tableOverlay").hidden = true; active = null; hideReprocessSonner(); renderGrid(); };
 /* itens visíveis segundo o filtro ativo (para a navegação Anterior/Próximo) */
 function visibleItemsIdx() { return ITEMS.map((_, i) => i).filter(i => statusFilter === "all" || itemSummary(i).status === statusFilter); }
 function renderNav() {
@@ -380,7 +389,7 @@ function updateProdSecSummary() {
   const nenhum = !!(activeComp && activeComp.nenhumProduto);
   const ok = !nenhum && BEST.diverg.length === 0;
   let html;
-  if (nenhum) html = `<span class="ic-reco-inline none">Nenhum produto se aplica</span>`;
+  if (nenhum) html = ""; // texto "Nenhum produto se aplica" fica só na tela vazia da tabela, não no header
   else if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<span class="ic-reco-inline chosen"><b>✓ Produto escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}</span>`; }
   else if (!ok) html = ""; // não atende: sem produto recomendado
   else html = `<span class="ic-reco-inline prod"><b>Melhor produto:</b> ${mono(BEST.sku.model)} · ${esc(BEST.sku.brand)}</span>`;
@@ -902,7 +911,7 @@ function closeCatMenu() { const m = $("#catMenu"); if (m) m.hidden = true; catMe
 
 /* Trocar categoria re-roda a extração dos requisitos (Alice 17/08): não é instantâneo.
    Simulamos: confirmar → loading "reprocessando" sobre o componente → label atualizado + match recalculado. */
-let pendingCat = null, reprocessTimer = null;
+let pendingCat = null, reprocessing = {}; // reprocessing[itemIndex] = { val, comp, timer } — persiste ao navegar entre itens
 function itemSkeletonHTML() {
   const row = () => `<div class="sk-row"><div class="sk-cell wide"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div></div>`;
   return `<div class="to-collapsibles">
@@ -921,21 +930,32 @@ function showReprocessSonner(val) {
   s.hidden = false;
 }
 function hideReprocessSonner() { const s = document.getElementById("reprocessSonner"); if (s) s.hidden = true; }
-/* Trocar categoria afeta o ITEM inteiro: skeleton em tudo + sonner fixo. ~30s (Alice: "isso demora"). */
+/* mostra o estado de reprocessamento (skeleton do item + sonner) na tela atual */
+function showItemReprocessing(val) {
+  const toSum = $("#toSummary"); if (toSum) toSum.classList.add("sk-summary");
+  $("#toBody").innerHTML = itemSkeletonHTML();
+  showReprocessSonner(val);
+  sizeMatrixHeight();
+}
+/* Trocar categoria afeta o ITEM inteiro e pode demorar 1min+. O estado é POR ITEM e persiste:
+   o usuário pode navegar entre itens; ao voltar ao item que ainda reprocessa, vê o loading de novo. */
 function reprocessCategory(anchor, val) {
   const oldLabel = anchor.childNodes[0].nodeValue.trim();
   const it = ITEMS[active];
   const comp = it.componentes.find(c => c.rotulo === oldLabel) || it.componentes.find(c => c.mecanica === anchor.dataset.catmech);
-  const toSum = $("#toSummary"); if (toSum) toSum.classList.add("sk-summary");
-  $("#toBody").innerHTML = itemSkeletonHTML();
-  showReprocessSonner(val);
   if (comp) { comp.rotulo = val; comp.nenhumProduto = !/c[âa]mera/i.test(val); } // categoria sem câmera: nenhum produto do catálogo se aplica
-  clearTimeout(reprocessTimer);
-  reprocessTimer = setTimeout(() => {
-    hideReprocessSonner();
-    if (toSum) toSum.classList.remove("sk-summary");
-    if (active != null) openTable(active);
-    toast(comp && comp.nenhumProduto ? `Nenhum produto do catálogo se aplica a "${val}"` : `Requisitos reprocessados para "${val}" — análise recalculada`);
+  const item = active;
+  if (reprocessing[item] && reprocessing[item].timer) clearTimeout(reprocessing[item].timer);
+  reprocessing[item] = { val, comp };
+  showItemReprocessing(val);
+  reprocessing[item].timer = setTimeout(() => {
+    const done = reprocessing[item]; delete reprocessing[item];
+    if (active === item) {
+      hideReprocessSonner();
+      openTable(item);
+      toast(done && done.comp && done.comp.nenhumProduto ? `Nenhum produto do catálogo se aplica a "${val}"` : `Requisitos reprocessados para "${val}" — análise recalculada`);
+    }
+    // se o usuário está em outro item, nada visual muda aqui: quando ele voltar, o item já renderiza pronto (o "aviso por e-mail")
   }, 30000);
 }
 
