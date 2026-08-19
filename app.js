@@ -80,11 +80,11 @@ function joinUnit(core, unidade) {
   if (!unidade || core === "" || core === "—") return core || "—";
   return core + unitSep(unidade) + unidade;
 }
-const unitTag = unidade => unidade ? `<span class="unit-fixed" data-tip="Unidade de medida do requisito (fixa, não editável)">${esc(unitSep(unidade) + unidade)}</span>` : "";
+const unitTag = unidade => unidade ? `<span class="unit-fixed">${esc(unitSep(unidade) + unidade)}</span>` : "";
 /* operador da exigência (≥, ≤, >, <, =) também é FIXO, vem do edital: só o número é editável */
 const OP_RE = /^\s*(≥|≤|>=|<=|>|<|=)\s*/;
 const splitOp = value => { const m = String(value == null ? "" : value).match(OP_RE); return m ? { op: m[1], rest: String(value).slice(m[0].length) } : { op: "", rest: String(value == null ? "" : value) }; };
-const opTag = op => op ? `<span class="op-fixed" data-tip="Operador da exigência (fixo, vem do edital)">${esc(op)} </span>` : "";
+const opTag = op => op ? `<span class="op-fixed">${esc(op)} </span>` : "";
 const rankFor = sc => [...sc].sort((a, b) => b.pct - a.pct || a.ne - b.ne || b.ok - a.ok);
 const bestOf = (specs, skus) => rankFor(scoresFor(specs, skus))[0];
 const prodSummary = comp => { const best = bestOf(matrixOf(comp), comp.skus); return { best, ok: best.diverg.length === 0 }; };
@@ -189,7 +189,7 @@ function renderStats(ofType) {
     { ico: "ok", svg: I.check, n: atend, label: "Itens que atende" },
     { ico: "bad", svg: I.cross, n: nao, label: "Itens que não atende" },
   ];
-  $("#stats").innerHTML = cards.map(c => `<div class="stat" data-tip="${c.label}"><div class="stat-top"><div class="stat-ico ${c.ico}">${c.svg}</div><div class="stat-n">${c.n}</div></div><div class="stat-label">${c.label}</div></div>`).join("");
+  $("#stats").innerHTML = cards.map(c => `<div class="stat"><div class="stat-top"><div class="stat-ico ${c.ico}">${c.svg}</div><div class="stat-n">${c.n}</div></div><div class="stat-label">${c.label}</div></div>`).join("");
 }
 function renderGrid() {
   $("#crumbId").textContent = `Edital ${EDITAL.numero}`;
@@ -204,7 +204,7 @@ function renderGrid() {
     const tipos = [...new Set(it.componentes.map(c => c.mecanica === "produto" ? "produto" : (/software|vms|licen/i.test(c.rotulo) ? "software" : "servico")))];
     const segLabel = tipos.length > 1 ? `Misto (${tipos.map(t => TIPO_LBL[t]).join(" + ")})` : TIPO_LBL[tipos[0]];
     const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
-    const segBadge = `<span class="badge seg" data-tip="${esc(segTip)}">${esc(segLabel)}</span>`;
+    const segBadge = `<span class="badge seg">${esc(segLabel)}</span>`;
     // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor
     const swComp = it.componentes.every(c => c.mecanica === "checklist") ? sum.comps.find(c => c.mecanica === "checklist") : null;
     const statusBadge = swComp
@@ -213,7 +213,7 @@ function renderGrid() {
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     if (SEM_ARQUIVO) {
       // licitação sem arquivo: score ainda não gerado — sem Atende/Não atende, sem recomendação
-      return `<div class="item-card" data-item="${i}" data-tip="Abrir o item">
+      return `<div class="item-card" data-item="${i}">
         <div class="ic-badges">${segBadge}<span class="badge pendente" data-tip="A análise ainda não foi gerada (licitação sem arquivo)">${ICO_CLOCK}Score pendente</span></div>
         <div class="ic-desc">${esc(it.nome)}</div>
         <div class="ic-metaline"><span><b>Quantidade:</b> ${qtyTxt}</span><span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span><span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span></div>
@@ -230,7 +230,7 @@ function renderGrid() {
       reco = `<b>✓ Produto escolhido:</b> <span style="font-family:var(--mono)">${esc(chosenSku.model)}</span> · ${esc(chosenSku.brand)}`;
       recoCls = " chosen";
     }
-    return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}" data-tip="Abrir a análise completa deste item">
+    return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}">
       <div class="ic-badges">${segBadge}${statusBadge}${reco ? `<span class="ic-reco-inline${recoCls}">${reco}</span>` : ""}</div>
       <div class="ic-desc">${esc(it.nome)}</div>
       <div class="ic-metaline">
@@ -287,7 +287,7 @@ function openTable(i) {
     // Produto = "Editar"; Software/checklist = "Revisar requisitos"
     const editLabel = comp.mecanica === "produto" ? "Editar" : "Revisar requisitos";
     const editTip = comp.mecanica === "produto" ? "Editar as exigências desta seção" : "Revisar os requisitos deste software";
-    const editBtn = `<button class="comp-edit" data-editsec="${editSec}" data-tip="${editTip}">${editLabel}</button>`;
+    const editBtn = `<button class="comp-edit" data-editsec="${editSec}">${editLabel}</button>`;
     const kebabBtn = `<button class="comp-kebab" data-kebab data-kebabmech="${comp.mecanica}" data-tip="Mais ações">${ICO_KEBAB}</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
@@ -574,7 +574,7 @@ function renderMatrix() {
   let head = "";
   cols.forEach(c => {
     if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
-    else if (c.key === "val") head += `<th class="col-val${fzCls(c)}"${fzStyle(c)} data-tip="Valor que o edital exige para o requisito">Valor requerido${colCtrls(c)}</th>`;
+    else if (c.key === "val") head += `<th class="col-val${fzCls(c)}"${fzStyle(c)}>Valor requerido${colCtrls(c)}</th>`;
     else {
       const idx = c.skuIdx, sc = STATE[idx], rank = ORDER.indexOf(idx), best = rank === 0, isChosen = chosenIdx === idx, hasChoice = chosenIdx != null;
       const sku = sc.sku;
@@ -582,9 +582,9 @@ function renderMatrix() {
       const isNet = sku.origem === "internet";
       // estoque = disponibilidade em 3 estados: com estoque / sem estoque / não informado (nem todo cliente passa essa info)
       const estoqueBadge = sku.estoque === true
-        ? `<span class="sku-tag ok" data-tip="Com estoque">Com estoque</span>`
+        ? `<span class="sku-tag ok">Com estoque</span>`
         : sku.estoque === false
-          ? `<span class="sku-tag warn" data-tip="Sem estoque: precisaria comprar ou terceirizar">Sem estoque</span>`
+          ? `<span class="sku-tag warn">Sem estoque</span>`
           : `<span class="sku-tag soft" data-tip="Não temos a informação sobre o estoque deste produto.">Estoque não informado</span>`;
       // fonte = ÍCONE de origem: livro = catálogo do cliente, globo = internet (externo). Azul quando tem link (clicável), cinza quando não.
       const hasLink = isNet || !!sku.datasheet;
@@ -595,17 +595,17 @@ function renderMatrix() {
         : `<span class="sku-srcico nolink" data-tip="${srcTip} — sem link para abrir (não temos o datasheet deste produto)">${srcIco}</span>`;
       // preço em 2 estados: informado / não informado (nem toda fonte traz o valor)
       const precoLine = sku.preco != null
-        ? `<div class="sku-preco" data-tip="Preço do produto (conforme a fonte)">${esc(fmtBRL(sku.preco))}</div>`
+        ? `<div class="sku-preco">${esc(fmtBRL(sku.preco))}</div>`
         : `<div class="sku-preco sku-preco-none" data-tip="Não temos a informação sobre o preço deste produto.">Preço não informado</div>`;
       const fitCls = sc.pct === 100 ? "full" : sc.pct >= 50 ? "mid" : "low";
       // nome do SKU primeiro (Alice 28/07); fonte + estoque descem para baixo do preço
       head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
         <div class="sku-model" data-full="${esc(sku.model)}">${esc(sku.model)}</div><div class="sku-brand" data-full="${esc(sku.brand)}">${esc(sku.brand)}</div>
-        <div class="sku-fit" data-tip="Aderência: requisitos atendidos e percentual"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}</span></div>
+        <div class="sku-fit"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}</span></div>
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
         ${precoLine}
         <div class="sku-src">${sourceIcon}${estoqueBadge}</div>
-        <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}" data-tip="${isChosen ? "Remover seleção" : "Definir como produto escolhido para a proposta"}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
+        <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
   });
   let body = "";
@@ -628,7 +628,7 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${chip}</div></td>`;
         }
       }
-      else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Valor do seu produto disponível, mas ainda sem correspondência: falta extrair a exigência do edital">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
+      else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
       else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c, spec.unidade);
     });
     body += row + `</tr>`;
@@ -759,15 +759,15 @@ function renderChecklist(host, clArr, sec) {
   if (!host) return;
   const view = clView[sec] || "requisito";
   const seg = `<div class="clview-seg" role="tablist">
-      <button class="clview-tab${view === "requisito" ? " on" : ""}" data-clview="${sec}:requisito" data-tip="Ver os requisitos em tabela">Visão em requisito</button>
-      <button class="clview-tab${view === "bloco" ? " on" : ""}" data-clview="${sec}:bloco" data-tip="Agrupar os requisitos por módulo">Visão em bloco</button>
+      <button class="clview-tab${view === "requisito" ? " on" : ""}" data-clview="${sec}:requisito">Visão em requisito</button>
+      <button class="clview-tab${view === "bloco" ? " on" : ""}" data-clview="${sec}:bloco">Visão em bloco</button>
     </div>`;
   if (view === "bloco") { host.innerHTML = seg + renderChecklistBlocks(clArr, sec); sizeMatrixHeight(); return; }
   const rows = clArr.map((r, ri) => {
     const st = CL_ST[r.st] || CL_ST.ne;
     const nota = r.notas
       ? `<span class="cl-nota">${esc(r.notas)}</span>`
-      : `<button class="cell-add" data-clnote="${sec}:${ri}" data-tip="Adicionar uma nota interna a este requisito">+ Nota</button>`;
+      : `<button class="cell-add" data-clnote="${sec}:${ri}">+ Nota</button>`;
     return `<tr>
       <td class="col-req"><div class="req-head"><span class="req-name">${esc(r.req)}</span><button class="req-ico" data-clorigin="${sec}:${ri}" data-tip="Ver de onde a IA extraiu no edital (página e trecho)">${ICO_ARROW}</button></div></td>
       <td class="col-meta"><button class="badge ${st.cls} clickable-badge" data-clstatus="${sec}:${ri}" data-tip="Clique para escolher o status">${st.ico}${st.label}<span class="cl-caret">▾</span></button></td>
