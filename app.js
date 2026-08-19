@@ -1,5 +1,5 @@
 /* ============================================================
-   Análise Técnica · multi-tipo — shell único + mecânicas componíveis
+   Análise Técnica · multi-tipo, shell único + mecânicas componíveis
    Mecânicas: produto = comparar/escolher SKU (matriz) · serviço/software = atende-não (checklist) · solução = seções
    ============================================================ */
 const $ = (s, r = document) => r.querySelector(s);
@@ -97,7 +97,7 @@ function checklistSummary(cl) {
   return { ok, total: ev.length, no, status: no === 0 ? "ok" : "no", pct: ev.length ? Math.round(ok / ev.length * 100) : 0 };
 }
 const CL_ST = { ok: { cls: "ok", label: "Atende", ico: ICO_OK }, no: { cls: "bad", label: "Não atende", ico: ICO_NO }, parcial: { cls: "warn", label: "Atende parcialmente", ico: "" }, parceiro: { cls: "warn", label: "Atende com parceiro", ico: "" }, ne: { cls: "soft", label: "Não avaliado", ico: "" } };
-// software (checklist): status por faixa de aderência — <50% vermelho, >80% verde, 50-80% neutro
+// software (checklist): status por faixa de aderência, <50% vermelho, >80% verde, 50-80% neutro
 const TIER = pct => pct < 50 ? "bad" : pct > 80 ? "ok" : "mid";
 const confBadge = c => c ? `<span class="badge ${c === "alta" ? "ok" : c === "media" ? "warn" : "bad"}" data-tip="Confiança da IA na extração">${cap(c === "media" ? "média" : c)}</span>` : `<span class="state-na">—</span>`;
 
@@ -144,7 +144,7 @@ function updateInfo() {
   SPECS.forEach(spec => {
     if (spec.naoExtraido && spec._valorEdital) {
       spec.exig = spec._valorEdital; spec.naoExtraido = false;
-      if (spec._trecho) spec.origem = { doc: "Edital — Termo de Referência", pag: "—", trecho: spec._trecho };
+      if (spec._trecho) spec.origem = { doc: "Edital (Termo de Referência)", pag: "—", trecho: spec._trecho };
       rematchRow(spec); n++;
     }
   });
@@ -212,7 +212,7 @@ function renderGrid() {
       : (sum.status === "ok" ? `<span class="badge ok">Atende</span>` : `<span class="badge bad">Não atende</span>`);
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     if (SEM_ARQUIVO) {
-      // licitação sem arquivo: score ainda não gerado — sem Atende/Não atende, sem recomendação
+      // licitação sem arquivo: score ainda não gerado, sem Atende/Não atende, sem recomendação
       return `<div class="item-card" data-item="${i}">
         <div class="ic-badges">${segBadge}<span class="badge pendente" data-tip="A análise ainda não foi gerada (licitação sem arquivo)">${ICO_CLOCK}Score pendente</span></div>
         <div class="ic-desc">${esc(it.nome)}</div>
@@ -245,7 +245,7 @@ function renderGrid() {
 }
 
 /* ============================================================
-   Overlay — despacha por mecânica
+   Overlay, despacha por mecânica
    ============================================================ */
 function openTable(i) {
   active = i; const it = ITEMS[i]; editingMeta = null;
@@ -397,7 +397,7 @@ function actionsForChip(chip) {
 function openMetaOrigin(key) {
   const label = { unidade: "Unidade de medida", quantidade: "Quantidade", preco: "Valor unitário", total: "Valor total" }[key] || "Valor do item";
   const nota = key === "total" ? "Valor total é calculado: quantidade × valor unitário." : "Extraído do edital (Termo de Referência) e da planilha de itens.";
-  $("#drawerHead").textContent = `Origem — ${label}`;
+  $("#drawerHead").textContent = `Origem: ${label}`;
   $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>${esc(nota)}</span></div>`;
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
 }
@@ -591,8 +591,8 @@ function renderMatrix() {
       const srcIco = isNet ? ICO_GLOBE : ICO_CATALOG;
       const srcTip = isNet ? "Fonte: Internet (catálogo externo)" : "Fonte: Catálogo do cliente";
       const sourceIcon = hasLink
-        ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip} — clique para abrir">${srcIco}</button>`
-        : `<span class="sku-srcico nolink" data-tip="${srcTip} — sem link para abrir (não temos o datasheet deste produto)">${srcIco}</span>`;
+        ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip}, clique para abrir">${srcIco}</button>`
+        : `<span class="sku-srcico nolink" data-tip="${srcTip}, sem link para abrir (não temos o datasheet deste produto)">${srcIco}</span>`;
       // preço em 2 estados: informado / não informado (nem toda fonte traz o valor)
       const precoLine = sku.preco != null
         ? `<div class="sku-preco">${esc(fmtBRL(sku.preco))}</div>`
@@ -654,7 +654,7 @@ function commitInline(ri) {
     }
   }
   editingRow = null; recompute(); renderMatrix(); updateProdSecSummary();
-  toast(converted ? "Valor requerido definido — agora este requisito conta no atende" : "Valor requerido atualizado — análise recalculada");
+  toast(converted ? "Valor requerido definido, agora este requisito conta no atende" : "Valor requerido atualizado, análise recalculada");
 }
 function tryCommitInline(ri) {
   if (!prefs.warnedInline) { pendingCommitRi = ri; $("#warnOverlay").hidden = false; $("#warnModal").hidden = false; return; }
@@ -687,7 +687,7 @@ function descBlockHTML(it) {
     </div>`;
 }
 function collapsiblesHTML(it) {
-  // "Descrição completa" só quando o item tem Produto (software não tem descrição — decisão Alice 28/07)
+  // "Descrição completa" só quando o item tem Produto (software não tem descrição, decisão Alice 28/07)
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
   let html = temProduto ? descBlockHTML(it) : "";
   const prodComps = it.componentes.filter(c => c.mecanica === "produto");
@@ -717,7 +717,7 @@ function addNaoAnalisado(reqName) {
   const n = prodComp && (prodComp.naoAnalisadas || []).find(x => x.req === reqName);
   if (!n) return;
   const exig = n.valorEdital || "";
-  SPECS.push({ req: n.req, exig, unidade: n.unidade || "", modulo: "—", origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: n.trecho || exig }, cells: MX_SKUS.map((_, i) => { const v = (n.vals && n.vals[i]) || "—"; return { st: evalCell(v, exig), v, c: "alta" }; }) });
+  SPECS.push({ req: n.req, exig, unidade: n.unidade || "", modulo: "—", origem: { doc: "Edital (Termo de Referência)", pag: "—", trecho: n.trecho || exig }, cells: MX_SKUS.map((_, i) => { const v = (n.vals && n.vals[i]) || "—"; return { st: evalCell(v, exig), v, c: "alta" }; }) });
   (addedNA[active] || (addedNA[active] = new Set())).add(reqName);
   recompute(); renderMatrix();
   const host = document.querySelector("#toBody .to-collapsibles");
@@ -739,7 +739,7 @@ function addDiferencial(reqName) {
   const host = document.querySelector("#toBody .to-collapsibles");
   if (host) host.outerHTML = collapsiblesHTML(ITEMS[active]);
   const inp = document.querySelector("#matrixHost .val-inline-input"); if (inp) inp.scrollIntoView({ block: "center" });
-  toast(`"${reqName}" adicionado — informe o valor requerido, ou deixe como não exigido`);
+  toast(`"${reqName}" adicionado, informe o valor requerido, ou deixe como não exigido`);
 }
 /* remover uma linha vinda da seção "não exigidas": some da comparação e volta para a seção */
 function removeDiferencial(reqName) {
@@ -890,7 +890,7 @@ function confirmAddReq() {
   const s = addSpec, vi = $("#amValInput"), raw = String(vi.value != null ? vi.value : vi.textContent).trim();
   const exigFull = s.dominio === "numero" ? ((s.operador ? s.operador + " " : "") + joinUnit(raw, s.unidade)) : raw;
   const cells = s.valsPorSku.map(v => ({ st: evalCell(v, exigFull), v, c: "alta" }));
-  SPECS.push({ req: s.nome, exig: exigFull, unidade: s.unidade, added: true, origem: { doc: "Edital — Termo de Referência", pag: "—", trecho: addTrecho }, cells });
+  SPECS.push({ req: s.nome, exig: exigFull, unidade: s.unidade, added: true, origem: { doc: "Edital (Termo de Referência)", pag: "—", trecho: addTrecho }, cells });
   recompute(); renderMatrix();
   if (!$("#editDrawer").hidden) renderEditDrawer(); // reflete o novo requisito na barra de edição
   $("#addModal").hidden = true;
@@ -919,7 +919,7 @@ function closeStatusMenu() { const m = $("#statusMenu"); if (m) m.hidden = true;
 
 function openKebabMenu(anchor) {
   const menu = $("#kebabMenu"); if (!menu) return;
-  // "Concluir análise" só no software (em produto não existe — Brunno)
+  // "Concluir análise" só no software (em produto não existe, Brunno)
   const items = anchor.dataset.kebabmech === "produto"
     ? [["importar", "Importar"], ["exportar", "Exportar esta seção"]]
     : [["concluir", "Concluir análise"], ["importar", "Importar"], ["exportar", "Exportar esta seção"]];
@@ -951,7 +951,7 @@ function closeCatMenu() { const m = $("#catMenu"); if (m) m.hidden = true; catMe
 
 /* Trocar categoria re-roda a extração dos requisitos (Alice 17/08): não é instantâneo.
    Simulamos: confirmar → loading "reprocessando" sobre o componente → label atualizado + match recalculado. */
-let pendingCat = null, reprocessing = {}; // reprocessing[itemIndex] = { val, comp, timer } — persiste ao navegar entre itens
+let pendingCat = null, reprocessing = {}; // reprocessing[itemIndex] = { val, comp, timer }, persiste ao navegar entre itens
 function itemSkeletonHTML() {
   const row = () => `<div class="sk-row"><div class="sk-cell wide"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div></div>`;
   return `<div class="to-collapsibles">
@@ -966,7 +966,7 @@ function itemSkeletonHTML() {
 function showReprocessSonner(val) {
   let s = document.getElementById("reprocessSonner");
   if (!s) { s = document.createElement("div"); s.id = "reprocessSonner"; s.className = "reprocess-sonner"; document.body.appendChild(s); }
-  s.innerHTML = `<div class="cat-spin"></div><div class="rs-txt"><b>Reprocessando os requisitos para "${esc(val)}"</b><span>Este processo pode demorar um pouco — você pode sair desta tela. Assim que estiver pronto, avisaremos por e-mail <i>(o canal ainda precisa ser definido: podemos retomar a task de alertas na plataforma, feita há alguns meses)</i>.</span></div>`;
+  s.innerHTML = `<div class="cat-spin"></div><div class="rs-txt"><b>Reprocessando os requisitos para "${esc(val)}"</b><span>Este processo pode demorar um pouco. Você pode sair desta tela. Assim que estiver pronto, avisaremos por e-mail <i>(o canal ainda precisa ser definido: podemos retomar a task de alertas na plataforma, feita há alguns meses)</i>.</span></div>`;
   s.hidden = false;
 }
 function hideReprocessSonner() { const s = document.getElementById("reprocessSonner"); if (s) s.hidden = true; }
@@ -997,7 +997,7 @@ function reprocessCategory(anchor, val) {
     if (active === item) {
       hideReprocessSonner();
       openTable(item);
-      toast(done && done.comp && done.comp.nenhumProduto ? `Nenhum produto do catálogo se aplica a "${val}"` : `Requisitos reprocessados para "${val}" — análise recalculada`);
+      toast(done && done.comp && done.comp.nenhumProduto ? `Nenhum produto do catálogo se aplica a "${val}"` : `Requisitos reprocessados para "${val}", análise recalculada`);
     }
     // se o usuário está em outro item, nada visual muda aqui: quando ele voltar, o item já renderiza pronto (o "aviso por e-mail")
   }, 30000);
@@ -1029,7 +1029,7 @@ function wire() {
     if (more) { const d = $("#editBody .ed-desc"); d.classList.toggle("clamp"); more.textContent = d.classList.contains("clamp") ? "Ver mais" : "Ver menos"; }
   });
   $("#toExport").onclick = () => toast("Baixando o item inteiro (PDF · planilha · resumo técnico)…");
-  { const sh = $("#toShare"); if (sh) sh.onclick = () => toast("Link da análise copiado — compartilhe para validação (engenharia, fornecedor, gestor)"); }
+  { const sh = $("#toShare"); if (sh) sh.onclick = () => toast("Link da análise copiado, compartilhe para validação (engenharia, fornecedor, gestor)"); }
 
   const tb = $("#toBody");
   // redimensiona a tabela ao mudar o tamanho da janela ou abrir/fechar uma seção
@@ -1092,8 +1092,8 @@ function wire() {
     const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }
     const vcan = e.target.closest("[data-vcancel]"); if (vcan) { cancelInlineEdit(); return; }
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
-    const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); toast(`Abrindo a origem do dado na internet — ${MX_SKUS[+nl.dataset.neturl].model} (para conferência)`); return; }
-    const cl = e.target.closest("[data-caturl]"); if (cl) { e.stopPropagation(); toast(`Abrindo no catálogo — ${MX_SKUS[+cl.dataset.caturl].model}`); return; }
+    const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); toast(`Abrindo a origem do dado na internet, ${MX_SKUS[+nl.dataset.neturl].model} (para conferência)`); return; }
+    const cl = e.target.closest("[data-caturl]"); if (cl) { e.stopPropagation(); toast(`Abrindo no catálogo, ${MX_SKUS[+cl.dataset.caturl].model}`); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
     const cv = e.target.closest("[data-copytext]"); if (cv) { e.stopPropagation(); const txt = cv.dataset.copytext; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
     const kb = e.target.closest("[data-kebab]"); if (kb) { e.preventDefault(); e.stopPropagation(); openKebabMenu(kb); return; }
@@ -1101,11 +1101,11 @@ function wire() {
     const clv = e.target.closest("[data-clview]"); if (clv) { const [s, v] = clv.dataset.clview.split(":"); clView[+s] = v; renderChecklist($("#clHost-" + s), currentChecklists[+s], +s); return; }
     const ba = e.target.closest("[data-blockact]"); if (ba) { toast(ba.dataset.blockact === "excluir" ? "Excluir módulo (remove os requisitos do módulo)" : "Ir para o módulo"); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
-    const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação — "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
+    const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação, "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
-    const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação — "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
-    const cn = e.target.closest("[data-clnote]"); if (cn) { const [s, r] = cn.dataset.clnote.split(":").map(Number); toast(`Adicionar nota interna — "${currentChecklists[s][r].req}"`); return; }
+    const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação, "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
+    const cn = e.target.closest("[data-clnote]"); if (cn) { const [s, r] = cn.dataset.clnote.split(":").map(Number); toast(`Adicionar nota interna, "${currentChecklists[s][r].req}"`); return; }
     const ac = e.target.closest("[data-addcol]"); if (ac) { toast("Adicionar coluna à tabela (campo personalizado)"); return; }
   });
   tb.addEventListener("keydown", e => {
@@ -1126,9 +1126,9 @@ function wire() {
     if (!e.target.closest("#extractConfirm") || extractRi == null || !pendingExtract) return;
     const ri = extractRi, val = pendingExtract, nm = SPECS[ri].req;
     SPECS[ri].naoExtraido = false; SPECS[ri].exig = val;
-    SPECS[ri].origem = { doc: EDITAL.docNome || "Edital — Termo de Referência", pag: "—", trecho: val };
+    SPECS[ri].origem = { doc: EDITAL.docNome || "Edital (Termo de Referência)", pag: "—", trecho: val };
     recompute(); renderMatrix(); closeOrigin();
-    toast(`Valor extraído para "${nm}" — produtos liberados para comparação`);
+    toast(`Valor extraído para "${nm}", produtos liberados para comparação`);
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#catMenu").hidden) closeCatMenu(); else if (!$("#kebabMenu").hidden) closeKebabMenu(); else if (!$("#statusMenu").hidden) closeStatusMenu(); else if (!$("#drawer").hidden) closeOrigin(); else if (!$("#tableOverlay").hidden) closeTable(); } });
   // dropdown de categoria da seção (com qual catálogo compara)
