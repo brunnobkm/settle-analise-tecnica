@@ -132,7 +132,7 @@ const LS = "settle-at-prefs-v7";
 let prefs = (() => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch { return {}; } })();
 const savePrefs = () => localStorage.setItem(LS, JSON.stringify(prefs));
 prefs.chosen = prefs.chosen || {};
-let statusFilter = prefs.filter || "all";
+let statusFilter = "all"; // só a tab "Todos" por enquanto (status a resolver depois)
 let active = null, SPECS = null, STATE, RANKED, ORDER, BEST, activeComp = null, MX_SKUS = [];
 let miniTourStart = null; // mini tour: começa a explicar quando o item é aberto (definido em initTour se ?tour=diferencial)
 let editingRow = null, pendingCommitRi = null; // edição inline do "Valor requerido" na matriz (com confirmação)
