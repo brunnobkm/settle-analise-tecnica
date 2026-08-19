@@ -100,7 +100,7 @@ const confBadge = c => c ? `<span class="badge ${c === "alta" ? "ok" : c === "me
 function itemSummary(i) {
   const it = ITEMS[i];
   const comps = it.componentes.map(comp => {
-    if (comp.mecanica === "produto") { const ps = prodSummary(comp); return { mecanica: "produto", rotulo: comp.rotulo, ok: ps.ok, best: ps.best, comp }; }
+    if (comp.mecanica === "produto") { const ps = prodSummary(comp); return { mecanica: "produto", rotulo: comp.rotulo, ok: comp.nenhumProduto ? false : ps.ok, best: ps.best, comp }; }
     const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, ok: s.status === "ok", ok_n: s.ok, total: s.total, comp };
   });
   return { comps, multi: comps.length > 1, status: comps.every(c => c.ok) ? "ok" : "no" };
@@ -109,6 +109,7 @@ function itemSummary(i) {
 function secSummary(cs) {
   const mono = m => `<span style="font-family:var(--mono)">${esc(m)}</span>`;
   if (cs.mecanica === "produto") {
+    if (cs.comp.nenhumProduto) return `<span class="ic-reco-inline none">Nenhum produto se aplica</span>`;
     // a escolha substitui a recomendação
     const chosenIdx = prefs.chosen[active];
     if (chosenIdx != null && cs.comp.skus[chosenIdx]) {
@@ -202,7 +203,8 @@ function renderGrid() {
     // chip do topo: "Melhor produto · atende X%" quando há produto (a pendência de camada vive na própria badge "Não atende · X/Y")
     const prod = sum.comps.find(c => c.mecanica === "produto");
     let reco = "", recoCls = "";
-    if (prod && sum.status === "ok") { reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`; recoCls = " prod"; } // não atende: sem produto recomendado
+    if (prod && prod.comp.nenhumProduto) { reco = "Nenhum produto se aplica"; recoCls = " none"; }
+    else if (prod && sum.status === "ok") { reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`; recoCls = " prod"; } // não atende: sem produto recomendado
     // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
     const chosenSku = (prod && chosenIdx != null && prod.comp.skus[chosenIdx]) ? prod.comp.skus[chosenIdx] : null;
     if (chosenSku) {
@@ -375,9 +377,11 @@ function updateProdSecSummary() {
   const details = [...document.querySelectorAll(".comp-acc")].find(d => d.querySelector("#matrixHost"));
   if (!details || !BEST) return;
   const chosenIdx = prefs.chosen[active], mono = m => `<span style="font-family:var(--mono)">${esc(m)}</span>`;
-  const ok = BEST.diverg.length === 0;
+  const nenhum = !!(activeComp && activeComp.nenhumProduto);
+  const ok = !nenhum && BEST.diverg.length === 0;
   let html;
-  if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<span class="ic-reco-inline chosen"><b>✓ Produto escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}</span>`; }
+  if (nenhum) html = `<span class="ic-reco-inline none">Nenhum produto se aplica</span>`;
+  else if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<span class="ic-reco-inline chosen"><b>✓ Produto escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}</span>`; }
   else if (!ok) html = ""; // não atende: sem produto recomendado
   else html = `<span class="ic-reco-inline prod"><b>Melhor produto:</b> ${mono(BEST.sku.model)} · ${esc(BEST.sku.brand)}</span>`;
   const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = html;
@@ -506,8 +510,17 @@ function refreshClSecSummary(sec) {
   const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = `Atende ${s.ok} de ${s.total} exigências`;
   const st = details.querySelector(".comp-status"); if (st) { st.className = "comp-status badge " + (ok ? "ok" : "bad"); st.textContent = ok ? "Atende" : "Não atende"; }
 }
+function noProdHTML(comp) {
+  return `<div class="no-prod">
+      <div class="no-prod-ico">${ICO_ALERT}</div>
+      <div class="no-prod-title">Nenhum produto se aplica</div>
+      <div class="no-prod-sub">Os produtos do seu catálogo não correspondem à categoria <b>"${esc(comp.rotulo)}"</b>. Verifique se a categoria está correta (use o seletor no topo) ou adicione um produto manualmente.</div>
+      <div class="no-prod-actions"><button class="btn primary" data-addmanual>Adicionar produto manualmente</button></div>
+    </div>`;
+}
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
+  if (activeComp && activeComp.nenhumProduto) { host.innerHTML = noProdHTML(activeComp); sizeMatrixHeight(); return; }
   const chosenIdx = prefs.chosen[active];
   const cols = buildCols(ORDER), totalW = cols.reduce((s, c) => s + c.w, 0);
   const colgroup = `<colgroup>${cols.map(c => `<col data-k="${c.key}" style="width:${c.w}px">`).join("")}</colgroup>`;
@@ -538,7 +551,7 @@ function renderMatrix() {
       // nome do SKU primeiro (Alice 28/07); fonte + estoque descem para baixo do preço
       head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
         <div class="sku-model">${esc(sku.model)}</div><div class="sku-brand" data-tip="Fabricante (info do produto, não é requisito)">${esc(sku.brand)}</div>
-        <div class="sku-fit" data-tip="Aderência: requisitos atendidos e percentual"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}${sc.ne ? ` · ${sc.ne} n/e` : ""}</span></div>
+        <div class="sku-fit" data-tip="Aderência: requisitos atendidos e percentual"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}</span></div>
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
         ${precoLine}
         <div class="sku-src">${sourceIcon}${estoqueBadge}</div>
@@ -548,18 +561,17 @@ function renderMatrix() {
   let body = "";
   SPECS.forEach((spec, ri) => {
     if (spec.exigNa) return;
-    const nx = !!spec.naoExtraido, df = !!spec.diferencial;
+    const nx = !!spec.naoExtraido, df = !!spec.diferencial, fromDiff = !!spec.fromDiff;
     let row = `<tr class="${df ? "diff-row" : nx ? "nx-row" : (isConcordant(spec) ? "concordant" : "")}">`;
     cols.forEach(c => {
-      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="${df ? "Diferencial do produto (o edital não exige)" : "Requisito exigido pelo edital"}">${esc(spec.req)}</span>${df ? `<span class="diff-badge" data-tip="Diferencial: o edital não exige, não conta no atende">Diferencial</span><button class="diff-remove" data-rmdiff="${esc(spec.req)}" data-tip="Remover este diferencial da comparação">${ICO_NO}</button>` : ""}</td>`;
+      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-tip="${df ? "Diferencial do produto (o edital não exige)" : "Requisito exigido pelo edital"}">${esc(spec.req)}</span>${df ? `<span class="diff-badge" data-tip="Diferencial: o edital não exige, não conta no atende">Diferencial</span>` : ""}${fromDiff ? `<button class="diff-remove" data-rmdiff="${esc(spec.req)}" data-tip="Remover esta linha da comparação">${ICO_NO}</button>` : ""}</td>`;
       else if (c.key === "val") {
-        if (df) row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-diff" data-tip="O edital não exige este requisito">Não exigido</span></div></td>`;
-        else if (nx) {
-          const originBtn = `<button class="req-ico val-ico" data-origin="${ri}" data-tip="Abrir o edital para localizar e extrair o valor exigido">${ICO_ARROW}</button>`;
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="val-missing" data-tip="O edital exige este requisito, mas a IA não conseguiu extrair o valor. Preencha para liberar a comparação.">${ICO_WARN} Não extraído</span>${originBtn}</div></td>`;
-        } else if (editingRow === ri) {
+        if (editingRow === ri) {
           const core = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="ts-chip-edit val-chip-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}">${vrUnit}<button class="ts-ok" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="ts-cancel" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></span></div></td>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="ts-chip-edit val-chip-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}" placeholder="valor requerido">${vrUnit}<button class="ts-ok" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="ts-cancel" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></span></div></td>`;
+        } else if (df && !spec.exig) {
+          // diferencial ainda sem valor requerido: editável (o edital não exige; clique para informar, se o edital exigir)
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><button class="ts-chip val-chip val-chip-empty" data-vstart="${ri}" data-tip="O edital não exige. Clique para informar um valor requerido (se a IA tiver errado e o edital exigir).">Não exigido</button></div></td>`;
         } else {
           const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
           const chip = `<button class="ts-chip val-chip" data-vstart="${ri}">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</button>`;
@@ -580,12 +592,19 @@ function startInlineEdit(ri) { editingRow = ri; renderMatrix(); }
 function cancelInlineEdit() { editingRow = null; renderMatrix(); }
 function commitInline(ri) {
   const inp = $("#matrixHost .val-inline-input"), spec = SPECS[ri];
+  let converted = false;
   if (inp && spec) {
     const raw = String(inp.value || "").trim();
-    if (raw) { const op = splitOp(spec.exig).op; spec.exig = op ? op + " " + joinUnit(raw, spec.unidade) : joinUnit(raw, spec.unidade); if (spec.naoExtraido) spec.naoExtraido = false; rematchRow(spec); }
+    if (raw) {
+      const op = splitOp(spec.exig).op;
+      spec.exig = op ? op + " " + joinUnit(raw, spec.unidade) : joinUnit(raw, spec.unidade);
+      if (spec.naoExtraido) spec.naoExtraido = false;
+      if (spec.diferencial) { spec.diferencial = false; converted = true; } // informou valor requerido: vira requisito e passa a contar no atende
+      rematchRow(spec);
+    }
   }
   editingRow = null; recompute(); renderMatrix(); updateProdSecSummary();
-  toast("Valor requerido atualizado — análise recalculada");
+  toast(converted ? "Valor requerido definido — agora este requisito conta no atende" : "Valor requerido atualizado — análise recalculada");
 }
 function tryCommitInline(ri) {
   if (!prefs.warnedInline) { pendingCommitRi = ri; $("#warnOverlay").hidden = false; $("#warnModal").hidden = false; return; }
@@ -663,17 +682,20 @@ function addDiferencial(reqName) {
   const prodComp = ITEMS[active].componentes.find(c => c.mecanica === "produto");
   const d = prodComp && (prodComp.catalogoNaoEdital || []).map(t => typeof t === "string" ? { req: t } : t).find(x => x.req === reqName);
   if (!d || !d.vals) return;
-  SPECS.push({ req: d.req, exig: "Não exigido", diferencial: true, unidade: "", modulo: "Diferencial", origem: { doc: "Catálogo do produto", pag: "—", trecho: "Diferencial oferecido pelo produto, não exigido pelo edital." }, cells: MX_SKUS.map((_, i) => ({ st: "diff", v: (d.vals && d.vals[i]) || "—", c: null })) });
+  SPECS.push({ req: d.req, exig: "", diferencial: true, fromDiff: true, unidade: d.unidade || "", modulo: "Diferencial", origem: { doc: "Catálogo do produto", pag: "—", trecho: "Especificação do produto, não exigida pelo edital." }, cells: MX_SKUS.map((_, i) => ({ st: "diff", v: (d.vals && d.vals[i]) || "—", c: null })) });
   (addedDiff[active] || (addedDiff[active] = new Set())).add(reqName);
-  recompute(); renderMatrix();
+  recompute();
+  editingRow = SPECS.length - 1; // abre o campo para o usuário informar o valor requerido (ou deixar como não exigido)
+  renderMatrix();
   const host = document.querySelector("#toBody .to-collapsibles");
   if (host) host.outerHTML = collapsiblesHTML(ITEMS[active]);
-  toast(`"${reqName}" adicionado como diferencial (não conta no atende)`);
+  const inp = document.querySelector("#matrixHost .val-inline-input"); if (inp) inp.scrollIntoView({ block: "center" });
+  toast(`"${reqName}" adicionado — informe o valor requerido, ou deixe como não exigido`);
 }
-/* remover um diferencial da tabela: some da comparação e volta para a seção "não exigidas" */
+/* remover uma linha vinda da seção "não exigidas": some da comparação e volta para a seção */
 function removeDiferencial(reqName) {
   if (active == null || !SPECS) return;
-  const i = SPECS.findIndex(s => s.diferencial && s.req === reqName);
+  const i = SPECS.findIndex(s => s.fromDiff && s.req === reqName);
   if (i >= 0) SPECS.splice(i, 1);
   const set = addedDiff[active]; if (set) set.delete(reqName);
   recompute(); renderMatrix();
@@ -907,13 +929,13 @@ function reprocessCategory(anchor, val) {
   const toSum = $("#toSummary"); if (toSum) toSum.classList.add("sk-summary");
   $("#toBody").innerHTML = itemSkeletonHTML();
   showReprocessSonner(val);
-  if (comp) comp.rotulo = val;
+  if (comp) { comp.rotulo = val; comp.nenhumProduto = !/c[âa]mera/i.test(val); } // categoria sem câmera: nenhum produto do catálogo se aplica
   clearTimeout(reprocessTimer);
   reprocessTimer = setTimeout(() => {
     hideReprocessSonner();
     if (toSum) toSum.classList.remove("sk-summary");
     if (active != null) openTable(active);
-    toast(`Requisitos reprocessados para "${val}" — análise recalculada`);
+    toast(comp && comp.nenhumProduto ? `Nenhum produto do catálogo se aplica a "${val}"` : `Requisitos reprocessados para "${val}" — análise recalculada`);
   }, 30000);
 }
 
@@ -997,6 +1019,7 @@ function wire() {
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
     const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
+    if (e.target.closest("[data-addmanual]")) { toast("Adicionar produto manualmente (fluxo a definir)"); return; }
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
     if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
