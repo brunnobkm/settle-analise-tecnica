@@ -172,25 +172,9 @@ function renderStats(ofType) {
     $("#stats").innerHTML = `<div class="stat-pendente"><div class="stat-pendente-ico">${ICO_CLOCK}</div><div class="stat-pendente-txt"><b>Análise pendente</b><span>Esta licitação ainda não tem arquivos identificados. Os scores serão gerados automaticamente assim que os arquivos forem carregados.</span></div></div>`;
     return;
   }
-  const total = ofType.length;
-  const atend = ofType.filter(x => itemSummary(x.i).status === "ok").length;
-  const nao = total - atend;
-  const I = {
-    target: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="3"/><circle cx="8" cy="8" r="0.6" fill="currentColor"/></svg>`,
-    layers: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 2l6 3-6 3-6-3 6-3z"/><path d="M2 8l6 3 6-3"/></svg>`,
-    check: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`,
-    cross: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`,
-  };
-  // Resumo executivo AGNÓSTICO DE TIPO: conta ITENS por status (única unidade que sobrevive ao item misto).
-  // Detalhe por requisito (parcial / com parceiro) vive dentro do item; questionamento/impugnação são de outra superfície.
-  const ader = total ? Math.round(atend / total * 100) : 0;
-  const cards = [
-    { ico: "brand", svg: I.target, n: ader + "%", label: "Aderência do edital", tip: "Percentual dos itens do edital que você atende." },
-    { ico: "", svg: I.layers, n: total, label: "Itens analisados", tip: "Itens do edital que já passaram por análise técnica." },
-    { ico: "ok", svg: I.check, n: atend, label: "Itens que atende", tip: "Itens em que você cumpre todas as exigências do edital." },
-    { ico: "bad", svg: I.cross, n: nao, label: "Itens que não atende", tip: "Itens em que há ao menos uma exigência não cumprida." },
-  ];
-  $("#stats").innerHTML = cards.map(c => `<div class="stat"><div class="stat-top"><div class="stat-ico ${c.ico}">${c.svg}</div><div class="stat-n">${c.n}</div></div><div class="stat-label">${c.label}<button class="stat-info" aria-label="${esc(c.tip)}" data-tip="${esc(c.tip)}">${ICO_INFO}</button></div></div>`).join("");
+  // Resumo executivo GERAL removido (aguardando feedback dos usuários; a regra de atende/não atende por item ficou sem conclusão).
+  // Os resumos DENTRO de cada card (produto/software) seguem ativos. #stats fica vazio e colapsa via .stats:empty.
+  $("#stats").innerHTML = "";
 }
 function renderGrid() {
   $("#crumbId").textContent = `Edital ${EDITAL.numero}`;

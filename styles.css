@@ -297,6 +297,7 @@ button.tag-item.diff-tag:hover { background: var(--brand-100); border-color: var
 
 /* ---------- Stat cards ---------- */
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.stats:empty { display: none; margin: 0; }
 .stat { border: 1px solid var(--border); border-radius: var(--r-box); padding: 14px; background: var(--card); min-height: 104px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
 .stat-top { display: flex; align-items: center; gap: 10px; }
 .stat-ico { width: 30px; height: 30px; border-radius: var(--r-field); display: grid; place-items: center; flex-shrink: 0; background: var(--muted); color: var(--muted-foreground); }
