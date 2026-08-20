@@ -278,7 +278,7 @@ function openTable(i) {
   }
   hideReprocessSonner();
 
-  let body = collapsiblesHTML(it), secs = "";
+  let body = itemResumoHTML(it) + collapsiblesHTML(it), secs = "";
   it.componentes.forEach((comp, ci) => {
     let hostHTML, editSec;
     if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; editSec = "produto"; }
@@ -670,6 +670,48 @@ function tagList(items, note) {
 }
 const addedNA = {}; // por item: specs "no edital não analisados" que o usuário adicionou à comparação
 const addedDiff = {}; // por item: specs "não exigidas" que o usuário trouxe como diferencial (opção B)
+/* Resumo executivo DENTRO do card: produto (3 tiles, por requisito do produto recomendado) e software (7 tiles, por requisito do checklist). */
+const RES_I = {
+  target: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="3"/><circle cx="8" cy="8" r="0.6" fill="currentColor"/></svg>`,
+  layers: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 2l6 3-6 3-6-3 6-3z"/><path d="M2 8l6 3 6-3"/></svg>`,
+  check: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`,
+  cross: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`,
+  help: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M6.5 6.4a1.6 1.6 0 1 1 2.2 1.5c-.5.2-.7.5-.7 1v.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11.6v.01" stroke-linecap="round"/></svg>`,
+};
+function resTile(cls, svg, n, label, tip) {
+  return `<div class="stat res-tile"><div class="stat-top"><div class="stat-ico ${cls}">${svg}</div><div class="stat-n">${n}</div></div><div class="stat-label">${esc(label)}<button class="stat-info" aria-label="${esc(tip)}" data-tip="${esc(tip)}">${ICO_INFO}</button></div></div>`;
+}
+function itemResumoHTML(it) {
+  const prod = it.componentes.find(c => c.mecanica === "produto");
+  if (prod) {
+    const specs = matrixOf(prod), scores = scoresFor(specs, prod.skus);
+    const chosenIdx = prefs.chosen[active];
+    const sc = (chosenIdx != null && scores.find(s => s.i === chosenIdx)) || rankFor(scores)[0];
+    const atendidos = sc.ok, analisados = sc.evaluable, nao = sc.evaluable - sc.ok;
+    return `<div class="item-resumo">
+      ${resTile("", RES_I.layers, analisados, "Itens analisados", "Requisitos deste item que já passaram por análise técnica.")}
+      ${resTile("ok", RES_I.check, atendidos, "Itens atendidos", "Requisitos que o produto recomendado atende.")}
+      ${resTile("bad", RES_I.cross, nao, "Itens não atendido", "Requisitos que o produto recomendado não atende.")}
+    </div>`;
+  }
+  const chk = it.componentes.find(c => c.mecanica === "checklist");
+  if (chk) {
+    const cl = chk.lista, c = { ok: 0, parcial: 0, parceiro: 0, no: 0, ne: 0 };
+    cl.forEach(r => { c[r.st] = (c[r.st] || 0) + 1; });
+    const evaluable = c.ok + c.parcial + c.parceiro + c.no;
+    const pct = evaluable ? Math.round((c.ok + c.parceiro) / evaluable * 100) : 0;
+    return `<div class="item-resumo sw">
+      ${resTile("brand", RES_I.target, pct + "%", "Percentual de aderência", "Percentual de requisitos atendidos (inclui os atendidos com parceiro).")}
+      ${resTile("", RES_I.layers, cl.length, "Total de requisitos", "Quantidade total de requisitos deste software.")}
+      ${resTile("ok", RES_I.check, c.ok, "Atende", "Requisitos que a sua solução atende integralmente.")}
+      ${resTile("warn", RES_I.check, c.parcial, "Atende parcialmente", "Requisitos atendidos apenas em parte.")}
+      ${resTile("warn", RES_I.check, c.parceiro, "Atende com parceiro", "Requisitos que você atende com apoio de um parceiro.")}
+      ${resTile("bad", RES_I.cross, c.no, "Não atende", "Requisitos que a sua solução não atende.")}
+      ${resTile("", RES_I.help, c.ne, "Falta analisar", "Requisitos que ainda não foram analisados.")}
+    </div>`;
+  }
+  return "";
+}
 /* "Descrição completa" (card v1): começa aberta; ao passar o mouse mostra um icon group (igual à célula);
    ao colapsar, o texto vira um preview truncado com reticência (quantidade máx. de caracteres a definir). */
 function descBlockHTML(it) {
