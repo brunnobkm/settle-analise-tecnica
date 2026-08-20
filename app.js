@@ -677,10 +677,13 @@ function resProdTiles(prod, caption) {
   // Em produto TODA especificação exigida é sempre analisada (decisão Brunno, ago/2026): não existe "falta analisar".
   // Total = especificações exigidas pelo edital = evaluable (Atende + Não atende). Não conta diferenciais nem "edital não exige".
   const atendidos = sc.ok, nao = sc.evaluable - sc.ok, total = sc.evaluable;
+  // Quantos SKUs do catálogo cumprem 100% das especificações (mede quantas opções o comprador tem). Unidade = produto, não especificação.
+  const skus100 = scores.filter(s => s.evaluable > 0 && s.pct === 100).length;
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo">
     ${resTile("", RES_I.layers, total, "Total de especificações", "Especificações que o edital exige para este item (não conta diferenciais nem o que o edital não exige).")}
-    ${resTile("ok", RES_I.check, atendidos, "Atende", "Especificações que o produto recomendado atende.")}
-    ${resTile("bad", RES_I.cross, nao, "Não atende", "Especificações que o produto recomendado não atende.")}
+    ${resTile("ok", RES_I.check, atendidos, "Especificações atendidas", "Especificações que o produto recomendado atende.")}
+    ${resTile("bad", RES_I.cross, nao, "Especificações não atendidas", "Especificações que o produto recomendado não atende.")}
+    ${resTile("brand", RES_I.target, skus100, "Produtos que atendem 100%", "Produtos (SKUs) do seu catálogo que cumprem todas as especificações exigidas pelo edital, de " + scores.length + " comparados.")}
   </div></div>`;
 }
 function resChkTiles(chk, caption) {
