@@ -674,18 +674,13 @@ function resProdTiles(prod, caption) {
   const specs = matrixOf(prod), scores = scoresFor(specs, prod.skus);
   const chosenIdx = prefs.chosen[active];
   const sc = (chosenIdx != null && scores.find(s => s.i === chosenIdx)) || rankFor(scores)[0];
-  // Total = especificações EXIGIDAS pelo edital = já analisadas (evaluable) + as que faltam analisar. Não conta diferenciais nem "edital não exige".
-  // Faltam analisar: as sem valor extraído na matriz (naoExtraido) + as da lista "no edital não analisados" (comp.naoAnalisadas), menos as que o usuário já trouxe pra comparação.
-  const naoExtr = specs.filter(s => s.naoExtraido && !s.exigNa && !s.diferencial).length;
-  const added = addedNA[active];
-  const naoAnal = (prod.naoAnalisadas || []).filter(n => !(added && added.has(n.req))).length;
-  const faltaAnalisar = naoExtr + naoAnal;
-  const atendidos = sc.ok, nao = sc.evaluable - sc.ok, total = sc.evaluable + faltaAnalisar;
+  // Em produto TODA especificação exigida é sempre analisada (decisão Brunno, ago/2026): não existe "falta analisar".
+  // Total = especificações exigidas pelo edital = evaluable (Atende + Não atende). Não conta diferenciais nem "edital não exige".
+  const atendidos = sc.ok, nao = sc.evaluable - sc.ok, total = sc.evaluable;
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo">
     ${resTile("", RES_I.layers, total, "Total de especificações", "Especificações que o edital exige para este item (não conta diferenciais nem o que o edital não exige).")}
     ${resTile("ok", RES_I.check, atendidos, "Atende", "Especificações que o produto recomendado atende.")}
     ${resTile("bad", RES_I.cross, nao, "Não atende", "Especificações que o produto recomendado não atende.")}
-    ${resTile("", RES_I.help, faltaAnalisar, "Falta analisar", "Especificações que o edital exige mas ainda não foram analisadas (falta o valor).")}
   </div></div>`;
 }
 function resChkTiles(chk, caption) {
