@@ -285,14 +285,19 @@ function openTable(i) {
     else { const idx = currentChecklists.length; currentChecklists.push(comp.lista); hostHTML = `<div class="mech-host" id="clHost-${idx}"></div>`; editSec = "cl:" + idx; }
     const cs = sum.comps[ci];
     // Produto: sem botão "Editar" (a célula "Valor requerido" já é editável inline). Software: "Revisar requisitos".
-    const editBtn = comp.mecanica === "produto" ? "" : `<button class="comp-edit" data-editsec="${editSec}">Revisar requisitos</button>`;
+    const isProd = comp.mecanica === "produto";
+    // Software: "Revisar requisitos" + "Concluir análise" como botões no header (resumo já mostra aderência e contagens).
+    const editBtn = isProd ? "" : `<button class="comp-edit" data-editsec="${editSec}">Revisar requisitos</button>`;
+    const concluirBtn = isProd ? "" : `<button class="comp-concluir" data-concluir>Concluir análise</button>`;
     const kebabBtn = `<button class="comp-kebab" data-kebab data-kebabmech="${comp.mecanica}" data-tip="Mais ações">${ICO_KEBAB}</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
-    const compStatus = comp.mecanica === "produto"
+    // Produto mantém resumo ("Produto recomendado") + badge Atende/Não atende. Software passa a mostrar isso nos tiles do resumo.
+    const compSum = isProd ? `<span class="comp-sum">${secSummary(cs)}</span>` : `<span class="comp-spacer"></span>`;
+    const compStatus = isProd
       ? `<span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span>`
-      : `<span class="comp-status badge ${TIER(cs.pct)}" data-tip="Aderência: ${cs.ok_n} de ${cs.total} exigências atendidas">Aderência ${cs.pct}%</span>`;
-    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}<span class="comp-sum">${secSummary(cs)}</span>${compStatus}${editBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+      : "";
+    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}${compSum}${compStatus}${editBtn}${concluirBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
@@ -681,36 +686,41 @@ const RES_I = {
 function resTile(cls, svg, n, label, tip) {
   return `<div class="stat res-tile"><div class="stat-top"><div class="stat-ico ${cls}">${svg}</div><div class="stat-n">${n}</div></div><div class="stat-label">${esc(label)}<button class="stat-info" aria-label="${esc(tip)}" data-tip="${esc(tip)}">${ICO_INFO}</button></div></div>`;
 }
+function resProdTiles(prod, caption) {
+  const specs = matrixOf(prod), scores = scoresFor(specs, prod.skus);
+  const chosenIdx = prefs.chosen[active];
+  const sc = (chosenIdx != null && scores.find(s => s.i === chosenIdx)) || rankFor(scores)[0];
+  const atendidos = sc.ok, analisados = sc.evaluable, nao = sc.evaluable - sc.ok;
+  return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo">
+    ${resTile("", RES_I.layers, analisados, "Itens analisados", "Requisitos deste item que já passaram por análise técnica.")}
+    ${resTile("ok", RES_I.check, atendidos, "Itens atendidos", "Requisitos que o produto recomendado atende.")}
+    ${resTile("bad", RES_I.cross, nao, "Itens não atendido", "Requisitos que o produto recomendado não atende.")}
+  </div></div>`;
+}
+function resChkTiles(chk, caption) {
+  const cl = chk.lista, c = { ok: 0, parcial: 0, parceiro: 0, no: 0, ne: 0 };
+  cl.forEach(r => { c[r.st] = (c[r.st] || 0) + 1; });
+  const evaluable = c.ok + c.parcial + c.parceiro + c.no;
+  const pct = evaluable ? Math.round((c.ok + c.parceiro) / evaluable * 100) : 0;
+  return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo sw">
+    ${resTile("brand", RES_I.target, pct + "%", "Percentual de aderência", "Percentual de requisitos atendidos (inclui os atendidos com parceiro).")}
+    ${resTile("", RES_I.layers, cl.length, "Total de requisitos", "Quantidade total de requisitos deste software.")}
+    ${resTile("ok", RES_I.check, c.ok, "Atende", "Requisitos que a sua solução atende integralmente.")}
+    ${resTile("warn", RES_I.check, c.parcial, "Atende parcialmente", "Requisitos atendidos apenas em parte.")}
+    ${resTile("warn", RES_I.check, c.parceiro, "Atende com parceiro", "Requisitos que você atende com apoio de um parceiro.")}
+    ${resTile("bad", RES_I.cross, c.no, "Não atende", "Requisitos que a sua solução não atende.")}
+    ${resTile("", RES_I.help, c.ne, "Falta analisar", "Requisitos que ainda não foram analisados.")}
+  </div></div>`;
+}
+// Item misto (produto + software): mostra os dois resumos empilhados, cada um com legenda da seção.
 function itemResumoHTML(it) {
-  const prod = it.componentes.find(c => c.mecanica === "produto");
-  if (prod) {
-    const specs = matrixOf(prod), scores = scoresFor(specs, prod.skus);
-    const chosenIdx = prefs.chosen[active];
-    const sc = (chosenIdx != null && scores.find(s => s.i === chosenIdx)) || rankFor(scores)[0];
-    const atendidos = sc.ok, analisados = sc.evaluable, nao = sc.evaluable - sc.ok;
-    return `<div class="item-resumo">
-      ${resTile("", RES_I.layers, analisados, "Itens analisados", "Requisitos deste item que já passaram por análise técnica.")}
-      ${resTile("ok", RES_I.check, atendidos, "Itens atendidos", "Requisitos que o produto recomendado atende.")}
-      ${resTile("bad", RES_I.cross, nao, "Itens não atendido", "Requisitos que o produto recomendado não atende.")}
-    </div>`;
-  }
-  const chk = it.componentes.find(c => c.mecanica === "checklist");
-  if (chk) {
-    const cl = chk.lista, c = { ok: 0, parcial: 0, parceiro: 0, no: 0, ne: 0 };
-    cl.forEach(r => { c[r.st] = (c[r.st] || 0) + 1; });
-    const evaluable = c.ok + c.parcial + c.parceiro + c.no;
-    const pct = evaluable ? Math.round((c.ok + c.parceiro) / evaluable * 100) : 0;
-    return `<div class="item-resumo sw">
-      ${resTile("brand", RES_I.target, pct + "%", "Percentual de aderência", "Percentual de requisitos atendidos (inclui os atendidos com parceiro).")}
-      ${resTile("", RES_I.layers, cl.length, "Total de requisitos", "Quantidade total de requisitos deste software.")}
-      ${resTile("ok", RES_I.check, c.ok, "Atende", "Requisitos que a sua solução atende integralmente.")}
-      ${resTile("warn", RES_I.check, c.parcial, "Atende parcialmente", "Requisitos atendidos apenas em parte.")}
-      ${resTile("warn", RES_I.check, c.parceiro, "Atende com parceiro", "Requisitos que você atende com apoio de um parceiro.")}
-      ${resTile("bad", RES_I.cross, c.no, "Não atende", "Requisitos que a sua solução não atende.")}
-      ${resTile("", RES_I.help, c.ne, "Falta analisar", "Requisitos que ainda não foram analisados.")}
-    </div>`;
-  }
-  return "";
+  const prods = it.componentes.filter(c => c.mecanica === "produto");
+  const chks = it.componentes.filter(c => c.mecanica === "checklist");
+  const misto = prods.length && chks.length;
+  let html = "";
+  prods.forEach(p => { html += resProdTiles(p, misto ? p.rotulo : ""); });
+  chks.forEach(c => { html += resChkTiles(c, misto ? c.rotulo : ""); });
+  return html;
 }
 /* "Descrição completa" (card v1): começa aberta; ao passar o mouse mostra um icon group (igual à célula);
    ao colapsar, o texto vira um preview truncado com reticência (quantidade máx. de caracteres a definir). */
@@ -959,10 +969,8 @@ function closeStatusMenu() { const m = $("#statusMenu"); if (m) m.hidden = true;
 
 function openKebabMenu(anchor) {
   const menu = $("#kebabMenu"); if (!menu) return;
-  // "Concluir análise" só no software (em produto não existe, Brunno)
-  const items = anchor.dataset.kebabmech === "produto"
-    ? [["importar", "Importar"]]
-    : [["concluir", "Concluir análise"], ["importar", "Importar"]];
+  // "Concluir análise" agora é botão no header do software; kebab fica só com "Importar".
+  const items = [["importar", "Importar"]];
   menu.innerHTML = items.map(([k, l]) => `<button class="km-item" data-kbact="${k}">${l}</button>`).join("");
   menu.hidden = false;
   const r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
@@ -1127,6 +1135,7 @@ function wire() {
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
     if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
+    if (e.target.closest("[data-concluir]")) { e.preventDefault(); toast("Concluir análise desta seção"); return; }
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const vs = e.target.closest("[data-vstart]"); if (vs) { startInlineEdit(+vs.dataset.vstart); return; }
     const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }
