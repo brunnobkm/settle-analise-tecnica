@@ -692,9 +692,9 @@ function resProdTiles(prod, caption) {
   const sc = (chosenIdx != null && scores.find(s => s.i === chosenIdx)) || rankFor(scores)[0];
   const atendidos = sc.ok, analisados = sc.evaluable, nao = sc.evaluable - sc.ok;
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo">
-    ${resTile("", RES_I.layers, analisados, "Itens analisados", "Requisitos deste item que já passaram por análise técnica.")}
-    ${resTile("ok", RES_I.check, atendidos, "Itens atendidos", "Requisitos que o produto recomendado atende.")}
-    ${resTile("bad", RES_I.cross, nao, "Itens não atendido", "Requisitos que o produto recomendado não atende.")}
+    ${resTile("", RES_I.layers, analisados, "Especificações analisadas", "Especificações do edital deste item que já foram analisadas (têm valor exigido definido).")}
+    ${resTile("ok", RES_I.check, atendidos, "Especificações atendidas", "Especificações que o produto recomendado atende.")}
+    ${resTile("bad", RES_I.cross, nao, "Especificações não atendidas", "Especificações que o produto recomendado não atende.")}
   </div></div>`;
 }
 function resChkTiles(chk, caption) {
