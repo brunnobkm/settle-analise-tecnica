@@ -749,9 +749,9 @@ function collapsiblesHTML(it) {
     .map(t => typeof t === "string" ? { req: t } : t)
     .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
   if (naoExig.length) {
-    const note = "Especificações que o seu produto oferece e o edital não exige. Clique no + para comparar os produtos neste diferencial (não conta no atende).";
+    const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na tabela e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
     const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
-    html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
+    html += collapsible("Especificações cadastradas no catálogo e não exigidas pelo edital", tags, naoExig.length, true);
   }
   // (2) no edital não analisados: o edital exige, mas ainda não foi analisado. Só referência (badges), SEM "+" (decisão da reunião ~8:01).
   const na = prodComps.flatMap(c => c.naoAnalisadas || []);
