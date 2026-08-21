@@ -126,6 +126,16 @@ const SOFTWARE_OK = [
   cl("Aplicativo mobile", "Sim", "Mobile", "ok", "alta", "App iOS/Android incluído.", 25, "<mark>Aplicativo mobile</mark> para visualização."),
 ];
 
+/* checklist de SOFTWARE com análise NÃO FINALIZADA: 3 avaliados + 2 ainda "não avaliado" (ne).
+   Demonstra o estado "em análise": em vez de aderência, o card mostra o quanto já foi analisado (60%). */
+const SOFTWARE_PARCIAL = [
+  cl("Gestão de vídeo (VMS) multiusuário", "Sim", "VMS", "ok", "alta", "Plataforma VMS com perfis e múltiplos usuários simultâneos.", 23, "<mark>Software de gestão de vídeo</mark> multiusuário."),
+  cl("Aplicativo mobile gratuito", "Sim", "Mobile", "ok", "alta", "App iOS/Android gratuito incluído.", 25, "<mark>Aplicativo mobile gratuito</mark> para visualização."),
+  cl("Reconhecimento facial em tempo real", "Sim", "Analítico", "no", "media", "Módulo facial disponível apenas na versão enterprise, não incluída na proposta.", 24, "<mark>Reconhecimento facial em tempo real</mark>."),
+  cl("Integração com cerco virtual", "Sim", "Integração", "ne", "", "", 25, "Integração com <mark>cerco virtual fixo e móvel</mark>."),
+  cl("Armazenamento em nuvem", "Opcional", "Storage", "ne", "", "", 26, "<mark>Armazenamento em nuvem</mark> opcional."),
+];
+
 /* Requisitos que a IA identificou no edital, mas não conseguiu extrair o VALOR EXIGIDO.
    O valor de cada SKU (catálogo do cliente) nós temos; o que falta é a exigência do edital
    para fazer o match. vals segue a ordem de SKUS. */
@@ -216,7 +226,9 @@ const CATALOGO_NAO_EDITAL_FW = ["Fonte redundante (RPS)", "Módulo Wi-Fi", "Fort
    PROD_OK = há SKU que atende 100% (override em Detecção facial no SKU0). PROD_FAIL = nenhum SKU 100% (melhor = 93%).
    SOFTWARE_OK = checklist tudo atende. SOFTWARE_VMS = checklist com exigência não atendida. */
 const PROD_CAM = ov => ({ mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: ov ? [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] : [] });
-const CHK = (rotulo, ok) => ({ mecanica: "checklist", rotulo, lista: (ok ? SOFTWARE_OK : SOFTWARE_VMS).map(r => ({ ...r })) });
+const SOFTWARE_LISTS = { ok: SOFTWARE_OK, vms: SOFTWARE_VMS, parcial: SOFTWARE_PARCIAL };
+// variante: "ok" (tudo atende) | "vms" (completo, com um não atende) | "parcial" (análise não finalizada). Aceita boolean legado (true=ok, false=vms).
+const CHK = (rotulo, variante) => { const key = variante === true ? "ok" : variante === false ? "vms" : variante; return { mecanica: "checklist", rotulo, lista: (SOFTWARE_LISTS[key] || SOFTWARE_OK).map(r => ({ ...r })) }; };
 
 const ITEMS = [
   // 1) SÓ PRODUTO · NÃO ATENDE (nenhum SKU atende 100%)
@@ -255,7 +267,7 @@ const ITEMS = [
     nome: "Licença de software de gestão de vídeo (VMS) com leitura de placas (LPR) e cerco virtual.",
     quantidade: "1", precoUnit: 145000, unidadeMedida: "licença",
     resumoTR: "Licenciamento do VMS. Confirme cada funcionalidade exigida; há exigências não atendidas.",
-    componentes: [ CHK("Software de gestão de vídeo (VMS)", false) ] },
+    componentes: [ CHK("Software de gestão de vídeo (VMS)", "parcial") ] },
 
   // 6) MISTO · ATENDE (produto 100% + software atende)
   { titulo: "Câmeras speed dome + licença VMS", numero: "6",

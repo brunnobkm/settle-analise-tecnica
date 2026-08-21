@@ -95,7 +95,9 @@ const isConcordant = spec => new Set(spec.cells.filter(c => c.st === "ok" || c.s
 function checklistSummary(cl) {
   const ev = cl.filter(r => ["ok", "no", "parcial", "parceiro"].includes(r.st));
   const ok = cl.filter(r => r.st === "ok" || r.st === "parceiro").length, no = cl.filter(r => r.st === "no").length;
-  return { ok, total: ev.length, no, status: no === 0 ? "ok" : "no", pct: ev.length ? Math.round(ok / ev.length * 100) : 0 };
+  const ne = cl.filter(r => r.st === "ne").length, all = cl.length;
+  // done = análise finalizada (nada mais "não avaliado"). Enquanto não, mostramos o progresso, não a aderência.
+  return { ok, total: ev.length, no, ne, all, done: ne === 0, analisadoPct: all ? Math.round(ev.length / all * 100) : 0, status: no === 0 ? "ok" : "no", pct: ev.length ? Math.round(ok / ev.length * 100) : 0 };
 }
 const CL_ST = { ok: { cls: "ok", label: "Atende", ico: ICO_OK }, no: { cls: "bad", label: "Não atende", ico: ICO_NO }, parcial: { cls: "warn", label: "Atende parcialmente", ico: "" }, parceiro: { cls: "warn", label: "Atende com parceiro", ico: "" }, ne: { cls: "soft", label: "Não avaliado", ico: "" } };
 // software (checklist): status por faixa de aderência, <50% vermelho, >80% verde, 50-80% neutro
@@ -107,7 +109,7 @@ function itemSummary(i) {
   const it = ITEMS[i];
   const comps = it.componentes.map(comp => {
     if (comp.mecanica === "produto") { const ps = prodSummary(comp); return { mecanica: "produto", rotulo: comp.rotulo, ok: comp.nenhumProduto ? false : ps.ok, best: ps.best, comp }; }
-    const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, ok: s.status === "ok", ok_n: s.ok, total: s.total, pct: s.pct, comp };
+    const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, ok: s.status === "ok", ok_n: s.ok, total: s.total, pct: s.pct, ne: s.ne, done: s.done, analisadoPct: s.analisadoPct, comp };
   });
   return { comps, multi: comps.length > 1, status: comps.every(c => c.ok) ? "ok" : "no" };
 }
@@ -190,10 +192,13 @@ function renderGrid() {
     const segLabel = tipos.length > 1 ? `Misto (${tipos.map(t => TIPO_LBL[t]).join(" + ")})` : TIPO_LBL[tipos[0]];
     const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
     const segBadge = `<span class="badge seg">${esc(segLabel)}</span>`;
-    // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor
+    // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor.
+    // Enquanto a análise não terminou (há requisitos não avaliados), mostra o progresso em vez da aderência.
     const swComp = it.componentes.every(c => c.mecanica === "checklist") ? sum.comps.find(c => c.mecanica === "checklist") : null;
     const statusBadge = swComp
-      ? `<span class="badge ${TIER(swComp.pct)}">Aderência ${swComp.pct}%</span>`
+      ? (swComp.done
+        ? `<span class="badge ${TIER(swComp.pct)}">Aderência ${swComp.pct}%</span>`
+        : `<span class="badge mid" data-tip="${esc(swComp.analisadoPct + "% dos requisitos já foram analisados. A aderência aparece quando a análise for concluída.")}">Em análise · ${swComp.analisadoPct}%</span>`)
       : (sum.status === "ok" ? `<span class="badge ok">Atende</span>` : `<span class="badge bad">Não atende</span>`);
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     if (SEM_ARQUIVO) {
@@ -262,7 +267,7 @@ function openTable(i) {
   }
   hideReprocessSonner();
 
-  let body = itemResumoHTML(it) + collapsiblesHTML(it), secs = "";
+  let body = `<div id="itemResumo">${itemResumoHTML(it)}</div>` + collapsiblesHTML(it), secs = "";
   it.componentes.forEach((comp, ci) => {
     let hostHTML, editSec;
     if (comp.mecanica === "produto") { hostHTML = `<div class="mech-host" id="matrixHost"></div>`; editSec = "produto"; }
@@ -525,11 +530,13 @@ function saveEditDrawer() {
     const l = currentChecklists[editTarget.sec];
     $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(el => { const ri = +el.dataset.eri; const v = String(el.value || "").trim(); if (l[ri]) l[ri].exig = v || l[ri].exig; });
     $("#editBody").querySelectorAll(".ed-status[data-eri]").forEach(el => { const ri = +el.dataset.eri; if (l[ri]) l[ri].st = el.value; });
-    renderChecklist($("#clHost-" + editTarget.sec), l, editTarget.sec); refreshClSecSummary(editTarget.sec);
+    renderChecklist($("#clHost-" + editTarget.sec), l, editTarget.sec); refreshClSecSummary(editTarget.sec); refreshItemResumo();
   }
   renderItemSummary(); closeEditDrawer();
   toast("Análise reprocessada com as novas informações");
 }
+// re-renderiza o resumo executivo do topo (usa dados atuais): usado quando o status de um requisito muda a análise
+function refreshItemResumo() { const el = $("#itemResumo"); if (el && active != null) el.innerHTML = itemResumoHTML(ITEMS[active]); }
 function refreshClSecSummary(sec) {
   const host = $("#clHost-" + sec); if (!host) return;
   const details = host.closest(".comp-acc"); if (!details) return;
@@ -691,8 +698,13 @@ function resChkTiles(chk, caption) {
   cl.forEach(r => { c[r.st] = (c[r.st] || 0) + 1; });
   const evaluable = c.ok + c.parcial + c.parceiro + c.no;
   const pct = evaluable ? Math.round((c.ok + c.parceiro) / evaluable * 100) : 0;
+  // Análise não finalizada (há requisitos não avaliados): o 1º tile mostra o progresso, não a aderência (que só é confiável no fim).
+  const done = c.ne === 0, analisadoPct = cl.length ? Math.round(evaluable / cl.length * 100) : 0;
+  const headTile = done
+    ? resTile("brand", RES_I.target, pct + "%", "Percentual de aderência", "Percentual de requisitos atendidos (inclui os atendidos com parceiro).")
+    : resTile("", ICO_CLOCK, analisadoPct + "%", "Requisitos analisados", evaluable + " de " + cl.length + " requisitos já foram analisados. A aderência aparece quando a análise for concluída.");
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo sw">
-    ${resTile("brand", RES_I.target, pct + "%", "Percentual de aderência", "Percentual de requisitos atendidos (inclui os atendidos com parceiro).")}
+    ${headTile}
     ${resTile("", RES_I.layers, cl.length, "Total de requisitos", "Quantidade total de requisitos deste software.")}
     ${resTile("ok", RES_I.check, c.ok, "Atende", "Requisitos que a sua solução atende integralmente.")}
     ${resTile("warn", RES_I.check, c.parcial, "Atende parcialmente", "Requisitos atendidos apenas em parte.")}
@@ -1206,6 +1218,7 @@ function wire() {
     const { sec, ri } = statusMenuTarget;
     currentChecklists[sec][ri].st = b.dataset.stval;
     renderChecklist($("#clHost-" + sec), currentChecklists[sec], sec);
+    refreshItemResumo();
     closeStatusMenu();
   });
   document.addEventListener("click", e => {
