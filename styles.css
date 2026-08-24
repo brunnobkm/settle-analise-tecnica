@@ -366,6 +366,8 @@ button.tag-item.diff-tag:hover { background: var(--brand-100); border-color: var
 .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: var(--r-full); white-space: nowrap; }
 .badge svg { width: 12px; height: 12px; }
 .badge.soft { background: var(--muted); color: var(--secondary-foreground); }
+/* item não processado: texto/ícone sólidos #D97706, fundo na mesma cor a 10% */
+.badge.naoproc { background: rgba(217, 119, 6, .1); color: #D97706; }
 .badge.ok { background: var(--success-bg); color: var(--success); }
 .badge.warn { background: var(--warning-bg); color: var(--warning); }
 .badge.bad { background: var(--destructive-bg); color: var(--destructive); }

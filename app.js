@@ -207,7 +207,7 @@ function renderGrid() {
     const swComp = it.componentes.every(c => c.mecanica === "checklist") ? sum.comps.find(c => c.mecanica === "checklist") : null;
     // Não processado (análise vazia): nunca marca "atende"; mostra estado próprio.
     const statusBadge = sum.empty
-      ? `<span class="badge soft" data-tip="A extração automática não encontrou nenhuma especificação para este item. Não é marcado como 'atende'. Faça a extração manual do edital.">${ICO_ALERT}Não processado</span>`
+      ? `<span class="badge naoproc" data-tip="A extração automática não encontrou nenhuma especificação para este item. Faça a extração manual do edital.">${ICO_ALERT}Não processado</span>`
       : swComp
       ? (swComp.done
         ? `<span class="badge ${TIER(swComp.pct)}">Aderência ${swComp.pct}%</span>`
