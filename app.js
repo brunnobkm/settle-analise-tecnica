@@ -561,8 +561,7 @@ function noProdHTML(comp) {
   return `<div class="no-prod">
       <div class="no-prod-ico">${ICO_ALERT}</div>
       <div class="no-prod-title">Nenhum produto se aplica</div>
-      <div class="no-prod-sub">Os produtos do seu catálogo não correspondem à categoria <b>"${esc(comp.rotulo)}"</b>. Verifique se a categoria está correta (use o seletor no topo) ou adicione um produto manualmente.</div>
-      <div class="no-prod-actions"><button class="btn primary" data-addmanual>Adicionar produto manualmente</button></div>
+      <div class="no-prod-sub">Os produtos do seu catálogo não correspondem à categoria <b>"${esc(comp.rotulo)}"</b>. Verifique se a categoria está correta (use o seletor no topo).</div>
     </div>`;
 }
 function pendenteHTML() {
@@ -1054,7 +1053,7 @@ function itemSkeletonHTML() {
 function showReprocessSonner(val) {
   let s = document.getElementById("reprocessSonner");
   if (!s) { s = document.createElement("div"); s.id = "reprocessSonner"; s.className = "reprocess-sonner"; document.body.appendChild(s); }
-  s.innerHTML = `<div class="cat-spin"></div><div class="rs-txt"><b>Reprocessando os requisitos para "${esc(val)}"</b><span>Este processo pode demorar um pouco. Você pode sair desta tela. Assim que estiver pronto, avisaremos por e-mail <i>(o canal ainda precisa ser definido: podemos retomar a task de alertas na plataforma, feita há alguns meses)</i>.</span></div>`;
+  s.innerHTML = `<div class="cat-spin"></div><div class="rs-txt"><b>Reprocessando os requisitos para "${esc(val)}"</b><span>Este processo pode demorar um pouco. Você pode sair desta tela. Assim que estiver pronto, avisaremos por e-mail.</span></div>`;
   s.hidden = false;
 }
 function hideReprocessSonner() { const s = document.getElementById("reprocessSonner"); if (s) s.hidden = true; }
@@ -1184,7 +1183,6 @@ function wire() {
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
     const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
-    if (e.target.closest("[data-addmanual]")) { notPrototyped(); return; }
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
     if (e.target.closest("[data-descextrair]")) { notPrototyped(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
