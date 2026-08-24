@@ -576,6 +576,9 @@ function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
   if (activeComp && activeComp.nenhumProduto) { host.innerHTML = noProdHTML(activeComp); sizeMatrixHeight(); return; }
   const chosenIdx = prefs.chosen[active];
+  // Preço/Estoque: reserva o espaço só quando ALGUM SKU tem a info (para alinhar as alturas). Se NENHUM tiver, colapsa (não reserva).
+  const anyEstoque = (MX_SKUS || []).some(s => s && s.estoque != null);
+  const anyPreco = (MX_SKUS || []).some(s => s && s.preco != null);
   const cols = buildCols(ORDER), totalW = cols.reduce((s, c) => s + c.w, 0);
   const colgroup = `<colgroup>${cols.map(c => `<col data-k="${c.key}" style="width:${c.w}px">`).join("")}</colgroup>`;
   let head = "";
@@ -601,16 +604,17 @@ function renderMatrix() {
       const sourceIcon = hasLink
         ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip}, clique para abrir">${srcIco}</button>`
         : `<span class="sku-srcico nolink" data-tip="${srcTip}, sem link para abrir (não temos o datasheet deste produto)">${srcIco}</span>`;
-      // preço: quando não informado, NÃO mostra placeholder (some a informação)
-      const precoLine = sku.preco != null ? `<div class="sku-preco">${esc(fmtBRL(sku.preco))}</div>` : "";
-      const fitCls = sc.pct === 100 ? "full" : sc.pct >= 50 ? "mid" : "low";
+      // preço: quando não informado, reserva o espaço se ALGUM SKU tiver preço (alinhar alturas); se nenhum tiver, colapsa
+      const precoLine = sku.preco != null ? `<div class="sku-preco">${esc(fmtBRL(sku.preco))}</div>` : (anyPreco ? `<div class="sku-preco">&nbsp;</div>` : "");
+      // barra: cinza (0%, track) -> amarelo de 1% a 99% -> verde em 100%
+      const fitCls = sc.pct >= 100 ? "full" : "mid";
       // ícone da FONTE à esquerda do nome do produto/marca; estoque abaixo (some quando não informado)
       head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
         <div class="sku-idrow">${sourceIcon}<div class="sku-id"><div class="sku-model" data-full="${esc(sku.model)}">${esc(sku.model)}</div><div class="sku-brand" data-full="${esc(sku.brand)}">${esc(sku.brand)}</div></div></div>
         <div class="sku-fit"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}</span></div>
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
         ${precoLine}
-        <div class="sku-src">${estoqueBadge}</div>
+        ${anyEstoque ? `<div class="sku-src">${estoqueBadge}</div>` : ""}
         <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
   });

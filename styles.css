@@ -430,9 +430,10 @@ th.col-sku { padding: 10px 14px; min-width: 172px; background: #FFF; }
 th.col-sku.best { background: var(--success-bg); }
 .sku-rank { font-size: 11px; font-weight: 700; color: #A3A3A3; letter-spacing: .3px; min-height: 22px; }
 /* proposta leve: % herói, fonte/preço/estoque sem caixa */
-.sku-fit { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; }
-.sku-fit .score-pct { font-size: 18px; font-weight: 700; line-height: 1; }
-.sku-fit .score-frac { font-size: 11.5px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.sku-fit { display: flex; align-items: baseline; gap: 6px; margin-top: 10px; }
+/* percentual e x/x com o mesmo peso/tamanho de fonte */
+.sku-fit .score-pct { font-size: 13px; font-weight: 600; line-height: 1; }
+.sku-fit .score-frac { font-size: 13px; font-weight: 600; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .sku-src-lite { margin-top: 10px; }
 .sku-metaline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; }
 .sku-metaline .sku-preco { margin-top: 0; }
