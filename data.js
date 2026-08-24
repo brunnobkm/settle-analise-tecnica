@@ -222,7 +222,7 @@ const CATALOGO_NAO_EDITAL_FW = ["Fonte redundante (RPS)", "Módulo Wi-Fi", "Fort
    Um item da vida real é quase sempre uma composição (ex.: caixa + licença + garantia).
    titulo = "o que é o item" em linguagem clara; nome = descrição completa.
    ============================================================ */
-/* CENÁRIOS DE CARD (para design): um item por estado possível. Só Produto e Software (Serviço oculto por agora).
+/* CENÁRIOS DE CARD (para design): um item por estado possível. Produto, Software e Serviço.
    PROD_OK = há SKU que atende 100% (override em Detecção facial no SKU0). PROD_FAIL = nenhum SKU 100% (melhor = 93%).
    SOFTWARE_OK = checklist tudo atende. SOFTWARE_VMS = checklist com exigência não atendida. */
 const PROD_CAM = ov => ({ mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: REQS, naoAnalisadas: NAO_ANALISADAS, catalogoNaoEdital: CATALOGO_NAO_EDITAL, overrides: ov ? [{ ri: 8, ci: 0, st: "ok", v: "Sim", c: "alta" }] : [] });
@@ -269,9 +269,17 @@ const ITEMS = [
     resumoTR: "Licenciamento do VMS. Confirme cada funcionalidade exigida; há exigências não atendidas.",
     componentes: [ CHK("Software de gestão de vídeo (VMS)", "parcial") ] },
 
-  // 6) NÃO PROCESSADO (produto): a extração automática não encontrou nenhuma especificação. Não pode marcar "atende".
+  // 6) SÓ SERVIÇO · ATENDE (mecânica checklist aplicada a um serviço: instalação, rede, integração, operação, equipe, garantia)
+  { titulo: "Instalação e configuração do sistema de CFTV", numero: "6", tipo: "Serviço de instalação",
+    nome: "Serviço de instalação, configuração, integração e operação assistida do sistema de videomonitoramento.",
+    quantidade: "1", precoUnit: 320000, unidadeMedida: "serviço",
+    resumoTR: "Contratação do serviço de instalação e configuração. Confirme se a sua empresa atende a cada exigência do Termo de Referência.",
+    descricao: "Prestação dos serviços de instalação física dos equipamentos, lançamento de infraestrutura de rede, configuração e integração ao software de gestão de vídeo (VMS), operação assistida, disponibilização de equipe técnica certificada e garantia com manutenção corretiva do sistema de videomonitoramento, conforme especificações detalhadas no Termo de Referência (Anexo I) e demais condições estabelecidas no edital.",
+    componentes: [ { mecanica: "checklist", rotulo: "Serviço de instalação e configuração", lista: SERVICO_INSTALL.map(r => ({ ...r })) } ] },
+
+  // 7) NÃO PROCESSADO (produto): a extração automática não encontrou nenhuma especificação. Não pode marcar "atende".
   //    Resolução (reunião Alice 24/08): extração MANUAL do edital (produto). A extração popula as especificações.
-  { titulo: "Câmeras de monitoramento (lote)", numero: "6", tipo: "Câmera de segurança",
+  { titulo: "Câmeras de monitoramento (lote)", numero: "7", tipo: "Câmera de segurança",
     nome: "Fornecimento de câmeras de monitoramento para o município, conforme Termo de Referência.",
     quantidade: "40", precoUnit: 2100, unidadeMedida: "unidade",
     resumoTR: "Item cuja extração automática não encontrou especificações (não processado).",

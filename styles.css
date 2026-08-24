@@ -202,7 +202,7 @@ button { font-family: inherit; cursor: pointer; }
 /* badges de tipo do card: cor do texto = cor cheia, fundo = mesma cor a 10% */
 .badge.seg.seg-prod { background: rgba(120, 59, 84, .1); color: #783B54; }
 .badge.seg.seg-sw { background: rgba(69, 121, 166, .1); color: #4579A6; }
-.badge.seg.seg-serv { background: var(--muted); color: var(--secondary-foreground); }
+.badge.seg.seg-serv { background: rgba(107, 91, 149, .1); color: #6B5B95; }
 .ic-meta { font-size: 13px; }
 .ic-meta b { font-weight: 600; }
 .ic-vals { font-size: 12.5px; color: var(--foreground); margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border); }
