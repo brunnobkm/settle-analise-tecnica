@@ -226,10 +226,10 @@
     <p>Quando a análise de um item volta <b>sem nenhum requisito ou especificação</b> identificado (a IA não extraiu nada), o item <b>NÃO pode ser marcado como "atende"</b> (o padrão errado seria dizer "atende" por ausência de falhas).</p>
     <ul>
       <li><b>Card</b>: badge neutra <b>"Análise vazia"</b> (não Atende, não Aderência).</li>
-      <li><b>Sheet</b>: em vez da tabela/resumo, um estado vazio: "A análise deste item voltou sem nenhum requisito ou especificação identificado. Enquanto estiver vazia, o item não é marcado como 'atende'. Verifique o edital ou reprocesse a análise."</li>
+      <li><b>Sheet</b>: em vez da tabela/resumo, um estado vazio explicando a situação, com o botão <b>"Reprocessar análise"</b>.</li>
       <li>Detecção: produto sem especificações reais na matriz, ou software com a lista de requisitos vazia.</li>
     </ul>
-    <p class="note">Em aberto: se o estado vazio deve trazer uma ação direta (ex.: botão "Reprocessar análise") ou apenas orientar. Hoje só orienta.</p>
+    <p><b>Ação recomendada</b>: <b>Reprocessar análise</b> — análise vazia costuma ser uma falha de processamento (a IA não extraiu), então rodar de novo é a recuperação natural. Escalar (falar com especialista) só faz sentido se continuar vazio depois do reprocess.</p>
   </div>
 </body>
 </html>
