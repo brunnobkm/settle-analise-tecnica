@@ -770,13 +770,15 @@ function editRefCards(it) {
   const prodComps = it.componentes.filter(c => c.mecanica === "produto");
   const full = it.descricao || `${it.nome} ${it.resumoTR}`;
   let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(full)}</p>`, null, true);
+  // "não exigidas": com o "+" para adicionar à comparação (mesmo comportamento da tela de leitura); some as já adicionadas
+  const dset = addedDiff[active] || new Set();
   const seenD = new Set();
   const naoExig = prodComps.flatMap(c => c.catalogoNaoEdital || [])
     .map(t => typeof t === "string" ? { req: t } : t)
-    .filter(d => !seenD.has(d.req) && seenD.add(d.req));
+    .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
   if (naoExig.length) {
-    const note = "Especificações que estão cadastradas no catálogo e o edital não exige.";
-    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
+    const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na tabela e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
+    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
     html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
   }
   const na = prodComps.flatMap(c => c.naoAnalisadas || []);
@@ -1099,6 +1101,8 @@ function wire() {
   $("#editOverlay").onclick = cancelEditDrawer;
   $("#editSave").onclick = saveEditDrawer;
   $("#editBody").addEventListener("click", e => {
+    // "+" numa spec não exigida: adiciona à comparação (como na leitura) e re-renderiza o drawer
+    const adf = e.target.closest("[data-adddiff]"); if (adf) { addDiferencial(adf.dataset.adddiff); renderEditDrawer(); return; }
     if (e.target.closest("#editAddReq")) { openAddModal(); return; }
     if (e.target.closest("#editAddCl")) { const sec = editTarget.sec; currentChecklists[sec].push({ req: "Novo requisito", exig: "", modulo: "—", st: "ne", c: null, just: "—", origem: { doc: "Inserido manualmente", pag: "—" } }); renderEditDrawer(); return; }
     const more = e.target.closest("#edMore");
