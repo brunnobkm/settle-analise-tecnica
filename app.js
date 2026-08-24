@@ -498,7 +498,8 @@ function renderEditDrawer() {
         : `<input class="ed-input" data-eri="${ri}" value="${full}">`;
       return `<div class="ed-field"><label>${esc(spec.req)}</label>${control}</div>`;
     }).join("");
-    addBtn = `<button class="ed-add" id="editAddReq">${ICO_PLUS} Adicionar requisito</button>`;
+    // Sem "Adicionar requisito" em produto: o card "Especificações não exigidas pelo edital" (com o +) já cumpre esse papel.
+    addBtn = "";
   } else {
     scopeLine = `<div class="ed-scope">Seção: <b>${esc(editSecLabel())}</b></div>`;
     fields = currentChecklists[editTarget.sec].map((r, ri) => `<div class="ed-field">
@@ -514,7 +515,6 @@ function renderEditDrawer() {
     ? editRefCards(it)
     : (temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.descricao || it.nome)}</p>`, null, true) : "");
   $("#editBody").innerHTML = `
-    ${scopeLine}
     <div class="ed-hintbox">${hint}</div>
     ${refCards}
     <div class="ed-section-label">${sectionLabel}</div>
@@ -754,7 +754,7 @@ function collapsiblesHTML(it) {
     .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
   if (naoExig.length) {
     const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na tabela e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
-    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
+    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" data-tip="Adicionar esta especificação à tabela para comparar os produtos">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
     html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
   }
   // (2) no edital não analisados: o edital exige, mas ainda não foi analisado. Só referência (badges), SEM "+" (decisão da reunião ~8:01).
@@ -768,8 +768,8 @@ function collapsiblesHTML(it) {
 /* Cards de referência (colapsáveis) DENTRO do sheet de editar: mesma cara dos da tela atrás, porém read-only. */
 function editRefCards(it) {
   const prodComps = it.componentes.filter(c => c.mecanica === "produto");
-  const full = it.descricao || `${it.nome} ${it.resumoTR}`;
-  let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(full)}</p>`, null, true);
+  // Descrição = MESMO card da leitura (com o icon group no hover: ver no edital + copiar)
+  let html = descBlockHTML(it);
   // "não exigidas": com o "+" para adicionar à comparação (mesmo comportamento da tela de leitura); some as já adicionadas
   const dset = addedDiff[active] || new Set();
   const seenD = new Set();
@@ -778,7 +778,7 @@ function editRefCards(it) {
     .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
   if (naoExig.length) {
     const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na tabela e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
-    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
+    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" data-tip="Adicionar esta especificação à tabela para comparar os produtos">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
     html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
   }
   const na = prodComps.flatMap(c => c.naoAnalisadas || []);
@@ -1101,6 +1101,10 @@ function wire() {
   $("#editOverlay").onclick = cancelEditDrawer;
   $("#editSave").onclick = saveEditDrawer;
   $("#editBody").addEventListener("click", e => {
+    // icon group do card de descrição (mesmo da leitura): ver no edital + copiar; e o caret colapsa
+    if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
+    if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
+    const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
     // "+" numa spec não exigida: adiciona à comparação (como na leitura) e re-renderiza o drawer
     const adf = e.target.closest("[data-adddiff]"); if (adf) { addDiferencial(adf.dataset.adddiff); renderEditDrawer(); return; }
     if (e.target.closest("#editAddReq")) { openAddModal(); return; }
