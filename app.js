@@ -299,8 +299,7 @@ function openTable(i) {
     secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}${compSum}${compStatus}${editBtn}${concluirBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
-  if (lockedByOther) body = `<div class="lock-banner">${ICO_LOCK}<div><b>${esc(lockedByOther)} está reprocessando os requisitos deste item.</b><span>Você pode visualizar, mas não editar até a análise terminar.</span></div></div>` + body;
-  $("#tableOverlay").classList.toggle("locked", !!lockedByOther);
+  // Sem banner (não escala): o item abre normal em leitura; o alerta aparece só ao tentar uma ação de edição.
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
