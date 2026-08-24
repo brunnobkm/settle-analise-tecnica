@@ -730,7 +730,7 @@ function itemResumoHTML(it) {
 /* "Descrição completa" (card v1): começa aberta; ao passar o mouse mostra um icon group (igual à célula);
    ao colapsar, o texto vira um preview truncado com reticência (quantidade máx. de caracteres a definir). */
 function descBlockHTML(it) {
-  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descextrair>${ICO_COPY}</button><button class="desc-ico" data-descedital>${ICO_ARROW}</button></span>`;
+  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descextrair data-tip="Copiar a descrição">${ICO_COPY}</button><button class="desc-ico" data-descedital data-tip="Ver no edital">${ICO_ARROW}</button></span>`;
   const full = it.descricao || `${it.nome} ${it.resumoTR}`;
   return `<div class="desc-block open" data-descblock>
       <div class="desc-head" data-desctoggle>
@@ -1105,7 +1105,7 @@ function wire() {
   $("#editBody").addEventListener("click", e => {
     // icon group do card de descrição (mesmo da leitura): ver no edital + copiar; e o caret colapsa
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
-    if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
+    if (e.target.closest("[data-descextrair]")) { notPrototyped(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
     // "+" numa spec não exigida: adiciona à comparação (como na leitura), re-renderiza o drawer e rola até o fim da lista
     const adf = e.target.closest("[data-adddiff]"); if (adf) {
@@ -1178,7 +1178,7 @@ function wire() {
     const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
     if (e.target.closest("[data-addmanual]")) { notPrototyped(); return; }
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
-    if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
+    if (e.target.closest("[data-descextrair]")) { notPrototyped(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
     if (e.target.closest("[data-concluir]")) { e.preventDefault(); notPrototyped(); return; }
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
