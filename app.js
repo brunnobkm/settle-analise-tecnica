@@ -26,6 +26,7 @@ const ICO_COPY = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" str
 const ICO_KEBAB = `<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3.2" r="1.35"/><circle cx="8" cy="8" r="1.35"/><circle cx="8" cy="12.8" r="1.35"/></svg>`;
 const ICO_WARN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2l6-11z"/><path d="M8 6.5v3.2"/><path d="M8 11.6v.01"/></svg>`;
 const ICO_ALERT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.4" stroke-linecap="round"/><path d="M8 11v.01" stroke-linecap="round"/></svg>`;
+const ICO_LOCK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.2" y="7" width="9.6" height="6.4" rx="1.4"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7" stroke-linecap="round"/></svg>`;
 const ICO_CLOCK = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.8v3.4l2 1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICO_INFO = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 7.2v3.2" stroke-linecap="round"/><path d="M8 5v.01" stroke-linecap="round"/></svg>`;
 // licitação sem arquivo: os scores não foram gerados (Alice 40:33). Aciona via ?pendente=1
@@ -260,12 +261,17 @@ function openTable(i) {
     sizeMatrixHeight();
     return;
   }
-  // item ainda reprocessando (pode levar 1min+): mostra o loading persistente ao voltar para ele
+  // reprocessando: quem disparou vê o loading; se OUTRO usuário está reprocessando, mostra o estado anterior (leitura) com aviso e edição bloqueada
+  lockedByOther = null;
   if (reprocessing[i]) {
-    renderNav(); renderItemSummary(); renderEditControls();
-    $("#tableOverlay").hidden = false;
-    showItemReprocessing(reprocessing[i].val);
-    return;
+    const r = reprocessing[i];
+    if (!r.by || r.by === "Você") {
+      renderNav(); renderItemSummary(); renderEditControls();
+      $("#tableOverlay").hidden = false;
+      showItemReprocessing(r.val);
+      return;
+    }
+    lockedByOther = r.by; // outro usuário: segue para o render normal + banner de trava
   }
   hideReprocessSonner();
 
@@ -293,7 +299,8 @@ function openTable(i) {
     secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}${compSum}${compStatus}${editBtn}${concluirBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
-
+  if (lockedByOther) body = `<div class="lock-banner">${ICO_LOCK}<div><b>${esc(lockedByOther)} está reprocessando os requisitos deste item.</b><span>Você pode visualizar, mas não editar até a análise terminar.</span></div></div>` + body;
+  $("#tableOverlay").classList.toggle("locked", !!lockedByOther);
   $("#toBody").innerHTML = body;
   if ($("#matrixHost")) renderMatrix();
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
@@ -929,6 +936,20 @@ let toastT;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
 // sonner padrão para qualquer ação ainda não prototipada
 function notPrototyped() { toast("Essa ação ainda não está prototipada."); }
+// alerta ao tentar editar um item que outra pessoa está reprocessando (soft lock)
+function showLockAlert(by) {
+  let ov = document.getElementById("lockOverlay");
+  if (!ov) {
+    ov = document.createElement("div"); ov.id = "lockOverlay"; ov.className = "warn-overlay"; ov.hidden = true;
+    const m = document.createElement("div"); m.className = "warn-modal"; m.id = "lockModal"; m.hidden = true;
+    m.innerHTML = `<h3>Item em reprocessamento</h3><p id="lockModalBody"></p><div class="warn-actions"><button class="btn primary" id="lockOk">Entendi</button></div>`;
+    document.body.appendChild(ov); document.body.appendChild(m);
+    ov.onclick = hideLockAlert; m.querySelector("#lockOk").onclick = hideLockAlert;
+  }
+  document.getElementById("lockModalBody").innerHTML = `<b>${esc(by)}</b> está reprocessando os requisitos deste item. Você poderá editar quando a análise terminar.`;
+  ov.hidden = false; document.getElementById("lockModal").hidden = false;
+}
+function hideLockAlert() { const ov = document.getElementById("lockOverlay"), m = document.getElementById("lockModal"); if (ov) ov.hidden = true; if (m) m.hidden = true; }
 
 /* ============================================================
    Edição inline + interações
@@ -1041,7 +1062,7 @@ function closeCatMenu() { const m = $("#catMenu"); if (m) m.hidden = true; catMe
 
 /* Trocar categoria re-roda a extração dos requisitos (Alice 17/08): não é instantâneo.
    Simulamos: confirmar → loading "reprocessando" sobre o componente → label atualizado + match recalculado. */
-let pendingCat = null, reprocessing = {}; // reprocessing[itemIndex] = { val, comp, timer }, persiste ao navegar entre itens
+let pendingCat = null, reprocessing = {}, lockedByOther = null; // reprocessing[itemIndex] = { val, comp, timer, by }; lockedByOther = nome de quem está reprocessando o item aberto (bloqueia edição)
 function itemSkeletonHTML() {
   const row = () => `<div class="sk-row"><div class="sk-cell wide"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div></div>`;
   return `<div class="to-collapsibles">
@@ -1183,6 +1204,10 @@ function wire() {
     window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
   });
   tb.addEventListener("click", e => {
+    // item sendo reprocessado por outro usuário: qualquer tentativa de editar mostra o alerta (leitura liberada)
+    if (lockedByOther && e.target.closest("[data-editsec],[data-vstart],[data-vconfirm],[data-adddiff],[data-rmdiff],[data-addna],[data-concluir],[data-notproto],[data-catdrop],[data-choose],[data-clstatus],[data-addcol],[data-clnote]")) {
+      e.preventDefault(); e.stopPropagation(); showLockAlert(lockedByOther); return;
+    }
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
     const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
@@ -1405,4 +1430,6 @@ if (!prefs.seededChosen2) {
   prefs.chosen = pc ? { [DEMO_ITEM]: bestOf(matrixOf(pc), pc.skus).i } : {};
   prefs.seededChosen2 = true; savePrefs();
 }
+// DEMO: ?trava[=N] simula OUTRO usuário reprocessando o item N (padrão: 2) — abre em leitura com aviso e edição bloqueada
+{ const t = /[?&]trava(?:=(\d+))?/.exec(location.search); if (t) { const idx = t[1] != null ? +t[1] : 2; if (ITEMS[idx]) reprocessing[idx] = { by: "Larissa Alves", persistent: true }; } }
 renderGrid(); wire(); initAddModal(); initTooltip(); initTour();
