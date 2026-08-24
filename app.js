@@ -335,15 +335,38 @@ function sizeMatrixHeight() {
   const metaH = (metaEl && !metaEl.classList.contains("is-hidden")) ? metaEl.getBoundingClientRect().height : 0;
   ov.querySelectorAll(".comp-acc[open]").forEach(card => {
     const tw = card.querySelector(".table-wrap, .dt-wrap"); if (!tw) return;
-    if (multi) { tw.style.height = ""; tw.style.maxHeight = "60vh"; return; }
-    const chEl = card.querySelector(".comp-head");
-    const chH = chEl ? chEl.getBoundingClientRect().height : 52;
-    // 32 = padding vertical do corpo do card; 32 = 16 (gap acima do card) + 16 (gap abaixo)
-    const h = window.innerHeight - headH - metaH - chH - 32 - 32;
-    // altura automática (do tamanho do conteúdo) com teto: poucas linhas ficam compactas, muitas rolam
-    tw.style.height = "";
-    tw.style.maxHeight = Math.max(240, Math.round(h)) + "px";
+    if (multi) { tw.style.height = ""; tw.style.maxHeight = "60vh"; }
+    else {
+      const chEl = card.querySelector(".comp-head");
+      const chH = chEl ? chEl.getBoundingClientRect().height : 52;
+      // 32 = padding vertical do corpo do card; 32 = 16 (gap acima do card) + 16 (gap abaixo)
+      const h = window.innerHeight - headH - metaH - chH - 32 - 32;
+      // altura automática (do tamanho do conteúdo) com teto: poucas linhas ficam compactas, muitas rolam
+      tw.style.height = "";
+      tw.style.maxHeight = Math.max(240, Math.round(h)) + "px";
+    }
+    // largura: a tabela sempre preenche; o espaço extra vai para as colunas de SKU (req/val mantêm largura base)
+    fillCmpWidth(tw);
   });
+}
+
+// Se a soma das larguras base for menor que o espaço disponível, distribui o extra igualmente
+// entre as colunas de SKU para a tabela preencher (fill). Se maior, mantém base e rola na horizontal.
+function fillCmpWidth(tw) {
+  const table = tw.querySelector("table.cmp"); if (!table) return;
+  const cols = [...table.querySelectorAll("colgroup col")]; if (!cols.length) return;
+  const isSku = c => /^sku-/.test(c.dataset.k || "");
+  const skuCols = cols.filter(isSku);
+  const base = cols.reduce((s, c) => s + (parseFloat(c.dataset.w) || 0), 0);
+  const avail = tw.clientWidth;
+  if (skuCols.length && avail > base + 1) {
+    const extra = Math.floor((avail - base) / skuCols.length);
+    cols.forEach(c => { c.style.width = ((parseFloat(c.dataset.w) || 0) + (isSku(c) ? extra : 0)) + "px"; });
+    table.style.width = avail + "px";
+  } else {
+    cols.forEach(c => { c.style.width = (parseFloat(c.dataset.w) || 0) + "px"; });
+    table.style.width = base + "px";
+  }
 }
 const closeTable = () => {
   const ov = $("#tableOverlay"); if (!ov || ov.hidden) return;
@@ -617,7 +640,7 @@ function renderMatrix() {
   const anyEstoque = (MX_SKUS || []).some(s => s && s.estoque != null);
   const anyPreco = (MX_SKUS || []).some(s => s && s.preco != null);
   const cols = buildCols(ORDER), totalW = cols.reduce((s, c) => s + c.w, 0);
-  const colgroup = `<colgroup>${cols.map(c => `<col data-k="${c.key}" style="width:${c.w}px">`).join("")}</colgroup>`;
+  const colgroup = `<colgroup>${cols.map(c => `<col data-k="${c.key}" data-w="${c.w}" style="width:${c.w}px">`).join("")}</colgroup>`;
   let head = "";
   cols.forEach(c => {
     if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
