@@ -85,8 +85,7 @@
     <p>A tela lista os <b>itens do edital</b>. Cada item é um card; clicar abre um <b>sheet</b> (overlay de tela cheia) com a análise. Dentro do sheet, o item se divide em <b>seções</b> conforme a mecânica de cada parte:</p>
     <ul>
       <li><b>Produto</b>: comparação dos SKUs do catálogo contra as exigências do edital (matriz).</li>
-      <li><b>Software / serviço</b>: checklist de atende / não atende por requisito.</li>
-      <li><b>Misto</b>: um item pode ter produto <b>e</b> software na mesma análise (as duas seções).</li>
+      <li><b>Software</b>: checklist de atende / não atende por requisito.</li>
     </ul>
     <p>Cada item tem <code>tipo</code> (categoria: "Câmera de segurança", "Switch"...), <code>nome</code> (resumo curto), <code>descricao</code> (texto longo) e <code>componentes[]</code>, cada um com <code>mecanica</code> <code>"produto"</code> ou <code>"checklist"</code>.</p>
     <div class="box tip"><h4>Regra</h4><p style="margin:0"><b>Tipo</b> = a categoria do item (o que ele é), não a mecânica. É o prefixo da descrição no card.</p></div>
@@ -102,12 +101,11 @@
     <!-- 3 -->
     <h2 id="card">3. Card do item</h2>
     <h3>Badges de tipo</h3>
-    <p>Uma badge por tipo presente. Item misto mostra as duas.</p>
+    <p>Uma badge de tipo por item.</p>
     <table>
       <tr><th>Tipo</th><th>Texto</th><th>Fundo</th><th>Exemplo</th></tr>
       <tr><td>Produto</td><td><code>#783B54</code></td><td>mesma cor a 10%</td><td><span class="pill prod">Produto</span></td></tr>
       <tr><td>Software</td><td><code>#4579A6</code></td><td>mesma cor a 10%</td><td><span class="pill soft">Software</span></td></tr>
-      <tr><td>Serviço</td><td>neutro</td><td>cinza</td><td><span class="pill" style="background:var(--muted);color:var(--muted-fg)">Serviço</span></td></tr>
     </table>
     <h3>Descrição</h3>
     <ul>
@@ -147,8 +145,6 @@
     <p class="note">Em produto, toda especificação exigida é sempre analisada — não existe "falta analisar".</p>
     <h3>Software — conta por requisito</h3>
     <p>7 cards: <b>Percentual de aderência</b> · Total de requisitos · Atende · Atende parcialmente · Atende com parceiro · Não atende · Falta analisar. O Percentual de aderência é sempre exibido.</p>
-    <h3>Misto</h3>
-    <p>Os dois resumos empilhados, cada um com a legenda da seção.</p>
     <div class="box tip"><h4>Em aberto</h4><p style="margin:0">O resumo executivo <b>geral</b> (agregando todos os itens, no topo da lista) foi <b>removido por ora</b>, aguardando feedback. A regra de atende/não atende por item (e um possível estado "Em atenção") ainda não foi definida.</p></div>
 
     <!-- 6 -->
