@@ -595,20 +595,11 @@ function analiseVaziaHTML() {
       <div class="no-prod-actions"><button class="btn primary" data-extrairvazio>Extrair do edital</button></div>
     </div>`;
 }
-// ação do estado não processado: abre o edital (visualizador), onde a extração manual acontece (selecionar no PDF). No demo, um botão conclui a extração e popula.
+// ação do estado não processado: abre o edital (visualizador), onde a extração manual acontece (selecionar no PDF)
 function extractFromEdital() {
-  const i = active; if (i == null) return;
   $("#drawerHead").textContent = "Visualizador do arquivo";
-  $("#drawerBody").innerHTML = `<div class="file-preview-empty"><span>Visualizador do arquivo</span><p class="fp-hint">Selecione no edital as especificações do item e extraia para popular a análise.</p><button class="btn primary" id="extrairDemoBtn">Extrair especificações (demo)</button></div>`;
+  $("#drawerBody").innerHTML = `<div class="file-preview-empty"><span>Visualizador do arquivo</span></div>`;
   $("#drawer").hidden = false; $("#drawer").classList.remove("beside-edit"); $("#tableOverlay").classList.add("sidebar-open");
-  const b = $("#drawerBody #extrairDemoBtn");
-  if (b) b.onclick = () => {
-    // demo: a extração encontrou as especificações e populou o produto
-    if (typeof PROD_CAM === "function") ITEMS[i].componentes = [ PROD_CAM(true) ];
-    closeOrigin();
-    if (active === i) openTable(i);
-    toast("Especificações extraídas do edital, análise populada.");
-  };
 }
 function pendenteHTML() {
   return `<div class="no-prod">
