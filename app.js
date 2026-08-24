@@ -777,8 +777,8 @@ function editRefCards(it) {
     .map(t => typeof t === "string" ? { req: t } : t)
     .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
   if (naoExig.length) {
-    const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na tabela e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
-    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" data-tip="Adicionar esta especificação à tabela para comparar os produtos">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
+    const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na lista e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
+    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" data-tip="Adicionar esta especificação à lista para comparar os produtos">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
     html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
   }
   const na = prodComps.flatMap(c => c.naoAnalisadas || []);
@@ -1107,8 +1107,13 @@ function wire() {
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
     if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
-    // "+" numa spec não exigida: adiciona à comparação (como na leitura) e re-renderiza o drawer
-    const adf = e.target.closest("[data-adddiff]"); if (adf) { addDiferencial(adf.dataset.adddiff); renderEditDrawer(); return; }
+    // "+" numa spec não exigida: adiciona à comparação (como na leitura), re-renderiza o drawer e rola até o fim da lista
+    const adf = e.target.closest("[data-adddiff]"); if (adf) {
+      addDiferencial(adf.dataset.adddiff); renderEditDrawer();
+      const fs = $("#editBody").querySelectorAll(".ed-field"); const last = fs[fs.length - 1];
+      if (last) last.scrollIntoView({ block: "center", behavior: "smooth" });
+      return;
+    }
     if (e.target.closest("#editAddReq")) { openAddModal(); return; }
     if (e.target.closest("#editAddCl")) { const sec = editTarget.sec; currentChecklists[sec].push({ req: "Novo requisito", exig: "", modulo: "—", st: "ne", c: null, just: "—", origem: { doc: "Inserido manualmente", pag: "—" } }); renderEditDrawer(); return; }
     const more = e.target.closest("#edMore");
