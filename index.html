@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=120" />
+  <link rel="stylesheet" href="styles.css?v=121" />
 </head>
 <body>
   <!-- Sidebar -->
@@ -59,11 +59,9 @@
         <!-- Resumo do edital (stats) -->
         <div class="stats" id="stats"></div>
 
-        <!-- Filtros -->
+        <!-- Ações da lista -->
         <div class="filter-row">
-          <div class="seg seg-sm" role="tablist" id="filterTabs">
-            <button class="seg-tab active" data-filter="all">Todos</button>
-          </div>
+          <button class="btn" id="btnExportList"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v8M5 8l3 3 3-3M3 13h10"/></svg>Exportar</button>
         </div>
 
         <!-- Grid de cards de itens -->
@@ -178,6 +176,6 @@
   </div>
 
   <script src="data.js?v=26"></script>
-  <script src="app.js?v=157"></script>
+  <script src="app.js?v=158"></script>
 </body>
 </html>

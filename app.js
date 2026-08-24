@@ -188,10 +188,16 @@ function renderGrid() {
     const chosenIdx = prefs.chosen[i];
     // badge de apoio (fictícia) só para entender o tipo do item durante a validação
     const TIPO_LBL = { produto: "Produto", servico: "Serviço", software: "Software" };
+    const SEG_CLS = { produto: "seg-prod", software: "seg-sw", servico: "seg-serv" };
     const tipos = [...new Set(it.componentes.map(c => c.mecanica === "produto" ? "produto" : (/software|vms|licen/i.test(c.rotulo) ? "software" : "servico")))];
-    const segLabel = tipos.length > 1 ? `Misto (${tipos.map(t => TIPO_LBL[t]).join(" + ")})` : TIPO_LBL[tipos[0]];
-    const segTip = "Tipo do item (badge de apoio para entender o protótipo)" + (tipos.length > 1 ? ": " + tipos.map(t => TIPO_LBL[t]).join(" + ") : "");
-    const segBadge = `<span class="badge seg">${esc(segLabel)}</span>`;
+    // uma badge por tipo presente (misto = Produto + Software), cada uma com a cor do tipo
+    const segBadge = tipos.map(t => `<span class="badge seg ${SEG_CLS[t]}">${esc(TIPO_LBL[t])}</span>`).join("");
+    // descrição no formato "Tipo - Texto completo", truncada com reticência
+    const tipoPrefix = tipos.map(t => TIPO_LBL[t]).join(" + ");
+    const DESC_MAX = 120; // TODO: definir a quantidade máxima de caracteres para truncar (a combinar com o time)
+    const descFull = `${tipoPrefix} - ${it.nome}`;
+    const descTrunc = descFull.length > DESC_MAX ? descFull.slice(0, DESC_MAX).replace(/\s+$/, "") + "…" : descFull;
+    const descHTML = `<div class="ic-desc"${descFull.length > DESC_MAX ? ` data-tip="${esc(descFull)}"` : ""}>${esc(descTrunc)}</div>`;
     // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor.
     // Enquanto a análise não terminou (há requisitos não avaliados), mostra o progresso em vez da aderência.
     const swComp = it.componentes.every(c => c.mecanica === "checklist") ? sum.comps.find(c => c.mecanica === "checklist") : null;
@@ -205,16 +211,13 @@ function renderGrid() {
       // licitação sem arquivo: score ainda não gerado, sem Atende/Não atende, sem recomendação
       return `<div class="item-card" data-item="${i}">
         <div class="ic-badges">${segBadge}<span class="badge pendente" data-tip="A análise ainda não foi gerada (licitação sem arquivo)">${ICO_CLOCK}Score pendente</span></div>
-        <div class="ic-desc">${esc(it.nome)}</div>
+        ${descHTML}
         <div class="ic-metaline"><span><b>Quantidade:</b> ${qtyTxt}</span><span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span><span><b>Valor total:</b> <span class="mono">${esc(it.valorTotal.v)}</span></span></div>
       </div>`;
     }
-    // chip do topo: "Melhor produto · atende X%" quando há produto (a pendência de camada vive na própria badge "Não atende · X/Y")
+    // Sem recomendação de produto no card (decisão Brunno, ago/2026): mostramos apenas a ESCOLHA do usuário, quando houver.
     const prod = sum.comps.find(c => c.mecanica === "produto");
     let reco = "", recoCls = "";
-    if (prod && prod.comp.nenhumProduto) { reco = ""; recoCls = ""; } // nenhum produto: sem texto no card (só o status "Não atende")
-    else if (prod && sum.status === "ok") { reco = `<b>Melhor produto:</b> <span style="font-family:var(--mono)">${esc(prod.best.sku.model)}</span> · ${esc(prod.best.sku.brand)}`; recoCls = " prod"; } // não atende: sem produto recomendado
-    // a escolha substitui a recomendação: se um SKU foi escolhido, a linha vira "Produto escolhido"
     const chosenSku = (prod && chosenIdx != null && prod.comp.skus[chosenIdx]) ? prod.comp.skus[chosenIdx] : null;
     if (chosenSku) {
       reco = `<b>✓ Produto escolhido:</b> <span style="font-family:var(--mono)">${esc(chosenSku.model)}</span> · ${esc(chosenSku.brand)}`;
@@ -222,7 +225,7 @@ function renderGrid() {
     }
     return `<div class="item-card ${chosenIdx != null ? "selected" : ""}" data-item="${i}">
       <div class="ic-badges">${segBadge}${statusBadge}${reco ? `<span class="ic-reco-inline${recoCls}">${reco}</span>` : ""}</div>
-      <div class="ic-desc">${esc(it.nome)}</div>
+      ${descHTML}
       <div class="ic-metaline">
         <span><b>Quantidade:</b> ${qtyTxt}</span>
         <span><b>Valor unitário:</b> <span class="mono">${esc(it.valorUnitario.v)}</span></span>
@@ -231,7 +234,6 @@ function renderGrid() {
     </div>`;
   }).join("");
   $("#cardGrid").innerHTML = html || `<div style="grid-column:1/-1;color:var(--muted-foreground);padding:24px;text-align:center">Nenhum item neste filtro.</div>`;
-  [...$("#filterTabs").children].forEach(b => b.classList.toggle("active", b.dataset.filter === statusFilter));
 }
 
 /* ============================================================
@@ -1056,7 +1058,7 @@ function reprocessCategory(anchor, val) {
    Wire
    ============================================================ */
 function wire() {
-  $("#filterTabs").addEventListener("click", e => { const b = e.target.closest("[data-filter]"); if (b) { statusFilter = b.dataset.filter; prefs.filter = statusFilter; savePrefs(); renderGrid(); } });
+  const btnExp = $("#btnExportList"); if (btnExp) btnExp.addEventListener("click", () => toast("Exportando a análise técnica do edital (PDF · planilha · resumo técnico)…"));
   $("#cardGrid").addEventListener("click", e => { const c = e.target.closest("[data-item]"); if (c) openTable(+c.dataset.item); });
 
   $("#toClose").onclick = closeTable;
@@ -1292,9 +1294,7 @@ function initTour() {
   const MAIN_STEPS = [
     { before: ensureGrid, title: "Bem-vindo à Análise Técnica", text: "Em cerca de 1 minuto eu mostro como o protótipo transforma o edital em decisão: o que você atende, o que falta e qual produto indicar. Use Próximo para avançar." },
     { before: ensureGrid, sel: "#stats", title: "Resumo executivo", text: "Os indicadores do edital ficam aqui. Estão como 'A definir' porque vamos redefinir juntos quais números fazem mais sentido." },
-    { before: ensureGrid, sel: "#filterTabs", title: "Filtro por status", text: "Filtre os itens do edital por Atende / Não atende, para focar no que precisa de ação." },
-    { before: ensureGrid, sel: ".item-card", title: "Cada card é um item do edital", text: "O card mostra a descrição do item, quantidade, valores e se você atende. Clicar abre a análise completa." },
-    { before: ensureGrid, sel: ".item-card:first-child .ic-reco", title: "O quanto você atende, sem abrir", text: "Quando o item não atende, o card mostra em percentual o quanto o melhor produto atende (ex.: 93%). O detalhe, requisito por requisito e produto por produto, fica na tabela, ao abrir o item." },
+    { before: ensureGrid, sel: ".item-card", title: "Cada card é um item do edital", text: "O card mostra o tipo, a descrição do item, quantidade, valores e se você atende. Clicar abre a análise completa." },
     { before: ensureMisto, sel: ".comp-head", title: "Um item pode ter várias seções", text: "Ao abrir, o item se divide em seções (produto, licença, garantia, serviço), cada uma com a sua análise. Item simples tem só uma seção." },
     { before: ensureMisto, sel: ".best-tag", title: "Comparação de produtos", text: "Na seção de produto, comparamos os SKUs do seu catálogo com a exigência do edital e recomendamos o que mais atende." },
     { before: ensureMisto, sel: ".val-missing", title: "Valor não extraído", text: "Quando a IA não achou a exigência no edital, marcamos aqui. O ícone ao lado do valor abre o arquivo para você selecionar o trecho e extrair o dado." },
