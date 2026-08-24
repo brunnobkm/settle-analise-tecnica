@@ -591,8 +591,21 @@ function analiseVaziaHTML() {
   return `<div class="no-prod">
       <div class="no-prod-ico">${ICO_ALERT}</div>
       <div class="no-prod-title">Análise vazia</div>
-      <div class="no-prod-sub">A análise deste item voltou <b>sem nenhum requisito ou especificação</b> identificado. Enquanto estiver vazia, o item <b>não é marcado como "atende"</b>. Verifique o edital ou reprocesse a análise.</div>
+      <div class="no-prod-sub">A análise deste item voltou <b>sem nenhum requisito ou especificação</b> identificado. Enquanto estiver vazia, o item <b>não é marcado como "atende"</b>. Reprocesse a análise ou verifique o edital.</div>
+      <div class="no-prod-actions"><button class="btn primary" data-reprocessempty>Reprocessar análise</button></div>
     </div>`;
+}
+// ação do estado vazio: reprocessa (skeleton + sonner). Na demo, ao terminar, o item se preenche com requisitos (simula a reanálise que encontrou dados).
+function reprocessEmptyItem() {
+  const i = active; if (i == null) return;
+  reprocessing[i] = { val: "nova análise", by: "Você" };
+  showItemReprocessing("nova análise");
+  reprocessing[i].timer = setTimeout(() => {
+    delete reprocessing[i];
+    const comp = ITEMS[i].componentes.find(c => c.mecanica === "checklist");
+    if (comp && (comp.lista || []).length === 0 && typeof REANALISE_FINANCEIRO !== "undefined") comp.lista = REANALISE_FINANCEIRO.map(r => ({ ...r }));
+    if (active === i && !$("#tableOverlay").hidden) openTable(i);
+  }, 3000);
 }
 function pendenteHTML() {
   return `<div class="no-prod">
@@ -1230,6 +1243,7 @@ function wire() {
     if (lockedByOther && e.target.closest("[data-editsec],[data-vstart],[data-vconfirm],[data-adddiff],[data-rmdiff],[data-addna],[data-concluir],[data-notproto],[data-catdrop],[data-choose],[data-clstatus],[data-addcol],[data-clnote]")) {
       e.preventDefault(); e.stopPropagation(); showLockAlert(lockedByOther); return;
     }
+    if (e.target.closest("[data-reprocessempty]")) { reprocessEmptyItem(); return; }
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
     const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
