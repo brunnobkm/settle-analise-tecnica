@@ -891,7 +891,7 @@ let extractRi = null, pendingExtract = null;
 const FILE_SVG = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h6l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M10 2v3h3"/></svg>`;
 function openOriginSpec(spec, ri) {
   extractRi = null; pendingExtract = null;
-  $("#drawerHead").textContent = "Visualização do arquivo";
+  $("#drawerHead").textContent = "Visualizador do arquivo";
   $("#drawerBody").innerHTML = `<div class="file-preview-empty"><span>Visualizador do arquivo</span></div>`;
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
 }
@@ -899,7 +899,7 @@ const closeOrigin = () => { $("#drawer").hidden = true; $("#drawer").classList.r
 /* Descrição (card v1): "Ver no edital" abre o drawer na origem; "Extrair novamente" re-roda a extração da descrição */
 function openDescOrigin() {
   extractRi = null; pendingExtract = null;
-  $("#drawerHead").textContent = "Descrição no edital";
+  $("#drawerHead").textContent = "Visualizador do arquivo";
   $("#drawerBody").innerHTML = `<div class="file-preview-empty"><span>Visualizador do arquivo</span></div>`;
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
   // aberto de dentro do sheet de editar: o drawer de origem fica AO LADO do sheet (à esquerda), não atrás
