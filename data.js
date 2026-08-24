@@ -232,7 +232,7 @@ const CHK = (rotulo, variante) => { const key = variante === true ? "ok" : varia
 
 const ITEMS = [
   // 1) SÓ PRODUTO · NÃO ATENDE (nenhum SKU atende 100%)
-  { titulo: "Câmeras LPR (leitura de placas)", numero: "1",
+  { titulo: "Câmeras LPR (leitura de placas)", numero: "1", tipo: "Câmera de segurança",
     nome: "Fornecimento de 80 câmeras IP modelo LPR (leitura de placas) para o anel viário, conforme Termo de Referência.",
     quantidade: "80", precoUnit: 2980, unidadeMedida: "unidade",
     resumoTR: "Aquisição de 80 câmeras IP com leitura de placas (LPR). Compare os SKUs do seu catálogo com a exigência do edital.",
@@ -240,7 +240,7 @@ const ITEMS = [
     componentes: [ PROD_CAM(false) ] },
 
   // 2) SÓ PRODUTO · ATENDE (recomendado, sem escolha feita)
-  { titulo: "Câmeras dome fixas 4MP", numero: "2",
+  { titulo: "Câmeras dome fixas 4MP", numero: "2", tipo: "Câmera de segurança",
     nome: "Fornecimento de 60 câmeras dome fixas 4MP para ambientes internos.",
     quantidade: "60", precoUnit: 1740, unidadeMedida: "unidade",
     resumoTR: "Aquisição de 60 câmeras dome fixas. Há SKU no catálogo que atende a todos os requisitos.",
@@ -248,7 +248,7 @@ const ITEMS = [
     componentes: [ PROD_CAM(true) ] },
 
   // 3) SÓ PRODUTO · ATENDE · com PRODUTO ESCOLHIDO (seed no boot)
-  { titulo: "Câmeras bullet fixas", numero: "3",
+  { titulo: "Câmeras bullet fixas", numero: "3", tipo: "Câmera de segurança",
     nome: "Fornecimento de 100 câmeras bullet fixas para o perímetro externo.",
     quantidade: "100", precoUnit: 2210, unidadeMedida: "unidade",
     resumoTR: "Aquisição de 100 câmeras bullet. Um SKU já foi escolhido para a proposta.",
@@ -256,21 +256,21 @@ const ITEMS = [
     componentes: [ PROD_CAM(true) ] },
 
   // 4) SÓ SOFTWARE · ATENDE (checklist tudo atende)
-  { titulo: "Software de controle de acesso", numero: "4",
+  { titulo: "Software de controle de acesso", numero: "4", tipo: "Software de controle de acesso",
     nome: "Licença de software de controle de acesso integrado ao videomonitoramento.",
     quantidade: "1", precoUnit: 98000, unidadeMedida: "licença",
     resumoTR: "Licenciamento de software de controle de acesso. Confirme se a sua solução atende a cada exigência.",
     componentes: [ CHK("Software de controle de acesso", true) ] },
 
   // 5) SÓ SOFTWARE · NÃO ATENDE (checklist com exigência não atendida)
-  { titulo: "Software de gestão de vídeo (VMS)", numero: "5",
+  { titulo: "Software de gestão de vídeo (VMS)", numero: "5", tipo: "Software de gestão de vídeo",
     nome: "Licença de software de gestão de vídeo (VMS) com leitura de placas (LPR) e cerco virtual.",
     quantidade: "1", precoUnit: 145000, unidadeMedida: "licença",
     resumoTR: "Licenciamento do VMS. Confirme cada funcionalidade exigida; há exigências não atendidas.",
     componentes: [ CHK("Software de gestão de vídeo (VMS)", "parcial") ] },
 
   // 6) MISTO · ATENDE (produto 100% + software atende)
-  { titulo: "Câmeras speed dome + licença VMS", numero: "6",
+  { titulo: "Câmeras speed dome + licença VMS", numero: "6", tipo: "Câmera de segurança",
     nome: "Fornecimento de câmeras speed dome PTZ e a licença do software de gestão de vídeo (VMS).",
     quantidade: "1", precoUnit: 260000, unidadeMedida: "lote",
     resumoTR: "Item misto (produto + software). O produto atende e o software atende: item completo.",
@@ -278,7 +278,7 @@ const ITEMS = [
     componentes: [ PROD_CAM(true), CHK("Licença do software VMS", true) ] },
 
   // 7) MISTO · NÃO ATENDE · pendência SÓ no software (produto atende 100%) — recomendação condicionada
-  { titulo: "Câmeras + software VMS (LPR/facial)", numero: "7",
+  { titulo: "Câmeras + software VMS (LPR/facial)", numero: "7", tipo: "Câmera de segurança",
     nome: "Fornecimento de câmeras e a licença do VMS com LPR e reconhecimento facial.",
     quantidade: "1", precoUnit: 310000, unidadeMedida: "lote",
     resumoTR: "Item misto. O produto (câmera) atende 100%, mas o software tem exigência não atendida: pendência fora do produto.",
