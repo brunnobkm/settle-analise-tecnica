@@ -1430,5 +1430,5 @@ if (!prefs.seededChosen2) {
   prefs.seededChosen2 = true; savePrefs();
 }
 // DEMO: ?trava[=N] simula OUTRO usuário reprocessando o item N (padrão: 2) — abre em leitura com aviso e edição bloqueada
-{ const t = /[?&]trava(?:=(\d+))?/.exec(location.search); if (t) { const idx = t[1] != null ? +t[1] : 2; if (ITEMS[idx]) reprocessing[idx] = { by: "Larissa Alves", persistent: true }; } }
+{ const t = /[?&]trava(?:=(\d+))?/.exec(location.search); if (t) { const idx = t[1] != null ? +t[1] : 2; if (ITEMS[idx]) reprocessing[idx] = { by: "Brunno Krier Martins", persistent: true }; } }
 renderGrid(); wire(); initAddModal(); initTooltip(); initTour();

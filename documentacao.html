@@ -75,6 +75,7 @@
       <a href="#software">8. Seção Software</a>
       <a href="#editar">9. Editar informações</a>
       <a href="#diferencial">10. Diferenciais (botão +)</a>
+      <a href="#concorrencia">11. Item em reprocessamento (edição concorrente)</a>
     </nav>
 
     <!-- 1 -->
@@ -203,6 +204,21 @@
     </ul>
     <div class="box warn"><h4>Sem valor informado</h4><p style="margin:0">As células de cada SKU dessa linha mostram um <b>circle-alert</b> com tooltip (não há comparação, pois o edital não exige). O chip do valor fica como <b>"Não informado"</b>.</p></div>
 
+    <!-- 11 -->
+    <h2 id="concorrencia">11. Item em reprocessamento (edição concorrente)</h2>
+    <p>Trocar a categoria de um produto dispara um <b>reprocessamento</b> da análise (pode levar 1 min ou mais). Enquanto isso, o item não pode ser editado por ninguém, senão o resultado ficaria inconsistente. O tratamento é um <b>soft lock com alerta</b>:</p>
+    <ul>
+      <li><b>Quem dispara</b> o reprocessamento vê o <b>skeleton</b> de carregamento (com a mensagem de que pode sair da tela e será avisado ao terminar).</li>
+      <li><b>Quem chega depois</b> (outro usuário) abre o item <b>normalmente, em modo leitura</b>. Não há banner nem indicador fixo (não escala com muitos itens).</li>
+      <li>Ao tentar <b>qualquer ação que edita</b>, aparece um <b>alerta</b> nomeando quem está reprocessando: "Item em reprocessamento — <i>[Nome]</i> está reprocessando os requisitos deste item. Você poderá editar quando a análise terminar."</li>
+      <li>A <b>leitura continua livre</b>: navegar, copiar valores, ver a origem no edital.</li>
+    </ul>
+    <table>
+      <tr><th>Bloqueado (mostra o alerta)</th><th>Liberado (leitura)</th></tr>
+      <tr><td>Editar informações, editar valor na célula, botão +, Concluir análise, selecionar SKU, trocar categoria, mudar status</td><td>Navegar entre itens, copiar valor, ver origem no edital, colapsar/expandir cards</td></tr>
+    </table>
+    <div class="box tip"><h4>Padrão reutilizável</h4><p style="margin:0">O mesmo comportamento serve para qualquer recurso da plataforma quando <b>outra pessoa está editando</b>: alerta na ação, sem travar a leitura. Diferente do Notion, que resolve por edição em tempo real (merge + presença); aqui é o modelo mais simples de soft lock.</p></div>
+    <div class="box warn"><h4>Depende de backend</h4><p style="margin:0">Para valer de verdade, precisa de <b>estado compartilhado</b> (quem está reprocessando/editando cada item) e, idealmente, <b>presença</b>. No protótipo é simulado por <code>?trava=N</code>; o nome de quem reprocessa viria do backend na versão real.</p></div>
   </div>
 </body>
 </html>
