@@ -494,9 +494,9 @@ button.sku-tag { font: inherit; font-size: 10px; font-weight: 600; line-height: 
 tr.nx-row .cell.nm-cell .cell-val { color: var(--muted-foreground); }
 tr.nx-row .col-req .req-name { color: var(--foreground); }
 /* coluna do produto escolhido: destaque forte */
-th.col-sku.chosen { background: var(--success-bg); box-shadow: inset 0 0 0 2px var(--success); }
-/* SKU escolhido: coluna inteira verde (cabeçalho + células) */
-.cmp td.chosen { background: var(--success-bg); }
+th.col-sku.chosen { background: var(--brand-100); box-shadow: inset 0 0 0 2px var(--brand); }
+/* SKU escolhido: coluna inteira em teal claro #D4EEF0 (cabeçalho + células) */
+.cmp td.chosen { background: var(--brand-100); }
 .cmp tbody td.chosen-col { background: var(--brand-050, #EAF7F8); }
 /* barra da matriz: ocultar quem não atende */
 .mx-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -729,7 +729,7 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .sku-select { width: 100%; margin-top: 10px; border: 0; background: var(--brand); color: #fff; border-radius: var(--r-md); padding: 7px 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s; }
 .sku-select:hover { background: var(--brand-600); }
 .sku-select.on { background: var(--brand); }
-th.col-sku.chosen { background: var(--success-bg); box-shadow: inset 0 2px 0 var(--success); }
+th.col-sku.chosen { background: var(--brand-100); box-shadow: inset 0 2px 0 var(--brand); }
 .chosen-tag { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 10.5px; font-weight: 700; color: var(--brand-600); text-transform: uppercase; letter-spacing: .4px; }
 .chip-chosen { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--r-full); background: var(--brand-100); color: var(--brand-600); }
 
