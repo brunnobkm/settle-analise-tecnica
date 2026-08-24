@@ -76,6 +76,7 @@
       <a href="#editar">9. Editar informações</a>
       <a href="#diferencial">10. Diferenciais (botão +)</a>
       <a href="#concorrencia">11. Item em reprocessamento (edição concorrente)</a>
+      <a href="#vazia">12. Análise vazia</a>
     </nav>
 
     <!-- 1 -->
@@ -219,6 +220,16 @@
     </table>
     <div class="box tip"><h4>Padrão reutilizável</h4><p style="margin:0">O mesmo comportamento serve para qualquer recurso da plataforma quando <b>outra pessoa está editando</b>: alerta na ação, sem travar a leitura. Diferente do Notion, que resolve por edição em tempo real (merge + presença); aqui é o modelo mais simples de soft lock.</p></div>
     <div class="box warn"><h4>Depende de backend</h4><p style="margin:0">Para valer de verdade, precisa de <b>estado compartilhado</b> (quem está reprocessando/editando cada item) e, idealmente, <b>presença</b>. No protótipo é simulado por <code>?trava=N</code>; o nome de quem reprocessa viria do backend na versão real.</p></div>
+
+    <!-- 12 -->
+    <h2 id="vazia">12. Análise vazia</h2>
+    <p>Quando a análise de um item volta <b>sem nenhum requisito ou especificação</b> identificado (a IA não extraiu nada), o item <b>NÃO pode ser marcado como "atende"</b> (o padrão errado seria dizer "atende" por ausência de falhas).</p>
+    <ul>
+      <li><b>Card</b>: badge neutra <b>"Análise vazia"</b> (não Atende, não Aderência).</li>
+      <li><b>Sheet</b>: em vez da tabela/resumo, um estado vazio: "A análise deste item voltou sem nenhum requisito ou especificação identificado. Enquanto estiver vazia, o item não é marcado como 'atende'. Verifique o edital ou reprocesse a análise."</li>
+      <li>Detecção: produto sem especificações reais na matriz, ou software com a lista de requisitos vazia.</li>
+    </ul>
+    <p class="note">Em aberto: se o estado vazio deve trazer uma ação direta (ex.: botão "Reprocessar análise") ou apenas orientar. Hoje só orienta.</p>
   </div>
 </body>
 </html>
