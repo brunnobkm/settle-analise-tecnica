@@ -1087,7 +1087,7 @@ function reprocessCategory(anchor, val) {
    Wire
    ============================================================ */
 function wire() {
-  const btnExp = $("#btnExportList"); if (btnExp) btnExp.addEventListener("click", () => toast("Exportando a análise técnica do edital (PDF · planilha · resumo técnico)…"));
+  const btnExp = $("#btnExportList"); if (btnExp) btnExp.addEventListener("click", notPrototyped);
   $("#cardGrid").addEventListener("click", e => { const c = e.target.closest("[data-item]"); if (c) openTable(+c.dataset.item); });
 
   $("#toClose").onclick = closeTable;
@@ -1119,7 +1119,7 @@ function wire() {
     const more = e.target.closest("#edMore");
     if (more) { const d = $("#editBody .ed-desc"); d.classList.toggle("clamp"); more.textContent = d.classList.contains("clamp") ? "Ver mais" : "Ver menos"; }
   });
-  $("#toExport").onclick = () => toast("Baixando o item inteiro (PDF · planilha · resumo técnico)…");
+  $("#toExport").onclick = notPrototyped;
   // Ações ainda não prototipadas: sonner padrão. (Compartilhar e Importar caem aqui.)
   { const sh = $("#toShare"); if (sh) sh.onclick = notPrototyped; }
   { const im = $("#toImport"); if (im) im.onclick = notPrototyped; }
@@ -1176,31 +1176,31 @@ function wire() {
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
     const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
-    if (e.target.closest("[data-addmanual]")) { toast("Adicionar produto manualmente (fluxo a definir)"); return; }
+    if (e.target.closest("[data-addmanual]")) { notPrototyped(); return; }
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
     if (e.target.closest("[data-descextrair]")) { extractDescricao(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
-    if (e.target.closest("[data-concluir]")) { e.preventDefault(); toast("Concluir análise desta seção"); return; }
+    if (e.target.closest("[data-concluir]")) { e.preventDefault(); notPrototyped(); return; }
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const vs = e.target.closest("[data-vstart]"); if (vs) { startInlineEdit(+vs.dataset.vstart); return; }
     const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }
     const vcan = e.target.closest("[data-vcancel]"); if (vcan) { cancelInlineEdit(); return; }
     const pin = e.target.closest("[data-pin]"); if (pin) { const k = pin.dataset.pin; frozen.has(k) ? frozen.delete(k) : frozen.add(k); saveCols(); renderMatrix(); return; }
-    const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); toast(`Abrindo a origem do dado na internet, ${MX_SKUS[+nl.dataset.neturl].model} (para conferência)`); return; }
-    const cl = e.target.closest("[data-caturl]"); if (cl) { e.stopPropagation(); toast(`Abrindo no catálogo, ${MX_SKUS[+cl.dataset.caturl].model}`); return; }
+    const nl = e.target.closest("[data-neturl]"); if (nl) { e.stopPropagation(); notPrototyped(); return; }
+    const cl = e.target.closest("[data-caturl]"); if (cl) { e.stopPropagation(); notPrototyped(); return; }
     const ch = e.target.closest("[data-choose]"); if (ch) { const i = +ch.dataset.choose; prefs.chosen[active] = (prefs.chosen[active] === i) ? undefined : i; if (prefs.chosen[active] == null) delete prefs.chosen[active]; savePrefs(); renderMatrix(); updateProdSecSummary(); toast(prefs.chosen[active] != null ? `Produto escolhido: ${MX_SKUS[i].model}` : "Seleção removida"); return; }
     const cv = e.target.closest("[data-copytext]"); if (cv) { e.stopPropagation(); const txt = cv.dataset.copytext; if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {}); toast(`Valor copiado: "${txt}"`); return; }
     const kb = e.target.closest("[data-kebab]"); if (kb) { e.preventDefault(); e.stopPropagation(); openKebabMenu(kb); return; }
     const cd = e.target.closest("[data-catdrop]"); if (cd) { e.preventDefault(); e.stopPropagation(); openCatMenu(cd); return; }
     const clv = e.target.closest("[data-clview]"); if (clv) { const [s, v] = clv.dataset.clview.split(":"); clView[+s] = v; renderChecklist($("#clHost-" + s), currentChecklists[+s], +s); return; }
-    const ba = e.target.closest("[data-blockact]"); if (ba) { toast(ba.dataset.blockact === "excluir" ? "Excluir módulo (remove os requisitos do módulo)" : "Ir para o módulo"); return; }
+    const ba = e.target.closest("[data-blockact]"); if (ba) { notPrototyped(); return; }
     const or = e.target.closest("[data-origin]"); if (or) { const ri = +or.dataset.origin; openOriginSpec(SPECS[ri], ri); return; }
-    const q = e.target.closest("[data-question]"); if (q) { toast(`Abrindo questionamento/impugnação, "${SPECS[+q.dataset.question].req}" (referente ao edital)`); return; }
+    const q = e.target.closest("[data-question]"); if (q) { notPrototyped(); return; }
     const cs = e.target.closest("[data-clstatus]"); if (cs) { const [s, r] = cs.dataset.clstatus.split(":").map(Number); openStatusMenu(cs, s, r); return; }
     const co = e.target.closest("[data-clorigin]"); if (co) { const [s, r] = co.dataset.clorigin.split(":").map(Number); openOriginSpec(currentChecklists[s][r]); return; }
-    const cq = e.target.closest("[data-clquestion]"); if (cq) { const [s, r] = cq.dataset.clquestion.split(":").map(Number); toast(`Abrindo questionamento/impugnação, "${currentChecklists[s][r].req}" (referente ao edital)`); return; }
-    const cn = e.target.closest("[data-clnote]"); if (cn) { const [s, r] = cn.dataset.clnote.split(":").map(Number); toast(`Adicionar nota interna, "${currentChecklists[s][r].req}"`); return; }
-    const ac = e.target.closest("[data-addcol]"); if (ac) { toast("Adicionar coluna à tabela (campo personalizado)"); return; }
+    const cq = e.target.closest("[data-clquestion]"); if (cq) { notPrototyped(); return; }
+    const cn = e.target.closest("[data-clnote]"); if (cn) { notPrototyped(); return; }
+    const ac = e.target.closest("[data-addcol]"); if (ac) { notPrototyped(); return; }
   });
   tb.addEventListener("keydown", e => {
     const inp = e.target.closest(".val-inline-input"); if (!inp) return;
