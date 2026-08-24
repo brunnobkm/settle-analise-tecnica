@@ -624,7 +624,8 @@ function renderMatrix() {
       else if (c.key === "val") {
         if (editingRow === ri) {
           const core = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="ts-chip-edit val-chip-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}" placeholder="valor requerido">${vrUnit}<button class="ts-ok" data-vconfirm="${ri}" data-tip="Confirmar e recalcular">${ICO_OK}</button><button class="ts-cancel" data-vcancel="${ri}" data-tip="Cancelar edição">${ICO_NO}</button></span></div></td>`;
+          const okTip = fromDiff ? "Confirmar o valor" : "Confirmar e recalcular", cancelTip = fromDiff ? "Cancelar" : "Cancelar edição";
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="ts-chip-edit val-chip-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}" placeholder="valor requerido">${vrUnit}<button class="ts-ok" data-vconfirm="${ri}" data-tip="${okTip}">${ICO_OK}</button><button class="ts-cancel" data-vcancel="${ri}" data-tip="${cancelTip}">${ICO_NO}</button></span></div></td>`;
         } else if (df && !spec.exig) {
           // diferencial ainda sem valor requerido: editável (o edital não exige; clique para informar, se o edital exigir)
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><button class="ts-chip val-chip val-chip-empty" data-vstart="${ri}" data-tip="O edital não exige. Clique para informar um valor requerido (se a IA tiver errado e o edital exigir).">Não exigido</button></div></td>`;
