@@ -19,34 +19,23 @@
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body { margin: 0; font-family: "Geist", system-ui, sans-serif; color: var(--fg); background: var(--bg); line-height: 1.55; font-size: 15px; }
-    .wrap { display: grid; grid-template-columns: 264px 1fr; max-width: 1200px; margin: 0 auto; }
-    /* TOC */
-    .toc { position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; border-right: 1px solid var(--border); padding: 28px 20px; }
-    .toc .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-    .toc .brand .dot { width: 22px; height: 22px; border-radius: 6px; background: var(--brand-100); display: grid; place-items: center; }
-    .toc .brand .dot svg { width: 15px; height: 15px; }
-    .toc .sub { font-size: 12px; color: var(--muted-fg); margin-bottom: 20px; }
-    .toc a { display: block; padding: 6px 10px; border-radius: var(--r-sm); color: var(--muted-fg); text-decoration: none; font-size: 13.5px; font-weight: 500; }
-    .toc a:hover { background: var(--muted); color: var(--fg); }
-    .toc a.h3 { padding-left: 22px; font-size: 12.5px; }
-    .toc .grp { margin-top: 14px; font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--muted-fg); padding: 0 10px 4px; }
-    /* content */
-    main { padding: 40px 48px 120px; min-width: 0; }
-    .lead { font-size: 15px; color: var(--muted-fg); max-width: 720px; }
-    h1 { font-size: 30px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.4px; }
-    h2 { font-size: 21px; font-weight: 700; margin: 52px 0 10px; padding-top: 14px; letter-spacing: -.2px; scroll-margin-top: 20px; }
-    h2:first-of-type { margin-top: 34px; }
-    h3 { font-size: 16px; font-weight: 600; margin: 26px 0 8px; scroll-margin-top: 20px; }
-    p { margin: 8px 0; max-width: 760px; }
-    ul, ol { max-width: 760px; padding-left: 22px; margin: 8px 0; }
+    .page { max-width: 820px; margin: 0 auto; padding: 48px 24px 120px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; margin-bottom: 26px; }
+    .brand .dot { width: 24px; height: 24px; border-radius: 6px; background: var(--brand-100); display: grid; place-items: center; }
+    .brand .dot svg { width: 16px; height: 16px; }
+    h1 { font-size: 30px; font-weight: 700; margin: 0 0 8px; letter-spacing: -.4px; }
+    .lead { font-size: 15px; color: var(--muted-fg); margin: 0 0 8px; }
+    h2 { font-size: 21px; font-weight: 700; margin: 48px 0 10px; letter-spacing: -.2px; scroll-margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border); }
+    h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; scroll-margin-top: 18px; }
+    p { margin: 8px 0; }
+    ul, ol { padding-left: 22px; margin: 8px 0; }
     li { margin: 4px 0; }
     code { font-family: var(--mono); font-size: 12.5px; background: var(--muted); padding: 1px 6px; border-radius: 4px; }
-    .hr { height: 1px; background: var(--border); border: 0; margin: 8px 0 0; }
-    table { border-collapse: collapse; width: 100%; max-width: 860px; margin: 12px 0; font-size: 13.5px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13.5px; }
     th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
     th { font-weight: 600; color: var(--muted-fg); font-size: 12px; text-transform: uppercase; letter-spacing: .3px; }
     tr:last-child td { border-bottom: 0; }
-    .box { border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin: 14px 0; max-width: 820px; background: #fff; }
+    .box { border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin: 14px 0; }
     .box.tip { border-left: 3px solid var(--brand); background: #F7FCFC; }
     .box.warn { border-left: 3px solid var(--warning); background: var(--warning-bg); }
     .box h4 { margin: 0 0 6px; font-size: 14px; }
@@ -59,119 +48,95 @@
     .tag.warn { background: var(--warning-bg); color: var(--warning); }
     .tag.bad { background: #FBEAEA; color: var(--destructive); }
     .tag.neutral { background: var(--muted); color: var(--muted-fg); }
-    .status-note { font-size: 12.5px; color: var(--muted-fg); }
+    .note { font-size: 12.5px; color: var(--muted-fg); }
     a.inline { color: var(--brand-600); font-weight: 600; }
-    @media (max-width: 820px) { .wrap { grid-template-columns: 1fr; } .toc { display: none; } main { padding: 28px 20px 80px; } }
+    /* índice no topo */
+    .toc { background: var(--muted); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 22px; margin: 8px 0 8px; columns: 2; column-gap: 28px; }
+    .toc a { display: block; color: var(--fg); text-decoration: none; font-size: 13.5px; font-weight: 500; padding: 4px 0; break-inside: avoid; }
+    .toc a:hover { color: var(--brand-600); }
+    @media (max-width: 620px) { .toc { columns: 1; } }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <nav class="toc">
-    <div class="brand"><span class="dot"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#D4EEF0"/><path d="M22 9 C 14 9 8 14 8 21 C 8 22 9 23 10 23 C 17 23 22 17 22 9 Z" fill="#3A9B9E"/></svg></span> Análise técnica</div>
-    <div class="sub">Documentação para desenvolvimento</div>
+  <div class="page">
+    <div class="brand"><span class="dot"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#D4EEF0"/><path d="M22 9 C 14 9 8 14 8 21 C 8 22 9 23 10 23 C 17 23 22 17 22 9 Z" fill="#3A9B9E"/></svg></span> Settle · Análise técnica</div>
 
-    <div class="grp">Contexto</div>
-    <a href="#visao">1. Visão geral</a>
-    <a href="#modelo">2. Modelo de dados</a>
+    <h1>Documentação para desenvolvimento</h1>
+    <p class="lead">Regras e variações de cada componente da tela de Análise técnica. Protótipo de referência: <a class="inline" href="https://brunnobkm.github.io/settle-analise-tecnica/">brunnobkm.github.io/settle-analise-tecnica</a>. A referência visual final (medidas, espaçamentos) é o Figma; aqui estão as regras de comportamento.</p>
 
-    <div class="grp">Tela inicial</div>
-    <a href="#lista">3. Lista de itens</a>
-    <a href="#card">4. Card do item</a>
-
-    <div class="grp">Sheet do item</div>
-    <a href="#sheet">5. Abertura e header</a>
-    <a href="#resumo">6. Resumo executivo</a>
-    <a href="#cards-colap">7. Cards colapsáveis</a>
-
-    <div class="grp">Seções</div>
-    <a href="#produto">8. Seção Produto</a>
-    <a href="#software">9. Seção Software</a>
-
-    <div class="grp">Fluxos e regras</div>
-    <a href="#editar">10. Editar informações</a>
-    <a href="#diferencial">11. Diferenciais (+)</a>
-    <a href="#visualizador">12. Visualizador do arquivo</a>
-    <a href="#nao-proto">13. Ações não prototipadas</a>
-
-    <div class="grp">Referência</div>
-    <a href="#tokens">14. Cores e tokens</a>
-  </nav>
-
-  <main>
-    <h1>Análise técnica</h1>
-    <p class="lead">Documentação das regras e variações de cada componente da tela de Análise técnica, para orientar o desenvolvimento. O protótipo de referência (comportamento e visual) está publicado em <a class="inline" href="https://brunnobkm.github.io/settle-analise-tecnica/">brunnobkm.github.io/settle-analise-tecnica</a>. A versão final da UI (espaçamentos, medidas exatas) é o Figma; aqui documentamos as <b>regras</b>.</p>
+    <nav class="toc">
+      <a href="#visao">1. Visão geral</a>
+      <a href="#lista">2. Lista de itens</a>
+      <a href="#card">3. Card do item</a>
+      <a href="#sheet">4. Sheet do item (abertura e header)</a>
+      <a href="#resumo">5. Resumo executivo</a>
+      <a href="#cards-colap">6. Cards colapsáveis</a>
+      <a href="#produto">7. Seção Produto</a>
+      <a href="#software">8. Seção Software</a>
+      <a href="#editar">9. Editar informações</a>
+      <a href="#diferencial">10. Diferenciais (botão +)</a>
+      <a href="#visualizador">11. Visualizador do arquivo</a>
+      <a href="#nao-proto">12. Ações não prototipadas</a>
+      <a href="#tokens">13. Cores e tokens</a>
+    </nav>
 
     <!-- 1 -->
     <h2 id="visao">1. Visão geral</h2>
-    <p>A tela lista os <b>itens do edital</b>. Cada item é um card; clicar abre um <b>sheet</b> (overlay de tela cheia) com a análise completa. Dentro do sheet, o item se divide em <b>seções</b> conforme a mecânica de cada parte:</p>
+    <p>A tela lista os <b>itens do edital</b>. Cada item é um card; clicar abre um <b>sheet</b> (overlay de tela cheia) com a análise. Dentro do sheet, o item se divide em <b>seções</b> conforme a mecânica de cada parte:</p>
     <ul>
       <li><b>Produto</b>: comparação dos SKUs do catálogo contra as exigências do edital (matriz).</li>
       <li><b>Software / serviço</b>: checklist de atende / não atende por requisito.</li>
       <li><b>Misto</b>: um item pode ter produto <b>e</b> software na mesma análise (as duas seções).</li>
     </ul>
-    <p>Princípio: o usuário entende e decide pela resposta da análise, não classificando por tipo. O "tipo" (mecânica) define apenas como a seção é renderizada.</p>
+    <p>Cada item tem <code>tipo</code> (categoria: "Câmera de segurança", "Switch"...), <code>nome</code> (resumo curto), <code>descricao</code> (texto longo) e <code>componentes[]</code>, cada um com <code>mecanica</code> <code>"produto"</code> ou <code>"checklist"</code>.</p>
+    <div class="box tip"><h4>Regra</h4><p style="margin:0"><b>Tipo</b> = a categoria do item (o que ele é), não a mecânica. É o prefixo da descrição no card.</p></div>
 
     <!-- 2 -->
-    <h2 id="modelo">2. Modelo de dados (referência do protótipo)</h2>
-    <p>Cada item tem <code>tipo</code> (categoria: "Câmera de segurança", "Switch"...), <code>nome</code> (resumo curto), <code>descricao</code> (texto longo), <code>quantidade</code>, valores e <code>componentes[]</code>. Cada componente tem <code>mecanica</code>: <code>"produto"</code> (com <code>skus</code>, <code>reqs</code>) ou <code>"checklist"</code> (com <code>lista</code> de requisitos).</p>
-    <div class="box tip">
-      <h4>Regra</h4>
-      <p style="margin:0"><b>Tipo</b> = categoria do item (o que é), não a mecânica. É o que aparece como prefixo da descrição no card ("Câmera de segurança - ...").</p>
-    </div>
-
-    <!-- 3 -->
-    <h2 id="lista">3. Lista de itens (tela inicial)</h2>
+    <h2 id="lista">2. Lista de itens (tela inicial)</h2>
     <ul>
       <li>Não há abas/tabs de filtro.</li>
-      <li>Há um botão <b>Exportar</b> alinhado à direita, acima da lista. Fundo <code>#171717</code> a 10%, texto <code>#171717</code>, sem ícone.</li>
+      <li>Botão <b>Exportar</b> alinhado à direita, acima da lista. Fundo <code>#171717</code> a 10%, texto <code>#171717</code>, sem ícone.</li>
       <li>Cada item é um card clicável que abre o sheet.</li>
     </ul>
 
-    <!-- 4 -->
-    <h2 id="card">4. Card do item</h2>
+    <!-- 3 -->
+    <h2 id="card">3. Card do item</h2>
     <h3>Badges de tipo</h3>
-    <p>Uma badge por tipo presente no item. Item misto mostra as duas.</p>
+    <p>Uma badge por tipo presente. Item misto mostra as duas.</p>
     <table>
-      <tr><th>Tipo</th><th>Cor do texto</th><th>Fundo</th><th>Exemplo</th></tr>
+      <tr><th>Tipo</th><th>Texto</th><th>Fundo</th><th>Exemplo</th></tr>
       <tr><td>Produto</td><td><code>#783B54</code></td><td>mesma cor a 10%</td><td><span class="pill prod">Produto</span></td></tr>
       <tr><td>Software</td><td><code>#4579A6</code></td><td>mesma cor a 10%</td><td><span class="pill soft">Software</span></td></tr>
-      <tr><td>Serviço</td><td>neutro</td><td>cinza (muted)</td><td><span class="pill" style="background:var(--muted);color:var(--muted-fg)">Serviço</span></td></tr>
+      <tr><td>Serviço</td><td>neutro</td><td>cinza</td><td><span class="pill" style="background:var(--muted);color:var(--muted-fg)">Serviço</span></td></tr>
     </table>
-
     <h3>Descrição</h3>
     <ul>
-      <li>Formato: <b>"Categoria - texto completo"</b> (ex.: "Câmera de segurança - Fornecimento de 80 câmeras...").</li>
-      <li>Usa a <b>descrição longa</b> do item; software (sem descrição longa) usa o resumo curto.</li>
-      <li>Limite de <b>300 caracteres</b> (incluindo o prefixo). Acima disso, trunca com reticência (…). O texto completo fica no tooltip.</li>
+      <li>Formato <b>"Categoria - texto"</b> (ex.: "Câmera de segurança - Fornecimento de 80 câmeras...").</li>
+      <li>Usa a descrição longa; software (sem descrição longa) usa o resumo curto.</li>
+      <li>Limite de <b>300 caracteres</b> (com o prefixo). Acima disso trunca com reticência; o texto completo fica no tooltip.</li>
     </ul>
-
     <h3>Badge de status (varia por tipo)</h3>
     <table>
       <tr><th>Situação</th><th>Badge</th></tr>
       <tr><td>Produto</td><td><span class="tag ok">Atende</span> / <span class="tag bad">Não atende</span></td></tr>
-      <tr><td>Software analisado</td><td><span class="tag ok">Aderência X%</span> (faixa de cor: &lt;50 vermelho, 50–80 neutro, &gt;80 verde)</td></tr>
+      <tr><td>Software analisado</td><td>Aderência X% (cor por faixa: &lt;50 vermelho · 50–80 neutro · &gt;80 verde)</td></tr>
       <tr><td>Software em análise (há requisitos não avaliados)</td><td><span class="tag neutral">Em análise · X%</span> (mostra o progresso, não a aderência)</td></tr>
     </table>
-
     <h3>Recomendação de produto</h3>
-    <div class="box warn">
-      <p style="margin:0"><b>O card NÃO mostra recomendação.</b> Só mostra a <b>escolha</b> do usuário: quando um SKU é selecionado, aparece "✓ Produto escolhido: [modelo] · [marca]". Antes da escolha, nenhum produto é sugerido.</p>
-    </div>
+    <div class="box warn"><p style="margin:0"><b>O card NÃO mostra recomendação.</b> Só mostra a <b>escolha</b> do usuário: quando um SKU é selecionado, aparece "✓ Produto escolhido: [modelo] · [marca]". Antes da escolha, nenhum produto é sugerido.</p></div>
 
-    <!-- 5 -->
-    <h2 id="sheet">5. Sheet do item · abertura e header</h2>
+    <!-- 4 -->
+    <h2 id="sheet">4. Sheet do item · abertura e header</h2>
     <ul>
-      <li><b>Efeito de abertura/fechamento</b>: desliza da direita para a esquerda (entra por <code>translateX(100%)</code> → 0; fecha deslizando de volta).</li>
-      <li><b>Header (canto superior direito)</b>, na ordem: Compartilhar · Importar · Baixar · Fechar.</li>
-      <li><b>Importar</b> só aparece em itens com software (checklist).</li>
-      <li>Compartilhar, Baixar e Fechar <b>não têm tooltip</b>.</li>
-      <li>Compartilhar, Importar e Baixar são <b>ações não prototipadas</b> (ver seção 13).</li>
+      <li><b>Abertura/fechamento</b>: desliza da direita para a esquerda (entra por fora à direita e desliza até cobrir; fecha deslizando de volta).</li>
+      <li><b>Header (canto superior direito)</b>: Compartilhar · Importar · Baixar · Fechar.</li>
+      <li><b>Importar</b> só aparece em itens com software.</li>
+      <li>Compartilhar, Baixar e Fechar <b>não têm tooltip</b>. Compartilhar, Importar e Baixar são ações não prototipadas (seção 12).</li>
     </ul>
 
-    <!-- 6 -->
-    <h2 id="resumo">6. Resumo executivo (dentro do card)</h2>
-    <p>Fica no topo do sheet. O conteúdo varia conforme a seção. O tooltip explicativo aparece ao <b>passar o mouse no card inteiro</b> de cada indicador (não há mais o ícone ⓘ).</p>
-
+    <!-- 5 -->
+    <h2 id="resumo">5. Resumo executivo (topo do sheet)</h2>
+    <p>O conteúdo varia por seção. O tooltip explicativo aparece ao <b>passar o mouse no card inteiro</b> de cada indicador (sem ícone ⓘ).</p>
     <h3>Produto — conta por SKU</h3>
     <table>
       <tr><th>Card</th><th>O que é</th></tr>
@@ -179,103 +144,80 @@
       <tr><td>Atende</td><td>SKUs que cumprem 100% das especificações</td></tr>
       <tr><td>Não atende</td><td>SKUs que não cumprem tudo</td></tr>
     </table>
-    <p class="status-note">Em produto, toda especificação exigida é sempre analisada — não existe "falta analisar".</p>
-
+    <p class="note">Em produto, toda especificação exigida é sempre analisada — não existe "falta analisar".</p>
     <h3>Software — conta por requisito</h3>
-    <p>7 cards: <b>Percentual de aderência</b> · Total de requisitos · Atende · Atende parcialmente · Atende com parceiro · Não atende · Falta analisar. O "Percentual de aderência" é sempre exibido.</p>
-
+    <p>7 cards: <b>Percentual de aderência</b> · Total de requisitos · Atende · Atende parcialmente · Atende com parceiro · Não atende · Falta analisar. O Percentual de aderência é sempre exibido.</p>
     <h3>Misto</h3>
-    <p>Mostra os dois resumos empilhados, cada um com a legenda da seção (ex.: "Câmera (hardware)" e "Licença do software VMS").</p>
+    <p>Os dois resumos empilhados, cada um com a legenda da seção.</p>
+    <div class="box tip"><h4>Em aberto</h4><p style="margin:0">O resumo executivo <b>geral</b> (agregando todos os itens, no topo da lista) foi <b>removido por ora</b>, aguardando feedback. A regra de atende/não atende por item (e um possível estado "Em atenção") ainda não foi definida.</p></div>
 
-    <div class="box tip">
-      <h4>Em aberto</h4>
-      <p style="margin:0">O resumo executivo <b>geral</b> (indicadores no topo da lista, agregando todos os itens) foi <b>removido por ora</b>, aguardando feedback dos usuários. A regra de atende/não atende por item (incluindo um possível estado "Em atenção") ainda não foi definida.</p>
-    </div>
-
-    <!-- 7 -->
-    <h2 id="cards-colap">7. Cards colapsáveis (abaixo do resumo)</h2>
+    <!-- 6 -->
+    <h2 id="cards-colap">6. Cards colapsáveis (abaixo do resumo)</h2>
     <p>Aparecem em itens com produto. Todos colapsam pelo cabeçalho (setinha).</p>
     <ul>
-      <li><b>Descrição completa</b> — texto longo do item. No hover do card aparece o "icon group": <b>Copiar a descrição</b> e <b>Ver no edital</b> (setinha), nessa ordem.</li>
-      <li><b>Especificações não exigidas pelo edital</b> — vêm do catálogo, o edital não pede. Cada uma tem o botão <b>+</b> para adicionar à comparação (ver seção 11).</li>
+      <li><b>Descrição completa</b> — texto longo. No hover do card aparece o icon group: <b>Copiar a descrição</b> e <b>Ver no edital</b> (setinha), nessa ordem.</li>
+      <li><b>Especificações não exigidas pelo edital</b> — vêm do catálogo, o edital não pede. Cada uma tem o botão <b>+</b> para adicionar à comparação (seção 10).</li>
       <li><b>Especificações no edital não analisadas</b> — o edital exige mas falta o valor no catálogo. Só referência (sem +).</li>
     </ul>
 
-    <!-- 8 -->
-    <h2 id="produto">8. Seção Produto (matriz de SKUs)</h2>
+    <!-- 7 -->
+    <h2 id="produto">7. Seção Produto (matriz de SKUs)</h2>
     <h3>Cabeçalho da seção</h3>
-    <ul>
-      <li>Categoria (dropdown — define o catálogo comparado) · resumo "Produto recomendado" · badge <span class="tag ok">Atende</span>/<span class="tag bad">Não atende</span> · botão <b>Editar informações</b>.</li>
-    </ul>
+    <p>Categoria (dropdown — define o catálogo comparado) · resumo "Produto recomendado" · badge <span class="tag ok">Atende</span>/<span class="tag bad">Não atende</span> · botão <b>Editar informações</b>.</p>
     <h3>Colunas</h3>
     <p>Especificações do edital · Valor requerido · uma coluna por SKU.</p>
     <h3>Coluna do SKU</h3>
     <ul>
-      <li><b>Ícone da fonte à esquerda</b> do nome/marca. Livro = catálogo, globo = internet. Azul quando tem link (clicável), cinza quando não. Tooltip: "Fonte: Catálogo, clique para abrir" / "Fonte: Internet (catálogo externo), clique para abrir".</li>
-      <li><b>Percentual e fração (x/x)</b> com o <b>mesmo peso de fonte</b>.</li>
+      <li><b>Ícone da fonte à esquerda</b> do nome/marca. Livro = catálogo, globo = internet; azul quando tem link, cinza quando não. Tooltip: "Fonte: Catálogo, clique para abrir" / "Fonte: Internet (catálogo externo), clique para abrir".</li>
+      <li><b>Percentual e fração (x/x)</b> com o mesmo peso de fonte.</li>
       <li><b>Barra de progresso</b>: cinza no 0% (trilho), <b>amarelo de 1% a 99%</b>, <b>verde no 100%</b>.</li>
-      <li>Preço e estoque (quando houver) e botão <b>Selecionar</b>.</li>
+      <li>Preço, estoque (quando houver) e botão <b>Selecionar</b>.</li>
     </ul>
-    <div class="box tip">
-      <h4>Alinhamento de altura (preço e estoque)</h4>
-      <p style="margin:0 0 6px">Quando um SKU não tem preço (ou estoque) mas <b>algum outro tem</b>, reserva-se um espaço em branco para as colunas manterem a mesma altura. Quando <b>nenhum</b> SKU tem a informação, a linha colapsa (não reserva espaço).</p>
-    </div>
+    <div class="box tip"><h4>Alinhamento de altura (preço / estoque)</h4><p style="margin:0">Quando um SKU não tem preço (ou estoque) mas <b>algum outro tem</b>, reserva-se um espaço em branco para as colunas manterem a mesma altura. Quando <b>nenhum</b> SKU tem a informação, a linha colapsa.</p></div>
     <h3>SKU selecionado</h3>
-    <p>A <b>coluna inteira</b> (cabeçalho + células) fica em <b>teal <code>#D4EEF0</code></b> (<code>--brand-100</code>), com borda teal. Botão vira "✓ Selecionado".</p>
+    <p>A coluna inteira (cabeçalho + células) fica em <b>teal <code>#D4EEF0</code></b> com borda teal. O botão vira "✓ Selecionado".</p>
 
-    <!-- 9 -->
-    <h2 id="software">9. Seção Software (checklist)</h2>
+    <!-- 8 -->
+    <h2 id="software">8. Seção Software (checklist)</h2>
     <h3>Cabeçalho da seção</h3>
-    <ul>
-      <li>Categoria (dropdown) · botões <b>Revisar requisitos</b> e <b>Concluir análise</b> (os dois em teal, mesmo estilo).</li>
-      <li>Não repete a aderência no cabeçalho (já está nos cards do resumo).</li>
-    </ul>
+    <p>Categoria (dropdown) · botões <b>Revisar requisitos</b> e <b>Concluir análise</b> (os dois em teal, mesmo estilo). Não repete a aderência no cabeçalho.</p>
     <h3>Colunas</h3>
-    <p>Requisito · Status · Confiança IA · Justificativa IA · Módulo · Responsável · Notas.</p>
+    <p>Requisito · Status · Confiança IA · Justificativa IA · Módulo · Responsável · Notas. Há alternância entre <b>Visão em requisito</b> e <b>Visão em bloco</b> (por módulo).</p>
     <h3>Status por requisito</h3>
     <p><span class="tag ok">Atende</span> · <span class="tag warn">Atende parcialmente</span> · <span class="tag warn">Atende com parceiro</span> · <span class="tag bad">Não atende</span> · <span class="tag neutral">Não avaliado</span></p>
-    <div class="box tip">
-      <h4>Análise não finalizada</h4>
-      <p style="margin:0">Enquanto houver requisitos "Não avaliado", no lugar da aderência mostramos o <b>progresso</b> ("X% dos requisitos analisados"). A aderência só aparece quando a análise fecha (nenhum requisito pendente).</p>
-    </div>
+    <div class="box tip"><h4>Análise não finalizada</h4><p style="margin:0">Enquanto houver requisitos "Não avaliado", no lugar da aderência mostramos o <b>progresso</b> ("X% dos requisitos analisados"). A aderência só aparece quando a análise fecha.</p></div>
 
-    <!-- 10 -->
-    <h2 id="editar">10. Sheet "Editar informações"</h2>
-    <p>Abre pela seção de produto. Não tem a linha "Seção: ..." nem botão "Adicionar requisito" (as badges de não exigidas cumprem esse papel). Contém, acima dos campos editáveis, os <b>mesmos cards colapsáveis</b> da tela de leitura:</p>
+    <!-- 9 -->
+    <h2 id="editar">9. Sheet "Editar informações"</h2>
+    <p>Abre pela seção de produto. Não tem a linha "Seção: ..." nem botão "Adicionar requisito" (as badges de não exigidas cumprem esse papel). Contém, acima dos campos editáveis, os <b>mesmos cards colapsáveis</b> da leitura:</p>
     <ul>
-      <li><b>Descrição completa</b> (com o icon group: copiar + ver no edital).</li>
+      <li><b>Descrição completa</b> (com o icon group).</li>
       <li><b>Especificações não exigidas pelo edital</b> (com o + funcional — adiciona à lista e rola até o fim).</li>
       <li><b>Especificações no edital não analisadas</b> (referência).</li>
     </ul>
     <h3>Edição inline do "Valor requerido" (na matriz)</h3>
-    <ul>
-      <li>Editar direto na célula um valor <b>extraído do edital</b>: na 1ª vez mostra o modal <b>"Confirmar edição?"</b> (editar perde o vínculo com o trecho do edital). Depois não pergunta mais.</li>
-      <li>Tooltip do check/cancelar nesse contexto: "Confirmar e recalcular" / "Cancelar edição".</li>
-    </ul>
+    <p>Editar direto na célula um valor <b>extraído do edital</b>: na 1ª vez mostra o modal <b>"Confirmar edição?"</b> (editar perde o vínculo com o trecho do edital); depois não pergunta mais. Tooltip do check/cancelar: "Confirmar e recalcular" / "Cancelar edição".</p>
 
-    <!-- 11 -->
-    <h2 id="diferencial">11. Especificações não exigidas · botão + (diferencial)</h2>
-    <p>Ao clicar no <b>+</b> de uma especificação não exigida, ela entra na comparação como <b>diferencial</b> e vai para o fim da lista/tabela, com a célula do valor requerido ativa.</p>
+    <!-- 10 -->
+    <h2 id="diferencial">10. Especificações não exigidas · botão + (diferencial)</h2>
+    <p>Ao clicar no <b>+</b>, a especificação entra na comparação como <b>diferencial</b>, vai para o fim da lista/tabela com a célula do valor requerido ativa.</p>
     <ul>
       <li><b>Diferencial não conta no atende</b> (não entra na aderência).</li>
-      <li>A célula de valor abre <b>em branco</b> (sem placeholder). A linha fica <b>branca</b> como as demais (sem fundo cinza).</li>
+      <li>A célula abre <b>em branco</b> (sem placeholder). A linha fica <b>branca</b> como as demais.</li>
       <li><b>Não</b> mostra o modal "Confirmar edição?" (não é edição de dado extraído). Tooltip do check/cancelar: "Confirmar o valor" / "Cancelar".</li>
-      <li>Tooltip do + adapta ao contexto: "à tabela" na leitura, "à lista" no sheet de editar.</li>
-      <li><b>Não existe badge "Diferencial"</b> na linha.</li>
+      <li>Tooltip do +: "à tabela" na leitura, "à lista" no sheet de editar.</li>
+      <li>Não existe badge "Diferencial" na linha.</li>
     </ul>
-    <div class="box warn">
-      <h4>Sem valor informado</h4>
-      <p style="margin:0">Se o usuário não informar um valor, as células de cada SKU dessa linha mostram um <b>circle-alert</b> com tooltip explicando que não há comparação (o edital não exige). O chip do valor fica como <b>"Não informado"</b>.</p>
-    </div>
+    <div class="box warn"><h4>Sem valor informado</h4><p style="margin:0">As células de cada SKU dessa linha mostram um <b>circle-alert</b> com tooltip (não há comparação, pois o edital não exige). O chip do valor fica como <b>"Não informado"</b>.</p></div>
+
+    <!-- 11 -->
+    <h2 id="visualizador">11. Visualizador do arquivo (origem no edital)</h2>
+    <p>Aberto pela setinha "Ver no edital" e pelos ícones de origem. Sidebar à direita com <b>título e conteúdo "Visualizador do arquivo"</b> (placeholder em branco, texto centralizado). No futuro exibirá o PDF do edital no trecho relevante.</p>
+    <p class="note">Quando aberto de dentro do sheet de "Editar informações", abre <b>ao lado</b> do sheet (à esquerda), não atrás.</p>
 
     <!-- 12 -->
-    <h2 id="visualizador">12. Visualizador do arquivo (origem no edital)</h2>
-    <p>Aberto pela setinha "Ver no edital" ou pelos ícones de origem. É uma sidebar à direita com <b>título e conteúdo "Visualizador do arquivo"</b> (placeholder em branco, texto centralizado). No futuro exibirá o PDF do edital no trecho relevante.</p>
-    <p class="status-note">Quando aberto de dentro do sheet de "Editar informações", abre <b>ao lado</b> do sheet (à esquerda dele), não atrás.</p>
-
-    <!-- 13 -->
-    <h2 id="nao-proto">13. Ações não prototipadas</h2>
-    <p>Estas ações ainda não têm fluxo construído. Ao clicar, mostram o sonner padrão: <b>"Essa ação ainda não está prototipada."</b></p>
+    <h2 id="nao-proto">12. Ações não prototipadas</h2>
+    <p>Ao clicar, mostram o sonner padrão: <b>"Essa ação ainda não está prototipada."</b></p>
     <table>
       <tr><th>Ação</th><th>Onde</th></tr>
       <tr><td>Exportar</td><td>lista</td></tr>
@@ -286,12 +228,12 @@
       <tr><td>Adicionar produto manualmente</td><td>estado "nenhum produto"</td></tr>
       <tr><td>Copiar descrição</td><td>card Descrição completa</td></tr>
       <tr><td>Abrir a fonte (internet/catálogo)</td><td>coluna do SKU</td></tr>
-      <tr><td>Questionamento / impugnação, nota, adicionar coluna</td><td>tabelas</td></tr>
+      <tr><td>Adicionar nota / adicionar coluna</td><td>seção software</td></tr>
     </table>
-    <p class="status-note">Ações que <b>funcionam</b> no protótipo: selecionar SKU, copiar valor de célula, editar valor inline, adicionar/remover diferencial, escolher categoria, atualizar informações, adicionar do catálogo, ver a origem no edital.</p>
+    <p class="note">Ações que <b>funcionam</b> no protótipo: selecionar SKU, copiar valor de célula, editar valor inline, adicionar/remover diferencial, escolher categoria, adicionar requisito do catálogo, ver a origem no edital.</p>
 
-    <!-- 14 -->
-    <h2 id="tokens">14. Cores e tokens de referência</h2>
+    <!-- 13 -->
+    <h2 id="tokens">13. Cores e tokens de referência</h2>
     <table>
       <tr><th>Uso</th><th>Valor</th><th></th></tr>
       <tr><td>Marca (teal)</td><td><code>#3A9B9E</code></td><td><span class="sw" style="background:#3A9B9E"></span></td></tr>
@@ -303,8 +245,7 @@
       <tr><td>Não atende</td><td><code>#DC2626</code></td><td><span class="sw" style="background:#DC2626"></span></td></tr>
       <tr><td>Botão Exportar</td><td><code>#171717</code> a 10%</td><td><span class="sw" style="background:rgba(23,23,23,.1)"></span></td></tr>
     </table>
-    <p class="status-note">Fonte: Geist (texto) e Geist Mono (valores/modelos). A referência visual final (medidas, espaçamentos) é o Figma.</p>
-  </main>
-</div>
+    <p class="note">Fonte: Geist (texto) e Geist Mono (valores/modelos). A referência visual final (medidas, espaçamentos) é o Figma.</p>
+  </div>
 </body>
 </html>
