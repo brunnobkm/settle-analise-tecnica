@@ -457,9 +457,8 @@ function openEditDrawer(target) {
   else { const it = ITEMS[active]; editSnapshot = { quantidade: it.quantidade, unidadeMedida: it.unidadeMedida, vu: it.valorUnitario.v, vt: it.valorTotal.v }; }
   renderEditDrawer();
   $("#editOverlay").hidden = false; $("#editDrawer").hidden = false;
-  const fab = $("#helpFab"); if (fab) fab.style.display = "none";
 }
-function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; editTarget = null; const fab = $("#helpFab"); if (fab && $("#helpChat") && $("#helpChat").hidden) fab.style.display = ""; }
+function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; editTarget = null; }
 function cancelEditDrawer() {
   if (editSnapshot && editTarget) {
     if (editTarget.type === "produto") { SPECS = editSnapshot; recompute(); renderMatrix(); }
@@ -1345,50 +1344,6 @@ function initTour() {
   }
 }
 
-/* ---------- Tire suas dúvidas (chat de regras do protótipo) ----------
-   Não é IA: é um matcher de palavras-chave sobre as REGRAS que definimos.
-   Dúvida sobre a UI (aparência/layout) -> orienta a olhar o Figma (versão final). */
-function initHelpChat() {
-  const fab = $("#helpFab"), panel = $("#helpChat"), body = $("#helpBody"), form = $("#helpForm"), input = $("#helpInput"), closeBtn = $("#helpClose");
-  if (!fab || !panel) return;
-  const FIGMA_MSG = "Essa é uma dúvida de aparência / layout. A referência da UI final é o Figma: cores fora das que definimos, espaçamentos, posições, tamanhos e tipografia estão lá. Aqui eu explico as regras de comportamento que combinamos.";
-  const FALLBACK = "Ainda não tenho essa regra registrada aqui. Se for sobre comportamento, tente perguntar de outro jeito ou confirme com o time. Se for sobre a aparência final da tela, a referência é o Figma.";
-  const KB = [
-    { k: ["badge", "cor", "cores", "#783", "#457", "fundo 10", "10%", "vinho", "azul"], a: "Badges de tipo do card: Produto usa texto #783B54 com fundo na mesma cor a 10%; Software usa #4579A6 com fundo a 10%; Serviço fica no cinza neutro. Num item misto aparecem os dois badges (Produto + Software)." },
-    { k: ["tipo", "categoria", "prefixo", "camera", "switch", "cabo de rede", "comeca a descricao", "inicio da descricao"], a: "O 'Tipo' no começo da descrição do card é a CATEGORIA do item (ex.: Câmera de segurança, Switch, Cabo de rede), não a mecânica Produto/Software. Vem do campo 'tipo' do item. Formato: 'Tipo - descrição'." },
-    { k: ["300", "caractere", "caracteres", "limite", "truncar", "truncagem", "reticencia", "texto do card", "tamanho do texto"], a: "O texto do card é a descrição longa do item, limitada a 300 caracteres (incluindo o prefixo 'Tipo - '). Acima disso truncamos e aplicamos reticência (…). O texto completo aparece no tooltip e na 'Descrição completa' ao abrir o item." },
-    { k: ["recomendacao", "recomendado", "melhor produto", "escolha", "escolhido", "indicacao", "sugestao de produto"], a: "O card NÃO mostra recomendação de produto. Só mostra a ESCOLHA do usuário: ao selecionar um SKU, aparece '✓ Produto escolhido'. Antes da escolha, nenhum produto é sugerido no card." },
-    { k: ["resumo geral", "resumo executivo", "indicadores", "topo da lista", "aderencia do edital", "stats"], a: "O resumo executivo geral (os indicadores no topo da lista) foi removido por enquanto, aguardando feedback dos usuários. O resumo agora vive dentro de cada card." },
-    { k: ["resumo produto", "especificacoes", "especificacao", "produtos que atendem", "total de especificacoes", "atende 100"], a: "Resumo do card de produto: Total de especificações, Especificações atendidas, Especificações não atendidas e Produtos que atendem 100% (quantos SKUs do catálogo cumprem tudo). Em produto toda especificação exigida é sempre analisada, então NÃO existe 'falta analisar'." },
-    { k: ["resumo software", "em analise", "analise nao finalizada", "aderencia", "nao avaliado", "progresso", "requisitos analisados", "falta analisar"], a: "Resumo do card de software: aderência, total de requisitos, atende, atende parcialmente, atende com parceiro, não atende e falta analisar. Enquanto a análise não termina (há requisitos 'não avaliado'), no lugar da aderência mostramos o progresso: 'X% dos requisitos já analisados'. A aderência só aparece quando a análise fecha." },
-    { k: ["diferencial", "nao exigidas", "nao exigida", "catalogo nao", "conta no atende", "nao encontrada no edital"], a: "Especificações cadastradas no catálogo que o edital não exige aparecem no bloco de diferenciais. Clicando no + elas entram na tabela para comparação, mas como diferencial: NÃO contam na aderência (no 'atende')." },
-    { k: ["exportar", "tab", "aba todos", "filtro", "botao exportar"], a: "Na tela inicial a tab foi removida. No lugar há um botão 'Exportar' alinhado à direita, que exporta a análise técnica do edital." },
-    { k: ["item e um card", "card e um item", "secao", "secoes", "composicao", "mecanica", "misto"], a: "Cada card é um item do edital. Ao abrir, o item se divide em seções pela mecânica: produto (comparação de SKUs numa tabela) ou software/serviço (checklist atende/não). Um item pode ser composto (produto + software = misto)." },
-    { k: ["concluir analise", "revisar requisitos", "header do software", "botoes do software"], a: "No header da seção de software há 'Revisar requisitos' e 'Concluir análise' como botões. O software não repete o badge de aderência no header (isso já está nos tiles do resumo). No produto o header mantém o status Atende/Não atende." },
-  ];
-  const UI_WORDS = ["espac", "espaç", "margem", "padding", "alinh", "posic", "posiç", "tamanho", "fonte", "tipografia", "pixel", "largura", "altura", "sombra", "borda", "raio ", "icone", "ícone", "layout", "estilo", "css", "aparenc", "aparênc", "visual", "onde fica", "cor de fundo", "fundo da tela"];
-  const norm = s => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  function answer(q) {
-    const n = norm(q);
-    let best = null, bs = 0;
-    KB.forEach(e => { const sc = e.k.reduce((a, kw) => a + (n.includes(norm(kw)) ? (kw.length > 6 ? 2 : 1) : 0), 0); if (sc > bs) { bs = sc; best = e; } });
-    if (best && bs >= 2) return best.a;
-    if (UI_WORDS.some(w => n.includes(norm(w)))) return FIGMA_MSG;
-    if (best && bs >= 1) return best.a;
-    return FALLBACK;
-  }
-  function addMsg(text, who) { const d = document.createElement("div"); d.className = "hc-msg " + who; d.textContent = text; body.appendChild(d); body.scrollTop = body.scrollHeight; }
-  function addChips() { const wrap = document.createElement("div"); wrap.className = "hc-suggest"; ["Cores das badges", "Limite de texto do card", "Por que não tem recomendação?", "Software em análise"].forEach(q => { const b = document.createElement("button"); b.className = "hc-chip"; b.type = "button"; b.textContent = q; b.onclick = () => ask(q); wrap.appendChild(b); }); body.appendChild(wrap); body.scrollTop = body.scrollHeight; }
-  let greeted = false;
-  function greet() { if (greeted) return; greeted = true; addMsg("Oi! Posso explicar as regras que definimos neste protótipo: badges, resumo, limite de texto, recomendação, diferenciais e por aí. Dúvida sobre a aparência final da tela? A referência é o Figma. Como posso ajudar?", "bot"); addChips(); }
-  function ask(q) { addMsg(q, "user"); setTimeout(() => addMsg(answer(q), "bot"), 200); }
-  function openChat() { panel.hidden = false; fab.style.display = "none"; greet(); setTimeout(() => input.focus(), 60); }
-  function closeChat() { panel.hidden = true; fab.style.display = ""; }
-  fab.onclick = openChat;
-  if (closeBtn) closeBtn.onclick = closeChat;
-  form.addEventListener("submit", e => { e.preventDefault(); const q = input.value.trim(); if (!q) return; input.value = ""; ask(q); });
-}
-
 /* boot */
 // demo: pré-seleciona um produto num item que ATENDE, para ilustrar melhor o "produto escolhido"
 if (!prefs.seededChosen2) {
@@ -1397,4 +1352,4 @@ if (!prefs.seededChosen2) {
   prefs.chosen = pc ? { [DEMO_ITEM]: bestOf(matrixOf(pc), pc.skus).i } : {};
   prefs.seededChosen2 = true; savePrefs();
 }
-renderGrid(); wire(); initAddModal(); initTooltip(); initTour(); initHelpChat();
+renderGrid(); wire(); initAddModal(); initTooltip(); initTour();
