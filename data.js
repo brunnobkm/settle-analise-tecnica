@@ -136,15 +136,6 @@ const SOFTWARE_PARCIAL = [
   cl("Armazenamento em nuvem", "Opcional", "Storage", "ne", "", "", 26, "<mark>Armazenamento em nuvem</mark> opcional."),
 ];
 
-/* DEMO: requisitos que a reanálise encontra ao reprocessar o item de "análise vazia" (Software de gestão financeira) */
-const REANALISE_FINANCEIRO = [
-  cl("Empenho, liquidação e pagamento", "Sim", "Execução", "ok", "alta", "Fluxo completo de empenho, liquidação e pagamento nativo.", 31, "<mark>Empenho, liquidação e pagamento</mark> da despesa."),
-  cl("Integração com SIAFI / SICONFI", "Sim", "Integração", "parcial", "media", "Exporta arquivos; a integração automática requer módulo adicional.", 32, "Integração com <mark>SIAFI e SICONFI</mark>."),
-  cl("Controle orçamentário por dotação", "Sim", "Orçamento", "ok", "alta", "Controle por dotação e fonte de recurso.", 33, "<mark>Controle orçamentário</mark> por dotação."),
-  cl("Conciliação bancária automática", "Sim", "Tesouraria", "no", "media", "Não possui conciliação bancária automática.", 34, "<mark>Conciliação bancária</mark> automática."),
-  cl("Relatórios da LRF (RREO e RGF)", "Sim", "Prestação de contas", "ok", "alta", "Gera RREO e RGF conforme a Lei de Responsabilidade Fiscal.", 35, "Relatórios da <mark>LRF (RREO e RGF)</mark>."),
-];
-
 /* Requisitos que a IA identificou no edital, mas não conseguiu extrair o VALOR EXIGIDO.
    O valor de cada SKU (catálogo do cliente) nós temos; o que falta é a exigência do edital
    para fazer o match. vals segue a ordem de SKUS. */
@@ -278,11 +269,13 @@ const ITEMS = [
     resumoTR: "Licenciamento do VMS. Confirme cada funcionalidade exigida; há exigências não atendidas.",
     componentes: [ CHK("Software de gestão de vídeo (VMS)", "parcial") ] },
 
-  // 6) ANÁLISE VAZIA: a IA não identificou nenhum requisito. Não pode marcar "atende".
-  { titulo: "Software de gestão financeira", numero: "6", tipo: "Software de gestão financeira",
-    nome: "Licença de software de gestão financeira e orçamentária.",
-    quantidade: "1", precoUnit: 72000, unidadeMedida: "licença",
-    resumoTR: "Item cuja análise voltou vazia (nenhum requisito identificado).",
-    componentes: [ { mecanica: "checklist", rotulo: "Software de gestão financeira", lista: [] } ] },
+  // 6) NÃO PROCESSADO (produto): a extração automática não encontrou nenhuma especificação. Não pode marcar "atende".
+  //    Resolução (reunião Alice 24/08): extração MANUAL do edital (produto). A extração popula as especificações.
+  { titulo: "Câmeras de monitoramento (lote)", numero: "6", tipo: "Câmera de segurança",
+    nome: "Fornecimento de câmeras de monitoramento para o município, conforme Termo de Referência.",
+    quantidade: "40", precoUnit: 2100, unidadeMedida: "unidade",
+    resumoTR: "Item cuja extração automática não encontrou especificações (não processado).",
+    descricao: "Fornecimento e instalação de câmeras IP para monitoramento urbano, conforme especificações técnicas detalhadas no Termo de Referência (Anexo I) e nas demais condições estabelecidas no edital.",
+    componentes: [ { mecanica: "produto", rotulo: "Câmera (hardware)", skus: SKUS, reqs: [], naoAnalisadas: [], catalogoNaoEdital: [], overrides: [] } ] },
 
 ];

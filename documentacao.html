@@ -76,7 +76,7 @@
       <a href="#editar">9. Editar informações</a>
       <a href="#diferencial">10. Diferenciais (botão +)</a>
       <a href="#concorrencia">11. Item em reprocessamento (edição concorrente)</a>
-      <a href="#vazia">12. Análise vazia</a>
+      <a href="#vazia">12. Item não processado (análise vazia)</a>
     </nav>
 
     <!-- 1 -->
@@ -222,14 +222,15 @@
     <div class="box warn"><h4>Depende de backend</h4><p style="margin:0">Para valer de verdade, precisa de <b>estado compartilhado</b> (quem está reprocessando/editando cada item) e, idealmente, <b>presença</b>. No protótipo é simulado por <code>?trava=N</code>; o nome de quem reprocessa viria do backend na versão real.</p></div>
 
     <!-- 12 -->
-    <h2 id="vazia">12. Análise vazia</h2>
-    <p>Quando a análise de um item volta <b>sem nenhum requisito ou especificação</b> identificado (a IA não extraiu nada), o item <b>NÃO pode ser marcado como "atende"</b> (o padrão errado seria dizer "atende" por ausência de falhas).</p>
+    <h2 id="vazia">12. Item não processado (análise vazia)</h2>
+    <p>Quando a extração automática volta <b>sem nenhuma especificação</b> para um item, ele <b>NÃO pode ser marcado como "atende"</b> (o padrão errado, hoje em produção, é dizer "atende" por ausência de falhas). Decisão da reunião Alice/Brunno (24/08): sinalizar que <b>não houve processamento</b> e oferecer a <b>extração manual</b> como resolução.</p>
     <ul>
-      <li><b>Card</b>: badge neutra <b>"Análise vazia"</b> (não Atende, não Aderência).</li>
-      <li><b>Sheet</b>: em vez da tabela/resumo, um estado vazio explicando a situação, com o botão <b>"Reprocessar análise"</b>.</li>
-      <li>Detecção: produto sem especificações reais na matriz, ou software com a lista de requisitos vazia.</li>
+      <li><b>Card</b>: badge neutra <b>"Não processado"</b> (não Atende, não Aderência).</li>
+      <li><b>Sheet</b>: estado explicando a situação, com o botão <b>"Extrair do edital"</b>.</li>
+      <li><b>Ação = extração manual</b>: o botão abre o <b>Visualizador do arquivo</b> (o edital), onde a pessoa seleciona as especificações e extrai (mesmo padrão da "Descrição completa"). No cenário feliz, a extração <b>popula a análise</b>.</li>
+      <li><b>Escopo</b>: por enquanto <b>só produto</b> (decisão da reunião).</li>
     </ul>
-    <p><b>Ação recomendada</b>: <b>Reprocessar análise</b> — análise vazia costuma ser uma falha de processamento (a IA não extraiu), então rodar de novo é a recuperação natural. Escalar (falar com especialista) só faz sentido se continuar vazio depois do reprocess.</p>
+    <p class="note">Parkado (reunião): extração <b>parcial</b> (ex.: extraiu 1 de 10 requisitos) não é tratada por agora. Foco no caso "zerado".</p>
   </div>
 </body>
 </html>

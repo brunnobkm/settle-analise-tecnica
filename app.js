@@ -205,9 +205,9 @@ function renderGrid() {
     // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor.
     // Enquanto a análise não terminou (há requisitos não avaliados), mostra o progresso em vez da aderência.
     const swComp = it.componentes.every(c => c.mecanica === "checklist") ? sum.comps.find(c => c.mecanica === "checklist") : null;
-    // Análise vazia: nunca marca "atende"; mostra estado próprio.
+    // Não processado (análise vazia): nunca marca "atende"; mostra estado próprio.
     const statusBadge = sum.empty
-      ? `<span class="badge soft" data-tip="A análise deste item veio vazia: nenhum requisito ou especificação foi identificado. Verifique o edital ou reprocesse.">${ICO_ALERT}Análise vazia</span>`
+      ? `<span class="badge soft" data-tip="A extração automática não encontrou nenhuma especificação para este item. Não é marcado como 'atende'. Faça a extração manual do edital.">${ICO_ALERT}Não processado</span>`
       : swComp
       ? (swComp.done
         ? `<span class="badge ${TIER(swComp.pct)}">Aderência ${swComp.pct}%</span>`
@@ -586,26 +586,29 @@ function noProdHTML(comp) {
       <div class="no-prod-sub">Os produtos do seu catálogo não correspondem à categoria <b>"${esc(comp.rotulo)}"</b>. Verifique se a categoria está correta (use o seletor no topo).</div>
     </div>`;
 }
-// análise vazia: nenhum requisito/especificação identificado (não marca "atende")
+// não processado (análise vazia): nenhuma especificação extraída. Não marca "atende". Resolução = extração manual do edital (produto).
 function analiseVaziaHTML() {
   return `<div class="no-prod">
       <div class="no-prod-ico">${ICO_ALERT}</div>
-      <div class="no-prod-title">Análise vazia</div>
-      <div class="no-prod-sub">A análise deste item voltou <b>sem nenhum requisito ou especificação</b> identificado. Enquanto estiver vazia, o item <b>não é marcado como "atende"</b>. Reprocesse a análise ou verifique o edital.</div>
-      <div class="no-prod-actions"><button class="btn primary" data-reprocessempty>Reprocessar análise</button></div>
+      <div class="no-prod-title">Item não processado</div>
+      <div class="no-prod-sub">A extração automática <b>não encontrou nenhuma especificação</b> para este item. Enquanto estiver assim, o item <b>não é marcado como "atende"</b>. Faça a <b>extração manual</b>: abra o edital e selecione as especificações para popular a análise.</div>
+      <div class="no-prod-actions"><button class="btn primary" data-extrairvazio>Extrair do edital</button></div>
     </div>`;
 }
-// ação do estado vazio: reprocessa (skeleton + sonner). Na demo, ao terminar, o item se preenche com requisitos (simula a reanálise que encontrou dados).
-function reprocessEmptyItem() {
+// ação do estado não processado: abre o edital (visualizador), onde a extração manual acontece (selecionar no PDF). No demo, um botão conclui a extração e popula.
+function extractFromEdital() {
   const i = active; if (i == null) return;
-  reprocessing[i] = { val: "nova análise", by: "Você" };
-  showItemReprocessing("nova análise");
-  reprocessing[i].timer = setTimeout(() => {
-    delete reprocessing[i];
-    const comp = ITEMS[i].componentes.find(c => c.mecanica === "checklist");
-    if (comp && (comp.lista || []).length === 0 && typeof REANALISE_FINANCEIRO !== "undefined") comp.lista = REANALISE_FINANCEIRO.map(r => ({ ...r }));
-    if (active === i && !$("#tableOverlay").hidden) openTable(i);
-  }, 3000);
+  $("#drawerHead").textContent = "Visualizador do arquivo";
+  $("#drawerBody").innerHTML = `<div class="file-preview-empty"><span>Visualizador do arquivo</span><p class="fp-hint">Selecione no edital as especificações do item e extraia para popular a análise.</p><button class="btn primary" id="extrairDemoBtn">Extrair especificações (demo)</button></div>`;
+  $("#drawer").hidden = false; $("#drawer").classList.remove("beside-edit"); $("#tableOverlay").classList.add("sidebar-open");
+  const b = $("#drawerBody #extrairDemoBtn");
+  if (b) b.onclick = () => {
+    // demo: a extração encontrou as especificações e populou o produto
+    if (typeof PROD_CAM === "function") ITEMS[i].componentes = [ PROD_CAM(true) ];
+    closeOrigin();
+    if (active === i) openTable(i);
+    toast("Especificações extraídas do edital, análise populada.");
+  };
 }
 function pendenteHTML() {
   return `<div class="no-prod">
@@ -1243,7 +1246,7 @@ function wire() {
     if (lockedByOther && e.target.closest("[data-editsec],[data-vstart],[data-vconfirm],[data-adddiff],[data-rmdiff],[data-addna],[data-concluir],[data-notproto],[data-catdrop],[data-choose],[data-clstatus],[data-addcol],[data-clnote]")) {
       e.preventDefault(); e.stopPropagation(); showLockAlert(lockedByOther); return;
     }
-    if (e.target.closest("[data-reprocessempty]")) { reprocessEmptyItem(); return; }
+    if (e.target.closest("[data-extrairvazio]")) { extractFromEdital(); return; }
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
     const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
