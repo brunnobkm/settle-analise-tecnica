@@ -445,7 +445,7 @@ const colCtrls = c => `<span class="col-resize" data-resize="${c.key}" data-tip=
 function cellTd(cell, ri, ci, exigNa, c, unidade, chosen) {
   const ch = chosen ? " chosen" : ""; // SKU escolhido: coluna inteira em verde
   if (exigNa) return `<td class="cell na-cell${ch}${fzCls(c)}"${fzStyle(c)}><span class="cell-val" data-full="${esc(cell.v)}">${esc(cell.v)}</span></td>`;
-  if (cell.st === "diff") return `<td class="cell diff${ch}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico diff">•</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div></td>`;
+  if (cell.st === "diff") return `<td class="cell diff${ch}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Sem valor requerido informado. Como o edital não exige esta especificação, não há comparação de atende / não atende. Informe um valor requerido para comparar.">${ICO_ALERT}</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK_C : cell.st === "no" ? ICO_NO_C : "";
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
   const cpy = `<button class="cell-copy" data-copytext="${esc(cell.v)}" data-tip="Copiar">${ICO_COPY}</button>`;
@@ -628,7 +628,7 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><span class="ts-chip-edit val-chip-edit">${vrOp}<input class="val-inline-input" data-vedit="${ri}" value="${core}" placeholder="valor requerido">${vrUnit}<button class="ts-ok" data-vconfirm="${ri}" data-tip="${okTip}">${ICO_OK}</button><button class="ts-cancel" data-vcancel="${ri}" data-tip="${cancelTip}">${ICO_NO}</button></span></div></td>`;
         } else if (df && !spec.exig) {
           // diferencial ainda sem valor requerido: editável (o edital não exige; clique para informar, se o edital exigir)
-          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><button class="ts-chip val-chip val-chip-empty" data-vstart="${ri}" data-tip="O edital não exige. Clique para informar um valor requerido (se a IA tiver errado e o edital exigir).">Não exigido</button></div></td>`;
+          row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head"><button class="ts-chip val-chip val-chip-empty" data-vstart="${ri}" data-tip="Clique para informar um valor requerido (não é obrigatório informar, pois o edital não exige essa especificação).">Não exigido</button></div></td>`;
         } else {
           const vrCore = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
           const chip = `<button class="ts-chip val-chip" data-vstart="${ri}">${vrOp}<span class="val-plain">${vrCore}</span>${vrUnit}</button>`;
