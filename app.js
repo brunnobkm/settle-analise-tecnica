@@ -278,9 +278,11 @@ function openTable(i) {
     // Produto: sem botão "Editar" (a célula "Valor requerido" já é editável inline). Software: "Revisar requisitos".
     const isProd = comp.mecanica === "produto";
     // Software: "Revisar requisitos" + "Concluir análise" como botões no header (resumo já mostra aderência e contagens).
-    const editBtn = isProd ? "" : `<button class="comp-edit" data-editsec="${editSec}">Revisar requisitos</button>`;
+    // Produto: "Editar informações" abre o sheet de edição. Software: "Revisar requisitos" + "Concluir análise". Kebab removido (Importar foi p/ o header).
+    const editBtn = isProd
+      ? `<button class="comp-edit" data-editsec="produto">Editar informações</button>`
+      : `<button class="comp-edit" data-editsec="${editSec}">Revisar requisitos</button>`;
     const concluirBtn = isProd ? "" : `<button class="comp-concluir" data-concluir>Concluir análise</button>`;
-    const kebabBtn = `<button class="comp-kebab" data-kebab data-kebabmech="${comp.mecanica}" data-tip="Mais ações">${ICO_KEBAB}</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
     // Produto mantém resumo ("Produto recomendado") + badge Atende/Não atende. Software passa a mostrar isso nos tiles do resumo.
@@ -288,7 +290,7 @@ function openTable(i) {
     const compStatus = isProd
       ? `<span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span>`
       : "";
-    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}${compSum}${compStatus}${editBtn}${concluirBtn}${kebabBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
+    secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}${compSum}${compStatus}${editBtn}${concluirBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
   body += `<div class="to-sections">${secs}</div>`;
 
@@ -296,6 +298,8 @@ function openTable(i) {
   if ($("#matrixHost")) renderMatrix();
   currentChecklists.forEach((c, idx) => renderChecklist($("#clHost-" + idx), c, idx));
   renderNav(); renderItemSummary(); renderEditControls();
+  // Importar (header) só aparece em itens com software (checklist); em produto não existe
+  const imp = $("#toImport"); if (imp) imp.hidden = !it.componentes.some(c => c.mecanica === "checklist");
   $("#tableOverlay").hidden = false;
   sizeMatrixHeight();
   if (miniTourStart && i === 2) miniTourStart(); // mini tour: começa a explicar ao abrir o item
@@ -319,7 +323,11 @@ function sizeMatrixHeight() {
     tw.style.height = Math.max(240, Math.round(h)) + "px";
   });
 }
-const closeTable = () => { $("#tableOverlay").hidden = true; active = null; hideReprocessSonner(); renderGrid(); };
+const closeTable = () => {
+  const ov = $("#tableOverlay"); if (!ov || ov.hidden) return;
+  ov.classList.add("closing"); // anima a saída antes de esconder
+  setTimeout(() => { ov.classList.remove("closing"); ov.hidden = true; active = null; hideReprocessSonner(); renderGrid(); }, 170);
+};
 /* itens visíveis segundo o filtro ativo (para a navegação Anterior/Próximo) */
 function visibleItemsIdx() { return ITEMS.map((_, i) => i).filter(i => statusFilter === "all" || itemSummary(i).status === statusFilter); }
 function renderNav() {
@@ -434,13 +442,14 @@ function buildCols(order) {
 const fzCls = c => c.frozen ? ` frozen${c.edge ? " frozen-edge" : ""}` : "";
 const fzStyle = c => c.frozen ? ` style="left:${c.left}px"` : "";
 const colCtrls = c => `<span class="col-resize" data-resize="${c.key}" data-tip="Arraste para redimensionar a largura"></span>`;
-function cellTd(cell, ri, ci, exigNa, c, unidade) {
-  if (exigNa) return `<td class="cell na-cell${fzCls(c)}"${fzStyle(c)}><span class="cell-val" data-full="${esc(cell.v)}">${esc(cell.v)}</span></td>`;
-  if (cell.st === "diff") return `<td class="cell diff${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico diff">•</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div></td>`;
+function cellTd(cell, ri, ci, exigNa, c, unidade, chosen) {
+  const ch = chosen ? " chosen" : ""; // SKU escolhido: coluna inteira em verde
+  if (exigNa) return `<td class="cell na-cell${ch}${fzCls(c)}"${fzStyle(c)}><span class="cell-val" data-full="${esc(cell.v)}">${esc(cell.v)}</span></td>`;
+  if (cell.st === "diff") return `<td class="cell diff${ch}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico diff">•</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK_C : cell.st === "no" ? ICO_NO_C : "";
   const conf = (cell.st !== "ne" && cell.c) ? `<div class="conf ${cell.c}"><span class="dot"></span>${cap(cell.c)} confiança</div>` : "";
   const cpy = `<button class="cell-copy" data-copytext="${esc(cell.v)}" data-tip="Copiar">${ICO_COPY}</button>`;
-  return `<td class="cell ${cell.st}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}">${icoInner}</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}${cpy}</div>${conf}</td>`;
+  return `<td class="cell ${cell.st}${ch}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}">${icoInner}</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}${cpy}</div>${conf}</td>`;
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
 let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
@@ -576,11 +585,12 @@ function renderMatrix() {
       // fonte do dado qualifica o estoque: catálogo = seu estoque; internet = fonte externa (com link para a origem)
       const isNet = sku.origem === "internet";
       // estoque = disponibilidade em 3 estados: com estoque / sem estoque / não informado (nem todo cliente passa essa info)
+      // estoque em 3 estados; quando não informado, NÃO mostra placeholder (decisão Brunno, ago/2026: some a informação)
       const estoqueBadge = sku.estoque === true
         ? `<span class="sku-tag ok">Com estoque</span>`
         : sku.estoque === false
           ? `<span class="sku-tag warn">Sem estoque</span>`
-          : `<span class="sku-tag soft" data-tip="Não temos a informação sobre o estoque deste produto.">Estoque não informado</span>`;
+          : "";
       // fonte = ÍCONE de origem: livro = catálogo do cliente, globo = internet (externo). Azul quando tem link (clicável), cinza quando não.
       const hasLink = isNet || !!sku.datasheet;
       const srcIco = isNet ? ICO_GLOBE : ICO_CATALOG;
@@ -588,18 +598,16 @@ function renderMatrix() {
       const sourceIcon = hasLink
         ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip}, clique para abrir">${srcIco}</button>`
         : `<span class="sku-srcico nolink" data-tip="${srcTip}, sem link para abrir (não temos o datasheet deste produto)">${srcIco}</span>`;
-      // preço em 2 estados: informado / não informado (nem toda fonte traz o valor)
-      const precoLine = sku.preco != null
-        ? `<div class="sku-preco">${esc(fmtBRL(sku.preco))}</div>`
-        : `<div class="sku-preco sku-preco-none" data-tip="Não temos a informação sobre o preço deste produto.">Preço não informado</div>`;
+      // preço: quando não informado, NÃO mostra placeholder (some a informação)
+      const precoLine = sku.preco != null ? `<div class="sku-preco">${esc(fmtBRL(sku.preco))}</div>` : "";
       const fitCls = sc.pct === 100 ? "full" : sc.pct >= 50 ? "mid" : "low";
-      // nome do SKU primeiro (Alice 28/07); fonte + estoque descem para baixo do preço
+      // ícone da FONTE à esquerda do nome do produto/marca; estoque abaixo (some quando não informado)
       head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
-        <div class="sku-model" data-full="${esc(sku.model)}">${esc(sku.model)}</div><div class="sku-brand" data-full="${esc(sku.brand)}">${esc(sku.brand)}</div>
+        <div class="sku-idrow">${sourceIcon}<div class="sku-id"><div class="sku-model" data-full="${esc(sku.model)}">${esc(sku.model)}</div><div class="sku-brand" data-full="${esc(sku.brand)}">${esc(sku.brand)}</div></div></div>
         <div class="sku-fit"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}</span></div>
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
         ${precoLine}
-        <div class="sku-src">${sourceIcon}${estoqueBadge}</div>
+        ${estoqueBadge ? `<div class="sku-src">${estoqueBadge}</div>` : ""}
         <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
   });
@@ -623,8 +631,8 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${chip}</div></td>`;
         }
       }
-      else if (nx) row += `<td class="cell nm-cell${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
-      else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c, spec.unidade);
+      else if (nx) row += `<td class="cell nm-cell${c.skuIdx === chosenIdx ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
+      else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c, spec.unidade, c.skuIdx === chosenIdx);
     });
     body += row + `</tr>`;
   });
@@ -675,23 +683,20 @@ const RES_I = {
   cross: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`,
   help: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M6.5 6.4a1.6 1.6 0 1 1 2.2 1.5c-.5.2-.7.5-.7 1v.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11.6v.01" stroke-linecap="round"/></svg>`,
 };
-function resTile(cls, svg, n, label, tip) {
-  return `<div class="stat res-tile"><div class="stat-top"><div class="stat-ico ${cls}">${svg}</div><div class="stat-n">${n}</div></div><div class="stat-label">${esc(label)}<button class="stat-info" aria-label="${esc(tip)}" data-tip="${esc(tip)}">${ICO_INFO}</button></div></div>`;
+function resTile(cls, svg, n, label) {
+  // Sem tooltip (ⓘ) nos tiles do resumo (decisão Brunno, ago/2026).
+  return `<div class="stat res-tile"><div class="stat-top"><div class="stat-ico ${cls}">${svg}</div><div class="stat-n">${n}</div></div><div class="stat-label">${esc(label)}</div></div>`;
 }
 function resProdTiles(prod, caption) {
+  // Resumo de produto por SKU: quantos SKUs foram comparados, quantos atendem 100% e quantos não.
   const specs = matrixOf(prod), scores = scoresFor(specs, prod.skus);
-  const chosenIdx = prefs.chosen[active];
-  const sc = (chosenIdx != null && scores.find(s => s.i === chosenIdx)) || rankFor(scores)[0];
-  // Em produto TODA especificação exigida é sempre analisada (decisão Brunno, ago/2026): não existe "falta analisar".
-  // Total = especificações exigidas pelo edital = evaluable (Atende + Não atende). Não conta diferenciais nem "edital não exige".
-  const atendidos = sc.ok, nao = sc.evaluable - sc.ok, total = sc.evaluable;
-  // Quantos SKUs do catálogo cumprem 100% das especificações (mede quantas opções o comprador tem). Unidade = produto, não especificação.
-  const skus100 = scores.filter(s => s.evaluable > 0 && s.pct === 100).length;
+  const analisados = scores.length;
+  const atende = scores.filter(s => s.evaluable > 0 && s.pct === 100).length;
+  const nao = analisados - atende;
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo">
-    ${resTile("", RES_I.layers, total, "Total de especificações", "Especificações que o edital exige para este item (não conta diferenciais nem o que o edital não exige).")}
-    ${resTile("ok", RES_I.check, atendidos, "Especificações atendidas", "Especificações que o produto recomendado atende.")}
-    ${resTile("bad", RES_I.cross, nao, "Especificações não atendidas", "Especificações que o produto recomendado não atende.")}
-    ${resTile("brand", RES_I.target, skus100, "Produtos que atendem 100%", "Produtos (SKUs) do seu catálogo que cumprem todas as especificações exigidas pelo edital, de " + scores.length + " comparados.")}
+    ${resTile("", RES_I.layers, analisados, "SKUs analisados")}
+    ${resTile("ok", RES_I.check, atende, "Atende")}
+    ${resTile("bad", RES_I.cross, nao, "Não atende")}
   </div></div>`;
 }
 function resChkTiles(chk, caption) {
@@ -699,19 +704,14 @@ function resChkTiles(chk, caption) {
   cl.forEach(r => { c[r.st] = (c[r.st] || 0) + 1; });
   const evaluable = c.ok + c.parcial + c.parceiro + c.no;
   const pct = evaluable ? Math.round((c.ok + c.parceiro) / evaluable * 100) : 0;
-  // Análise não finalizada (há requisitos não avaliados): o 1º tile mostra o progresso, não a aderência (que só é confiável no fim).
-  const done = c.ne === 0, analisadoPct = cl.length ? Math.round(evaluable / cl.length * 100) : 0;
-  const headTile = done
-    ? resTile("brand", RES_I.target, pct + "%", "Percentual de aderência", "Percentual de requisitos atendidos (inclui os atendidos com parceiro).")
-    : resTile("", ICO_CLOCK, analisadoPct + "%", "Requisitos analisados", evaluable + " de " + cl.length + " requisitos já foram analisados. A aderência aparece quando a análise for concluída.");
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo sw">
-    ${headTile}
-    ${resTile("", RES_I.layers, cl.length, "Total de requisitos", "Quantidade total de requisitos deste software.")}
-    ${resTile("ok", RES_I.check, c.ok, "Atende", "Requisitos que a sua solução atende integralmente.")}
-    ${resTile("warn", RES_I.check, c.parcial, "Atende parcialmente", "Requisitos atendidos apenas em parte.")}
-    ${resTile("warn", RES_I.check, c.parceiro, "Atende com parceiro", "Requisitos que você atende com apoio de um parceiro.")}
-    ${resTile("bad", RES_I.cross, c.no, "Não atende", "Requisitos que a sua solução não atende.")}
-    ${resTile("", RES_I.help, c.ne, "Falta analisar", "Requisitos que ainda não foram analisados.")}
+    ${resTile("brand", RES_I.target, pct + "%", "Percentual de aderência")}
+    ${resTile("", RES_I.layers, cl.length, "Total de requisitos")}
+    ${resTile("ok", RES_I.check, c.ok, "Atende")}
+    ${resTile("warn", RES_I.check, c.parcial, "Atende parcialmente")}
+    ${resTile("warn", RES_I.check, c.parceiro, "Atende com parceiro")}
+    ${resTile("bad", RES_I.cross, c.no, "Não atende")}
+    ${resTile("", RES_I.help, c.ne, "Falta analisar")}
   </div></div>`;
 }
 // Item misto (produto + software): mostra os dois resumos empilhados, cada um com legenda da seção.
@@ -752,13 +752,13 @@ function collapsiblesHTML(it) {
   if (naoExig.length) {
     const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na tabela e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
     const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" title="Comparar como diferencial na tabela">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
-    html += collapsible("Especificações cadastradas no catálogo e não exigidas pelo edital", tags, naoExig.length, true);
+    html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
   }
   // (2) no edital não analisados: o edital exige, mas ainda não foi analisado. Só referência (badges), SEM "+" (decisão da reunião ~8:01).
   const na = prodComps.flatMap(c => c.naoAnalisadas || []);
   if (na.length) {
     const note = "Especificações exigidas pelo edital que ainda não foram analisadas (falta o valor no seu catálogo).";
-    html += collapsible("Especificações no edital não analisados", tagList(na.map(n => n.req), note), na.length, true);
+    html += collapsible("Especificações no edital não analisadas", tagList(na.map(n => n.req), note), na.length, true);
   }
   return `<div class="to-collapsibles">${html}</div>`;
 }
@@ -889,6 +889,8 @@ function extractDescricao() {
 
 let toastT;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
+// sonner padrão para qualquer ação ainda não prototipada
+function notPrototyped() { toast("Essa ação ainda não está prototipada."); }
 
 /* ============================================================
    Edição inline + interações
@@ -1079,7 +1081,9 @@ function wire() {
     if (more) { const d = $("#editBody .ed-desc"); d.classList.toggle("clamp"); more.textContent = d.classList.contains("clamp") ? "Ver mais" : "Ver menos"; }
   });
   $("#toExport").onclick = () => toast("Baixando o item inteiro (PDF · planilha · resumo técnico)…");
-  { const sh = $("#toShare"); if (sh) sh.onclick = () => toast("Link da análise copiado, compartilhe para validação (engenharia, fornecedor, gestor)"); }
+  // Ações ainda não prototipadas: sonner padrão. (Compartilhar e Importar caem aqui.)
+  { const sh = $("#toShare"); if (sh) sh.onclick = notPrototyped; }
+  { const im = $("#toImport"); if (im) im.onclick = notPrototyped; }
 
   const tb = $("#toBody");
   // redimensiona a tabela ao mudar o tamanho da janela ou abrir/fechar uma seção
