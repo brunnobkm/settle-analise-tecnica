@@ -730,7 +730,7 @@ function itemResumoHTML(it) {
 /* "Descrição completa" (card v1): começa aberta; ao passar o mouse mostra um icon group (igual à célula);
    ao colapsar, o texto vira um preview truncado com reticência (quantidade máx. de caracteres a definir). */
 function descBlockHTML(it) {
-  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descedital>${ICO_ARROW}</button><button class="desc-ico" data-descextrair>${ICO_COPY}</button></span>`;
+  const actions = `<span class="desc-hover-actions"><button class="desc-ico" data-descextrair>${ICO_COPY}</button><button class="desc-ico" data-descedital>${ICO_ARROW}</button></span>`;
   const full = it.descricao || `${it.nome} ${it.resumoTR}`;
   return `<div class="desc-block open" data-descblock>
       <div class="desc-head" data-desctoggle>
@@ -895,13 +895,15 @@ function openOriginSpec(spec, ri) {
   $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>Visualização do arquivo</span></div>`;
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
 }
-const closeOrigin = () => { $("#drawer").hidden = true; $("#tableOverlay").classList.remove("sidebar-open"); extractRi = null; pendingExtract = null; };
+const closeOrigin = () => { $("#drawer").hidden = true; $("#drawer").classList.remove("beside-edit"); $("#tableOverlay").classList.remove("sidebar-open"); extractRi = null; pendingExtract = null; };
 /* Descrição (card v1): "Ver no edital" abre o drawer na origem; "Extrair novamente" re-roda a extração da descrição */
 function openDescOrigin() {
   extractRi = null; pendingExtract = null;
   $("#drawerHead").textContent = "Descrição no edital";
   $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>Descrição do item no Termo de Referência</span></div>`;
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
+  // aberto de dentro do sheet de editar: o drawer de origem fica AO LADO do sheet (à esquerda), não atrás
+  $("#drawer").classList.toggle("beside-edit", !$("#editDrawer").hidden);
 }
 function extractDescricao() {
   const block = document.querySelector("#toBody .desc-block");

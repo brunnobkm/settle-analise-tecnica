@@ -664,6 +664,8 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .table-overlay { transition: padding-right .22s ease; }
 .table-overlay.sidebar-open { padding-right: 440px; }
 .drawer { border-left: 1px solid var(--border); box-shadow: -4px 0 18px rgba(0,0,0,.06); }
+/* origem aberta de dentro do sheet de editar: fica ao lado (à esquerda) do sheet, acima do backdrop de edição */
+.drawer.beside-edit { right: 460px; z-index: 42; }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
 .drawer-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
 .drawer-close { border: 0; background: transparent; color: var(--muted-foreground); width: 30px; height: 30px; border-radius: var(--r-md); display: grid; place-items: center; }
