@@ -508,12 +508,15 @@ function renderEditDrawer() {
     </div>`).join("");
     addBtn = `<button class="ed-add" id="editAddCl">${ICO_PLUS} Adicionar requisito</button>`;
   }
+  // Produto: cards colapsáveis (Descrição completa + não exigidas + não analisadas), como na tela atrás. Item com produto: só a Descrição completa.
+  const temProduto = it.componentes.some(c => c.mecanica === "produto");
+  const refCards = editTarget.type === "produto"
+    ? editRefCards(it)
+    : (temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.descricao || it.nome)}</p>`, null, true) : "");
   $("#editBody").innerHTML = `
     ${scopeLine}
     <div class="ed-hintbox">${hint}</div>
-    <div class="ed-section-label">Descrição</div>
-    <p class="ed-desc clamp">${esc(it.nome)}</p>
-    <button class="ed-more" id="edMore">Ver mais</button>
+    ${refCards}
     <div class="ed-section-label">${sectionLabel}</div>
     ${fields}${addBtn}`;
 }
@@ -761,6 +764,27 @@ function collapsiblesHTML(it) {
     html += collapsible("Especificações no edital não analisadas", tagList(na.map(n => n.req), note), na.length, true);
   }
   return `<div class="to-collapsibles">${html}</div>`;
+}
+/* Cards de referência (colapsáveis) DENTRO do sheet de editar: mesma cara dos da tela atrás, porém read-only. */
+function editRefCards(it) {
+  const prodComps = it.componentes.filter(c => c.mecanica === "produto");
+  const full = it.descricao || `${it.nome} ${it.resumoTR}`;
+  let html = collapsible("Descrição completa", `<p class="cps-desc">${esc(full)}</p>`, null, true);
+  const seenD = new Set();
+  const naoExig = prodComps.flatMap(c => c.catalogoNaoEdital || [])
+    .map(t => typeof t === "string" ? { req: t } : t)
+    .filter(d => !seenD.has(d.req) && seenD.add(d.req));
+  if (naoExig.length) {
+    const note = "Especificações que estão cadastradas no catálogo e o edital não exige.";
+    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
+    html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
+  }
+  const na = prodComps.flatMap(c => c.naoAnalisadas || []);
+  if (na.length) {
+    const note = "Especificações exigidas pelo edital que ainda não foram analisadas (falta o valor no seu catálogo).";
+    html += collapsible("Especificações no edital não analisadas", tagList(na.map(n => n.req), note), na.length, true);
+  }
+  return html;
 }
 /* "+" numa spec "no edital não analisados": adiciona ao fim da comparação e some da seção */
 function addNaoAnalisado(reqName) {
