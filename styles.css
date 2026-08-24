@@ -671,7 +671,7 @@ table.dt { border-collapse: separate; border-spacing: 0; width: 100%; min-width:
 .drawer-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
 .drawer-close { border: 0; background: transparent; color: var(--muted-foreground); width: 30px; height: 30px; border-radius: var(--r-md); display: grid; place-items: center; }
 .drawer-close:hover { background: var(--muted); color: var(--foreground); }
-.drawer-body { padding: 18px; overflow-y: auto; }
+.drawer-body { padding: 18px; overflow-y: auto; flex: 1; min-height: 0; }
 /* barra lateral de edição das exigências do edital */
 .edit-overlay { position: fixed; inset: 0; background: rgba(10,10,10,.28); z-index: 40; }
 .edit-overlay[hidden] { display: none; }

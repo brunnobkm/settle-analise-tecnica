@@ -892,7 +892,7 @@ const FILE_SVG = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" st
 function openOriginSpec(spec, ri) {
   extractRi = null; pendingExtract = null;
   $("#drawerHead").textContent = "Visualização do arquivo";
-  $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>Visualização do arquivo</span></div>`;
+  $("#drawerBody").innerHTML = `<div class="file-preview-empty"><span>Visualizador do arquivo</span></div>`;
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
 }
 const closeOrigin = () => { $("#drawer").hidden = true; $("#drawer").classList.remove("beside-edit"); $("#tableOverlay").classList.remove("sidebar-open"); extractRi = null; pendingExtract = null; };
@@ -900,7 +900,7 @@ const closeOrigin = () => { $("#drawer").hidden = true; $("#drawer").classList.r
 function openDescOrigin() {
   extractRi = null; pendingExtract = null;
   $("#drawerHead").textContent = "Descrição no edital";
-  $("#drawerBody").innerHTML = `<div class="file-preview-empty">${FILE_SVG}<span>Descrição do item no Termo de Referência</span></div>`;
+  $("#drawerBody").innerHTML = `<div class="file-preview-empty"><span>Visualizador do arquivo</span></div>`;
   $("#drawer").hidden = false; $("#tableOverlay").classList.add("sidebar-open");
   // aberto de dentro do sheet de editar: o drawer de origem fica AO LADO do sheet (à esquerda), não atrás
   $("#drawer").classList.toggle("beside-edit", !$("#editDrawer").hidden);
