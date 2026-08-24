@@ -686,9 +686,9 @@ const RES_I = {
   cross: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`,
   help: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M6.5 6.4a1.6 1.6 0 1 1 2.2 1.5c-.5.2-.7.5-.7 1v.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11.6v.01" stroke-linecap="round"/></svg>`,
 };
-function resTile(cls, svg, n, label) {
-  // Sem tooltip (ⓘ) nos tiles do resumo (decisão Brunno, ago/2026).
-  return `<div class="stat res-tile"><div class="stat-top"><div class="stat-ico ${cls}">${svg}</div><div class="stat-n">${n}</div></div><div class="stat-label">${esc(label)}</div></div>`;
+function resTile(cls, svg, n, label, tip) {
+  // Sem ícone ⓘ: o tooltip aparece ao passar o mouse no card inteiro (data-tip no tile).
+  return `<div class="stat res-tile"${tip ? ` data-tip="${esc(tip)}"` : ""}><div class="stat-top"><div class="stat-ico ${cls}">${svg}</div><div class="stat-n">${n}</div></div><div class="stat-label">${esc(label)}</div></div>`;
 }
 function resProdTiles(prod, caption) {
   // Resumo de produto por SKU: quantos SKUs foram comparados, quantos atendem 100% e quantos não.
@@ -697,9 +697,9 @@ function resProdTiles(prod, caption) {
   const atende = scores.filter(s => s.evaluable > 0 && s.pct === 100).length;
   const nao = analisados - atende;
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo">
-    ${resTile("", RES_I.layers, analisados, "SKUs analisados")}
-    ${resTile("ok", RES_I.check, atende, "Atende")}
-    ${resTile("bad", RES_I.cross, nao, "Não atende")}
+    ${resTile("", RES_I.layers, analisados, "SKUs analisados", "Produtos (SKUs) do seu catálogo comparados com as exigências deste item.")}
+    ${resTile("ok", RES_I.check, atende, "Atende", "SKUs que cumprem 100% das especificações exigidas pelo edital.")}
+    ${resTile("bad", RES_I.cross, nao, "Não atende", "SKUs que não cumprem todas as especificações exigidas.")}
   </div></div>`;
 }
 function resChkTiles(chk, caption) {
@@ -708,13 +708,13 @@ function resChkTiles(chk, caption) {
   const evaluable = c.ok + c.parcial + c.parceiro + c.no;
   const pct = evaluable ? Math.round((c.ok + c.parceiro) / evaluable * 100) : 0;
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo sw">
-    ${resTile("brand", RES_I.target, pct + "%", "Percentual de aderência")}
-    ${resTile("", RES_I.layers, cl.length, "Total de requisitos")}
-    ${resTile("ok", RES_I.check, c.ok, "Atende")}
-    ${resTile("warn", RES_I.check, c.parcial, "Atende parcialmente")}
-    ${resTile("warn", RES_I.check, c.parceiro, "Atende com parceiro")}
-    ${resTile("bad", RES_I.cross, c.no, "Não atende")}
-    ${resTile("", RES_I.help, c.ne, "Falta analisar")}
+    ${resTile("brand", RES_I.target, pct + "%", "Percentual de aderência", "Percentual de requisitos atendidos (inclui os atendidos com parceiro).")}
+    ${resTile("", RES_I.layers, cl.length, "Total de requisitos", "Quantidade total de requisitos deste software.")}
+    ${resTile("ok", RES_I.check, c.ok, "Atende", "Requisitos que a sua solução atende integralmente.")}
+    ${resTile("warn", RES_I.check, c.parcial, "Atende parcialmente", "Requisitos atendidos apenas em parte.")}
+    ${resTile("warn", RES_I.check, c.parceiro, "Atende com parceiro", "Requisitos que você atende com apoio de um parceiro.")}
+    ${resTile("bad", RES_I.cross, c.no, "Não atende", "Requisitos que a sua solução não atende.")}
+    ${resTile("", RES_I.help, c.ne, "Falta analisar", "Requisitos que ainda não foram analisados.")}
   </div></div>`;
 }
 // Item misto (produto + software): mostra os dois resumos empilhados, cada um com legenda da seção.

@@ -333,6 +333,7 @@ button.tag-item.diff-tag:hover { background: var(--brand-100); border-color: var
 .item-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .item-resumo.sw { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
 .item-resumo .res-tile { min-height: auto; padding: 12px 14px; gap: 8px; }
+.item-resumo .res-tile[data-tip] { cursor: help; }
 .item-resumo .stat-n { font-size: 22px; }
 
 /* ---------- View bar (toggle + ações) ---------- */
