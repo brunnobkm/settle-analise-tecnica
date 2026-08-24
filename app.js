@@ -325,8 +325,8 @@ function sizeMatrixHeight() {
 }
 const closeTable = () => {
   const ov = $("#tableOverlay"); if (!ov || ov.hidden) return;
-  ov.classList.add("closing"); // anima a saída antes de esconder
-  setTimeout(() => { ov.classList.remove("closing"); ov.hidden = true; active = null; hideReprocessSonner(); renderGrid(); }, 170);
+  ov.classList.add("closing"); // anima a saída (desliza para a direita) antes de esconder
+  setTimeout(() => { ov.classList.remove("closing"); ov.hidden = true; active = null; hideReprocessSonner(); renderGrid(); }, 200);
 };
 /* itens visíveis segundo o filtro ativo (para a navegação Anterior/Próximo) */
 function visibleItemsIdx() { return ITEMS.map((_, i) => i).filter(i => statusFilter === "all" || itemSummary(i).status === statusFilter); }
