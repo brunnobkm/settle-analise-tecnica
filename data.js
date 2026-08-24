@@ -269,19 +269,4 @@ const ITEMS = [
     resumoTR: "Licenciamento do VMS. Confirme cada funcionalidade exigida; há exigências não atendidas.",
     componentes: [ CHK("Software de gestão de vídeo (VMS)", "parcial") ] },
 
-  // 6) MISTO · ATENDE (produto 100% + software atende)
-  { titulo: "Câmeras speed dome + licença VMS", numero: "6", tipo: "Câmera de segurança",
-    nome: "Fornecimento de câmeras speed dome PTZ e a licença do software de gestão de vídeo (VMS).",
-    quantidade: "1", precoUnit: 260000, unidadeMedida: "lote",
-    resumoTR: "Item misto (produto + software). O produto atende e o software atende: item completo.",
-    descricao: "Fornecimento de câmeras IP tipo speed dome PTZ e da licença do software de gestão de vídeo (VMS), contemplando a integração entre os equipamentos e a plataforma, a instalação, a configuração e o treinamento operacional da equipe, incluindo suportes, cabeamento e todos os acessórios necessários, conforme as especificações técnicas detalhadas no Termo de Referência (Anexo I) e nas demais condições estabelecidas no edital.",
-    componentes: [ PROD_CAM(true), CHK("Licença do software VMS", true) ] },
-
-  // 7) MISTO · NÃO ATENDE · pendência SÓ no software (produto atende 100%) — recomendação condicionada
-  { titulo: "Câmeras + software VMS (LPR/facial)", numero: "7", tipo: "Câmera de segurança",
-    nome: "Fornecimento de câmeras e a licença do VMS com LPR e reconhecimento facial.",
-    quantidade: "1", precoUnit: 310000, unidadeMedida: "lote",
-    resumoTR: "Item misto. O produto (câmera) atende 100%, mas o software tem exigência não atendida: pendência fora do produto.",
-    descricao: "Fornecimento de câmeras IP e da licença do software de gestão de vídeo (VMS) com módulos de leitura automática de placas (LPR) e reconhecimento facial, incluindo a integração dos equipamentos à plataforma, a instalação, a configuração e o treinamento da equipe, conforme as especificações técnicas detalhadas no Termo de Referência (Anexo I) e nas demais condições estabelecidas no edital.",
-    componentes: [ PROD_CAM(true), CHK("Software de gestão de vídeo (VMS)", false) ] },
 ];

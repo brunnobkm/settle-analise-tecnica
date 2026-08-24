@@ -1326,7 +1326,7 @@ function initTooltip() {
 function initTour() {
   const layer = $("#tourLayer"), hi = $("#tourHi"), pop = $("#tourPop");
   const ensureGrid = () => { if (!$("#tableOverlay").hidden) closeTable(); if (!$("#drawer").hidden) closeOrigin(); };
-  const MISTO = ITEMS.length - 1; // último item = misto completo (produto + software + serviço)
+  const MISTO = 2; // item de PRODUTO com matriz (usado pelos passos do tour; itens misto foram removidos)
   const ensureMisto = () => { if ($("#tableOverlay").hidden || active !== MISTO) openTable(MISTO); };
   // mini tour (para gravação): fluxo das especificações não exigidas pelo edital. Aciona via ?tour=diferencial
   const openItem3 = () => { if ($("#tableOverlay").hidden || active !== 2) openTable(2); };
