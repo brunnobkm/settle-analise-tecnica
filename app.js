@@ -620,7 +620,7 @@ function renderMatrix() {
     const nx = !!spec.naoExtraido, df = !!spec.diferencial, fromDiff = !!spec.fromDiff;
     let row = `<tr class="${df ? "diff-row" : nx ? "nx-row" : (isConcordant(spec) ? "concordant" : "")}">`;
     cols.forEach(c => {
-      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-full="${esc(spec.req)}">${esc(spec.req)}</span>${df ? `<span class="diff-badge" data-tip="Diferencial: o edital não exige, não conta no atende">Diferencial</span>` : ""}${fromDiff ? `<button class="diff-remove" data-rmdiff="${esc(spec.req)}" data-tip="Remover da comparação">${ICO_NO}</button>` : ""}</td>`;
+      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-full="${esc(spec.req)}">${esc(spec.req)}</span>${fromDiff ? `<button class="diff-remove" data-rmdiff="${esc(spec.req)}" data-tip="Remover da comparação">${ICO_NO}</button>` : ""}</td>`;
       else if (c.key === "val") {
         if (editingRow === ri) {
           const core = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
@@ -663,6 +663,9 @@ function commitInline(ri) {
   toast(converted ? "Valor requerido definido, agora este requisito conta no atende" : "Valor requerido atualizado, análise recalculada");
 }
 function tryCommitInline(ri) {
+  const spec = SPECS[ri];
+  // Item recém-adicionado pela badge (diferencial): informar o valor não é "editar" um dado extraído do edital, então não mostra o aviso "Confirmar edição?".
+  if (spec && spec.fromDiff) { commitInline(ri); return; }
   if (!prefs.warnedInline) { pendingCommitRi = ri; $("#warnOverlay").hidden = false; $("#warnModal").hidden = false; return; }
   commitInline(ri);
 }
