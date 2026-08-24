@@ -281,7 +281,7 @@ function openTable(i) {
     // Produto: "Editar informações" abre o sheet de edição. Software: "Revisar requisitos" + "Concluir análise". Kebab removido (Importar foi p/ o header).
     const editBtn = isProd
       ? `<button class="comp-edit" data-editsec="produto">Editar informações</button>`
-      : `<button class="comp-edit" data-editsec="${editSec}">Revisar requisitos</button>`;
+      : `<button class="comp-edit" data-notproto>Revisar requisitos</button>`;
     const concluirBtn = isProd ? "" : `<button class="comp-concluir" data-concluir>Concluir análise</button>`;
     // categoria do componente = com qual catálogo o item é comparado; editável via dropdown (UI pronta, decisão Alice 28/07)
     const catBtn = `<button class="comp-cat" data-catdrop data-catmech="${comp.mecanica}" data-tip="Categoria usada para comparar com o catálogo. Clique para trocar.">${esc(comp.rotulo)}${CARET_SM}</button>`;
@@ -452,7 +452,7 @@ function cellTd(cell, ri, ci, exigNa, c, unidade, chosen) {
   return `<td class="cell ${cell.st}${ch}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="cell-ico ${cell.st}">${icoInner}</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}${cpy}</div>${conf}</td>`;
 }
 /* edição = ação consciente numa BARRA LATERAL, POR SEÇÃO (cada seção tem seu Editar). Tabela é sempre leitura. */
-let editSnapshot = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
+let editSnapshot = null, editSnapshotDiff = null, editTarget = null; // {type:"produto"} | {type:"checklist", sec:N}
 function renderEditControls() { const el = $("#toEditCtrls"); if (el) el.innerHTML = ""; } // "Editar informações do item" removido na v1 (card): a meta é editável inline; cada seção tem seu próprio Editar
 function editSecLabel() {
   const it = ITEMS[active];
@@ -461,16 +461,17 @@ function editSecLabel() {
 }
 function openEditDrawer(target) {
   editTarget = target;
-  if (target.type === "produto") editSnapshot = SPECS ? clone(SPECS) : null;
+  if (target.type === "produto") { editSnapshot = SPECS ? clone(SPECS) : null; editSnapshotDiff = new Set(addedDiff[active] || []); }
   else if (target.type === "checklist") editSnapshot = clone(currentChecklists[target.sec]);
   else { const it = ITEMS[active]; editSnapshot = { quantidade: it.quantidade, unidadeMedida: it.unidadeMedida, vu: it.valorUnitario.v, vt: it.valorTotal.v }; }
   renderEditDrawer();
   $("#editOverlay").hidden = false; $("#editDrawer").hidden = false;
 }
-function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; editTarget = null; }
+function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; editSnapshotDiff = null; editTarget = null; }
 function cancelEditDrawer() {
   if (editSnapshot && editTarget) {
-    if (editTarget.type === "produto") { SPECS = editSnapshot; recompute(); renderMatrix(); }
+    // produto: restaura SPECS e o conjunto de diferenciais adicionados (desfaz o que foi adicionado pelo "+" no sheet)
+    if (editTarget.type === "produto") { SPECS = editSnapshot; if (editSnapshotDiff) addedDiff[active] = editSnapshotDiff; recompute(); renderMatrix(); }
     else if (editTarget.type === "checklist") { const l = currentChecklists[editTarget.sec]; l.splice(0, l.length, ...editSnapshot); renderChecklist($("#clHost-" + editTarget.sec), l, editTarget.sec); }
     // item: só aplica no Salvar, nada a restaurar
   }
@@ -811,7 +812,7 @@ function addNaoAnalisado(reqName) {
 }
 /* "+" numa spec "não exigida pelo edital": entra na tabela como linha de diferencial (opção B).
    Compara os SKUs entre si, sem atende/não atende, e NÃO conta no match. */
-function addDiferencial(reqName) {
+function addDiferencial(reqName, fromSheet) {
   if (active == null || !SPECS) return;
   const prodComp = ITEMS[active].componentes.find(c => c.mecanica === "produto");
   const d = prodComp && (prodComp.catalogoNaoEdital || []).map(t => typeof t === "string" ? { req: t } : t).find(x => x.req === reqName);
@@ -819,6 +820,8 @@ function addDiferencial(reqName) {
   SPECS.push({ req: d.req, exig: "", diferencial: true, fromDiff: true, unidade: d.unidade || "", modulo: "Diferencial", origem: { doc: "Catálogo do produto", pag: "—", trecho: "Especificação do produto, não exigida pelo edital." }, cells: MX_SKUS.map((_, i) => ({ st: "diff", v: (d.vals && d.vals[i]) || "—", c: null })) });
   (addedDiff[active] || (addedDiff[active] = new Set())).add(reqName);
   recompute();
+  // Chamado de dentro do sheet de editar: NÃO toca na tabela; o efeito só vai para a tabela ao Salvar (Cancelar reverte).
+  if (fromSheet) return;
   editingRow = SPECS.length - 1; // abre o campo para o usuário informar o valor requerido (ou deixar como não exigido)
   renderMatrix();
   const host = document.querySelector("#toBody .to-collapsibles");
@@ -1116,7 +1119,7 @@ function wire() {
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
     // "+" numa spec não exigida: adiciona à comparação (como na leitura), re-renderiza o drawer e rola até o fim da lista
     const adf = e.target.closest("[data-adddiff]"); if (adf) {
-      addDiferencial(adf.dataset.adddiff); renderEditDrawer();
+      addDiferencial(adf.dataset.adddiff, true); renderEditDrawer(); // fromSheet: só no drawer; tabela só muda ao Salvar
       const fs = $("#editBody").querySelectorAll(".ed-field"); const last = fs[fs.length - 1];
       if (last) last.scrollIntoView({ block: "center", behavior: "smooth" });
       return;
@@ -1187,6 +1190,7 @@ function wire() {
     if (e.target.closest("[data-descextrair]")) { notPrototyped(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
     if (e.target.closest("[data-concluir]")) { e.preventDefault(); notPrototyped(); return; }
+    if (e.target.closest("[data-notproto]")) { e.preventDefault(); notPrototyped(); return; }
     const es = e.target.closest("[data-editsec]"); if (es) { e.preventDefault(); const v = es.dataset.editsec; openEditDrawer(v === "produto" ? { type: "produto" } : { type: "checklist", sec: +v.split(":")[1] }); return; }
     const vs = e.target.closest("[data-vstart]"); if (vs) { startInlineEdit(+vs.dataset.vstart); return; }
     const vconf = e.target.closest("[data-vconfirm]"); if (vconf) { tryCommitInline(+vconf.dataset.vconfirm); return; }
