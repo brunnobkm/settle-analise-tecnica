@@ -90,6 +90,8 @@ const opTag = op => op ? `<span class="op-fixed">${esc(op)} </span>` : "";
 const rankFor = sc => [...sc].sort((a, b) => b.pct - a.pct || a.ne - b.ne || b.ok - a.ok);
 const bestOf = (specs, skus) => rankFor(scoresFor(specs, skus))[0];
 const prodSummary = comp => { const best = bestOf(matrixOf(comp), comp.skus); return { best, ok: best.diverg.length === 0 }; };
+// análise vazia = veio sem nenhum requisito/especificação real. Não pode marcar "atende".
+const emptyComp = comp => comp.mecanica === "produto" ? !matrixOf(comp).some(sp => !sp.exigNa && !sp.diferencial) : (comp.lista || []).length === 0;
 const isConcordant = spec => new Set(spec.cells.filter(c => c.st === "ok" || c.st === "no").map(c => c.st)).size <= 1;
 
 /* ---------- checklist (serviço / software) ---------- */
@@ -109,10 +111,11 @@ const confBadge = c => c ? `<span class="badge ${c === "alta" ? "ok" : c === "me
 function itemSummary(i) {
   const it = ITEMS[i];
   const comps = it.componentes.map(comp => {
-    if (comp.mecanica === "produto") { const ps = prodSummary(comp); return { mecanica: "produto", rotulo: comp.rotulo, ok: comp.nenhumProduto ? false : ps.ok, best: ps.best, comp }; }
-    const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, ok: s.status === "ok", ok_n: s.ok, total: s.total, pct: s.pct, ne: s.ne, done: s.done, analisadoPct: s.analisadoPct, comp };
+    const empty = emptyComp(comp);
+    if (comp.mecanica === "produto") { const ps = prodSummary(comp); return { mecanica: "produto", rotulo: comp.rotulo, empty, ok: empty ? false : (comp.nenhumProduto ? false : ps.ok), best: ps.best, comp }; }
+    const s = checklistSummary(comp.lista); return { mecanica: "checklist", rotulo: comp.rotulo, empty, ok: empty ? false : (s.status === "ok"), ok_n: s.ok, total: s.total, pct: s.pct, ne: s.ne, done: s.done, analisadoPct: s.analisadoPct, comp };
   });
-  return { comps, multi: comps.length > 1, status: comps.every(c => c.ok) ? "ok" : "no" };
+  return { comps, multi: comps.length > 1, empty: comps.every(c => c.empty), status: comps.every(c => c.ok) ? "ok" : "no" };
 }
 /* resumo compacto de uma seção (para o cabeçalho do accordion) */
 function secSummary(cs) {
@@ -202,7 +205,10 @@ function renderGrid() {
     // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor.
     // Enquanto a análise não terminou (há requisitos não avaliados), mostra o progresso em vez da aderência.
     const swComp = it.componentes.every(c => c.mecanica === "checklist") ? sum.comps.find(c => c.mecanica === "checklist") : null;
-    const statusBadge = swComp
+    // Análise vazia: nunca marca "atende"; mostra estado próprio.
+    const statusBadge = sum.empty
+      ? `<span class="badge soft" data-tip="A análise deste item veio vazia: nenhum requisito ou especificação foi identificado. Verifique o edital ou reprocesse.">${ICO_ALERT}Análise vazia</span>`
+      : swComp
       ? (swComp.done
         ? `<span class="badge ${TIER(swComp.pct)}">Aderência ${swComp.pct}%</span>`
         : `<span class="badge mid" data-tip="${esc(swComp.analisadoPct + "% dos requisitos já foram analisados. A aderência aparece quando a análise for concluída.")}">Em análise · ${swComp.analisadoPct}%</span>`)
@@ -274,6 +280,15 @@ function openTable(i) {
     lockedByOther = r.by; // outro usuário: segue para o render normal + banner de trava
   }
   hideReprocessSonner();
+  // análise vazia: nenhum requisito/especificação identificado. Não mostra tabela nem "atende".
+  if (sum.empty) {
+    renderNav(); renderItemSummary(); renderEditControls();
+    const imp = $("#toImport"); if (imp) imp.hidden = true;
+    $("#toBody").innerHTML = `<div class="to-sections">${analiseVaziaHTML()}</div>`;
+    $("#tableOverlay").hidden = false;
+    sizeMatrixHeight();
+    return;
+  }
 
   let body = `<div id="itemResumo">${itemResumoHTML(it)}</div>` + collapsiblesHTML(it), secs = "";
   it.componentes.forEach((comp, ci) => {
@@ -569,6 +584,14 @@ function noProdHTML(comp) {
       <div class="no-prod-ico">${ICO_ALERT}</div>
       <div class="no-prod-title">Nenhum produto se aplica</div>
       <div class="no-prod-sub">Os produtos do seu catálogo não correspondem à categoria <b>"${esc(comp.rotulo)}"</b>. Verifique se a categoria está correta (use o seletor no topo).</div>
+    </div>`;
+}
+// análise vazia: nenhum requisito/especificação identificado (não marca "atende")
+function analiseVaziaHTML() {
+  return `<div class="no-prod">
+      <div class="no-prod-ico">${ICO_ALERT}</div>
+      <div class="no-prod-title">Análise vazia</div>
+      <div class="no-prod-sub">A análise deste item voltou <b>sem nenhum requisito ou especificação</b> identificado. Enquanto estiver vazia, o item <b>não é marcado como "atende"</b>. Verifique o edital ou reprocesse a análise.</div>
     </div>`;
 }
 function pendenteHTML() {

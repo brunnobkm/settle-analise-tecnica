@@ -269,4 +269,11 @@ const ITEMS = [
     resumoTR: "Licenciamento do VMS. Confirme cada funcionalidade exigida; há exigências não atendidas.",
     componentes: [ CHK("Software de gestão de vídeo (VMS)", "parcial") ] },
 
+  // 6) ANÁLISE VAZIA: a IA não identificou nenhum requisito. Não pode marcar "atende".
+  { titulo: "Software de gestão financeira", numero: "6", tipo: "Software de gestão financeira",
+    nome: "Licença de software de gestão financeira e orçamentária.",
+    quantidade: "1", precoUnit: 72000, unidadeMedida: "licença",
+    resumoTR: "Item cuja análise voltou vazia (nenhum requisito identificado).",
+    componentes: [ { mecanica: "checklist", rotulo: "Software de gestão financeira", lista: [] } ] },
+
 ];
