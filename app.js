@@ -597,7 +597,7 @@ function renderMatrix() {
       // fonte = ÍCONE de origem: livro = catálogo do cliente, globo = internet (externo). Azul quando tem link (clicável), cinza quando não.
       const hasLink = isNet || !!sku.datasheet;
       const srcIco = isNet ? ICO_GLOBE : ICO_CATALOG;
-      const srcTip = isNet ? "Fonte: Internet (catálogo externo)" : "Fonte: Catálogo do cliente";
+      const srcTip = isNet ? "Fonte: Internet (catálogo externo)" : "Fonte: Catálogo";
       const sourceIcon = hasLink
         ? `<button class="sku-srcico haslink" data-${isNet ? "neturl" : "caturl"}="${idx}" data-tip="${srcTip}, clique para abrir">${srcIco}</button>`
         : `<span class="sku-srcico nolink" data-tip="${srcTip}, sem link para abrir (não temos o datasheet deste produto)">${srcIco}</span>`;
@@ -610,7 +610,7 @@ function renderMatrix() {
         <div class="sku-fit"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}</span></div>
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
         ${precoLine}
-        ${estoqueBadge ? `<div class="sku-src">${estoqueBadge}</div>` : ""}
+        <div class="sku-src">${estoqueBadge}</div>
         <button class="sku-select${isChosen ? " on" : ""}" data-choose="${idx}">${isChosen ? "✓ Selecionado" : "Selecionar"}</button>${colCtrls(c)}</th>`;
     }
   });
