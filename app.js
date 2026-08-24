@@ -193,8 +193,9 @@ function renderGrid() {
     // uma badge por tipo presente (misto = Produto + Software), cada uma com a cor do tipo
     const segBadge = tipos.map(t => `<span class="badge seg ${SEG_CLS[t]}">${esc(TIPO_LBL[t])}</span>`).join("");
     // descrição no formato "Tipo - Texto completo", truncada com reticência. Tipo = categoria do item (Câmera, Switch, Cabo de rede...), não a mecânica.
-    const DESC_MAX = 120; // TODO: definir a quantidade máxima de caracteres para truncar (a combinar com o time)
-    const descFull = `${it.tipo ? it.tipo + " - " : ""}${it.nome}`;
+    const DESC_MAX = 300; // limite de caracteres do texto do card (inclui o prefixo "Tipo - "); acima disso trunca com reticência
+    const descText = it.descricao || it.nome; // descrição longa no card; software (sem descricao) usa o resumo curto
+    const descFull = `${it.tipo ? it.tipo + " - " : ""}${descText}`;
     const descTrunc = descFull.length > DESC_MAX ? descFull.slice(0, DESC_MAX).replace(/\s+$/, "") + "…" : descFull;
     const descHTML = `<div class="ic-desc"${descFull.length > DESC_MAX ? ` data-tip="${esc(descFull)}"` : ""}>${esc(descTrunc)}</div>`;
     // status do card: produto = Atende/Não atende; item só de software = faixa de aderência (%) por cor.
