@@ -886,13 +886,14 @@ function addDiferencial(reqName, fromSheet) {
   (addedDiff[active] || (addedDiff[active] = new Set())).add(reqName);
   recompute();
   // Chamado de dentro do sheet de editar: NÃO toca na tabela; o efeito só vai para a tabela ao Salvar (Cancelar reverte).
-  if (fromSheet) return;
+  // Sonner deixa claro que ficou em rascunho (a badge some da lista, mas nada aparece na tabela até salvar).
+  if (fromSheet) { toast(`"${reqName}" adicionada. Salve para aplicar na tabela.`); return; }
   editingRow = SPECS.length - 1; // abre o campo para o usuário informar o valor requerido (ou deixar como não exigido)
   renderMatrix();
   const host = document.querySelector("#toBody .to-collapsibles");
   if (host) host.outerHTML = collapsiblesHTML(ITEMS[active]);
   const inp = document.querySelector("#matrixHost .val-inline-input"); if (inp) inp.scrollIntoView({ block: "center" });
-  toast(`"${reqName}" adicionado, informe o valor requerido, ou deixe como não exigido`);
+  toast(`"${reqName}" adicionada à tabela. Informe o valor requerido, ou deixe como não exigido.`);
 }
 /* remover uma linha vinda da seção "não exigidas": some da comparação e volta para a seção */
 function removeDiferencial(reqName) {
