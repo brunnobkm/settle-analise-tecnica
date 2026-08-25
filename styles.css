@@ -823,11 +823,8 @@ td.cell.na-cell { background: #FFF; }
 tr.diff-row { background: transparent; }
 tr.diff-row .col-req .req-name { color: var(--foreground); }
 .diff-badge { display: inline-block; margin-left: 8px; padding: 1px 7px; font-size: 11px; font-weight: 600; color: var(--muted-foreground); background: var(--muted); border-radius: var(--r-full); vertical-align: middle; }
-.diff-remove { margin-left: 6px; width: 20px; height: 20px; padding: 0; border: 0; background: transparent; color: var(--muted-foreground); border-radius: var(--r-md); cursor: pointer; opacity: 0; vertical-align: middle; display: inline-grid; place-items: center; }
-tr.diff-row:hover .diff-remove { opacity: 1; }
-body.mini-tour tr.diff-row .diff-remove { opacity: 1; } /* mini tour: X sempre visível para a gravação */
-.diff-remove:hover { background: var(--destructive-bg, #FEE2E2); color: var(--destructive, #DC2626); }
-.diff-remove svg { width: 12px; height: 12px; }
+/* remover diferencial: agora vive na coluna Ações (.col-acoes .act-ico.danger), não mais colado ao nome */
+body.mini-tour tr.diff-row .act-ico { opacity: 1; } /* mini tour: lixeira sempre visível para a gravação */
 /* Descrição (card v1): começa aberta, hover mostra icon group, colapsada vira preview truncado */
 .desc-block { background: #FFF; border: 1px solid var(--border); border-radius: var(--r-box); }
 .desc-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; user-select: none; }

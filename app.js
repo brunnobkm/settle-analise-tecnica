@@ -478,6 +478,8 @@ function updateProdSecSummary() {
 /* ---------- Mecânica: matriz (produto) ---------- */
 function buildCols(order) {
   const cols = [{ key: "req" }, { key: "val" }, ...order.map(i => ({ key: "sku-" + i, skuIdx: i }))];
+  // coluna "Ações" (ações da célula) só aparece quando há linha de diferencial para agir (remover da comparação)
+  if (Array.isArray(SPECS) && SPECS.some(s => s.fromDiff)) cols.push({ key: "acoes" });
   let fl = 0;
   cols.forEach(c => { c.w = COLW(c.key); c.frozen = frozen.has(c.key); });
   cols.forEach(c => { if (c.frozen) { c.left = fl; fl += c.w; } });
@@ -645,6 +647,7 @@ function renderMatrix() {
   cols.forEach(c => {
     if (c.key === "req") head += `<th class="col-req${fzCls(c)}"${fzStyle(c)}>Especificações do edital${colCtrls(c)}</th>`;
     else if (c.key === "val") head += `<th class="col-val${fzCls(c)}"${fzStyle(c)}>Valor requerido${colCtrls(c)}</th>`;
+    else if (c.key === "acoes") head += `<th class="col-acoes">Ações</th>`;
     else {
       const idx = c.skuIdx, sc = STATE[idx], rank = ORDER.indexOf(idx), best = rank === 0, isChosen = chosenIdx === idx, hasChoice = chosenIdx != null;
       const sku = sc.sku;
@@ -684,7 +687,7 @@ function renderMatrix() {
     const nx = !!spec.naoExtraido, df = !!spec.diferencial, fromDiff = !!spec.fromDiff;
     let row = `<tr class="${df ? "diff-row" : nx ? "nx-row" : (isConcordant(spec) ? "concordant" : "")}">`;
     cols.forEach(c => {
-      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-full="${esc(spec.req)}">${esc(spec.req)}</span>${fromDiff ? `<button class="diff-remove" data-rmdiff="${esc(spec.req)}" data-tip="Remover da comparação">${ICO_NO}</button>` : ""}</td>`;
+      if (c.key === "req") row += `<td class="col-req${fzCls(c)}"${fzStyle(c)}><span class="req-name" data-full="${esc(spec.req)}">${esc(spec.req)}</span></td>`;
       else if (c.key === "val") {
         if (editingRow === ri) {
           const core = esc(splitUnit(splitOp(spec.exig).rest, spec.unidade)), vrOp = opTag(splitOp(spec.exig).op), vrUnit = unitTag(spec.unidade);
@@ -699,6 +702,7 @@ function renderMatrix() {
           row += `<td class="col-val${fzCls(c)}"${fzStyle(c)}><div class="val-head">${chip}</div></td>`;
         }
       }
+      else if (c.key === "acoes") row += `<td class="col-acoes">${fromDiff ? `<div class="acoes-cell"><button class="act-ico danger" data-rmdiff="${esc(spec.req)}" data-tip="Remover da comparação">${ICO_TRASH}</button></div>` : ""}</td>`;
       else if (nx) row += `<td class="cell nm-cell${c.skuIdx === chosenIdx ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm">${ICO_ALERT}</span><span class="cell-val">${esc(splitUnit(spec.cells[c.skuIdx].v, spec.unidade))}</span>${unitTag(spec.unidade)}</div></td>`;
       else row += cellTd(spec.cells[c.skuIdx], ri, c.skuIdx, spec.exigNa, c, spec.unidade, c.skuIdx === chosenIdx);
     });
@@ -1418,7 +1422,7 @@ function initTour() {
     { before: openItem3, sel: "[data-adddiff]", title: "Você decide, uma a uma", text: "A tabela mostra só o que o edital pediu. Mas cada uma tem esse '+'. Se você quiser comparar alguma, é só clicar." },
     { before: addDemoDiff, sel: "#matrixHost .val-inline-input", title: "Preencha o valor, ou não", text: "Ao clicar no '+', a especificação entra no fim da tabela e abre este campo. Aqui você tem duas escolhas." },
     { before: addDemoDiff, sel: "tr.diff-row", title: "Vira requisito ou fica como extra", text: "Se você preencher um valor, ela vira um requisito de verdade e passa a contar no atende. Se deixar em branco, fica como 'Não exigido', só para comparar entre os produtos, sem contar." },
-    { before: addDemoDiff, sel: "tr.diff-row .diff-remove", title: "Dá para remover", text: "E se mudar de ideia, esse 'X' tira a especificação da tabela e devolve para a seção. Nada é irreversível." },
+    { before: addDemoDiff, sel: "tr.diff-row [data-rmdiff]", title: "Dá para remover", text: "E se mudar de ideia, a lixeira na coluna Ações tira a especificação da tabela e devolve para a seção. Nada é irreversível." },
     { before: openItem3, title: "É isso", text: "Resumindo: por padrão elas ficam fora da conta (é o produto oferecendo a mais), e você decide, uma a uma, se quer puxar para a tabela e transformar em requisito." },
   ];
   const isMini = /[?&]tour=diferencial/.test(location.search);
