@@ -478,8 +478,9 @@ function updateProdSecSummary() {
 /* ---------- Mecânica: matriz (produto) ---------- */
 function buildCols(order) {
   const cols = [{ key: "req" }, { key: "val" }, ...order.map(i => ({ key: "sku-" + i, skuIdx: i }))];
-  // coluna "Ações" (ações da célula) só aparece quando há linha de diferencial para agir (remover da comparação)
-  if (Array.isArray(SPECS) && SPECS.some(s => s.fromDiff)) cols.push({ key: "acoes" });
+  // coluna "Ações" (ações da linha) é FIXA, sempre presente. Hoje só a lixeira nas linhas de diferencial
+  // (excluir o que veio de "não exigidas pelo edital"); no futuro comporta "copiar link da linha" nas demais.
+  cols.push({ key: "acoes" });
   let fl = 0;
   cols.forEach(c => { c.w = COLW(c.key); c.frozen = frozen.has(c.key); });
   cols.forEach(c => { if (c.frozen) { c.left = fl; fl += c.w; } });
