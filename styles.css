@@ -977,3 +977,22 @@ td.cell.diff { background: #FAFAFA; }
 .spec-menu { max-width: calc(100vw - 16px); max-height: min(320px, calc(100dvh - 16px)); overflow-y: auto; }
 .spec-menu .km-item { overflow-wrap: anywhere; }
 .spec-menu .km-item:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; background: var(--muted); }
+.processing-body { display: flex; align-items: center; justify-content: center; }
+.processing-message { text-align: center; color: var(--muted-foreground); max-width: 420px; padding: 24px; font-size: 14px; }
+.processing-message .cat-spin { display: block; margin: 0 auto; }
+.processing-message p { margin: 16px 0 0; line-height: 1.5; }
+.processing-card { position: fixed; z-index: 45; left: 20px; bottom: 20px; width: 360px; max-width: calc(100vw - 40px); background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.12); padding: 20px; }
+.processing-card[hidden] { display: none; }
+.processing-card h2 { font-size: 15px; margin: 0 0 8px; }
+.processing-card p { font-size: 13px; line-height: 1.5; color: var(--muted-foreground); margin: 0 0 20px; }
+.processing-card ul { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
+.processing-card li { padding: 4px 0; border-top: 1px solid var(--border); }
+.processing-card button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: var(--r-md); background: transparent; color: var(--foreground); text-align: left; font: inherit; font-size: 13px; cursor: pointer; }
+.processing-card button:hover { background: var(--muted); }
+.processing-card li:has(button:hover),
+.processing-card li:has(button:hover) + li,
+.processing-card li:has(button:focus-visible),
+.processing-card li:has(button:focus-visible) + li { border-top-color: transparent; }
+.processing-card button:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; background: var(--muted); }
+.processing-card button > span:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.processing-card .cat-spin, .processing-card svg { flex-shrink: 0; width: 14px; height: 14px; }

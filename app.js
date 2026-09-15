@@ -252,6 +252,8 @@ function renderGrid() {
    ============================================================ */
 function openTable(i) {
   active = i; const it = ITEMS[i]; editingMeta = null;
+  $("#toBody").classList.remove("processing-body");
+  $("#toSummary").hidden = false;
   currentChecklists = []; SPECS = null; BEST = null; activeComp = null; MX_SKUS = [];
   closeEditDrawer();
   $("#toTitle").textContent = it.titulo || it.nome;
@@ -1136,6 +1138,24 @@ function closeCatMenu() { const m = $("#catMenu"); if (m) m.hidden = true; catMe
 /* Trocar categoria re-roda a extração dos requisitos (Alice 17/08): não é instantâneo.
    Simulamos: confirmar → loading "reprocessando" sobre o componente → label atualizado + match recalculado. */
 let pendingCat = null, reprocessing = {}, lockedByOther = null; // reprocessing[itemIndex] = { val, comp, timer, by }; lockedByOther = nome de quem está reprocessando o item aberto (bloqueia edição)
+const processingResults = {};
+function renderProcessingCard() {
+  let card = document.getElementById("processingCard");
+  if (!card) {
+    card = document.createElement("aside");
+    card.id = "processingCard";
+    card.className = "processing-card";
+    card.setAttribute("aria-label", "Preparando resultados");
+    card.addEventListener("click", e => {
+      const button = e.target.closest("[data-processing-item]");
+      if (button) openTable(+button.dataset.processingItem);
+    });
+    document.body.appendChild(card);
+  }
+  const entries = Object.entries(processingResults);
+  card.hidden = !entries.length;
+  card.innerHTML = `<h2>Preparando resultados</h2><p>Estamos preparando os resultados abaixo. Você pode continuar navegando; um ✓ aparecerá quando cada item estiver disponível.</p><ul aria-live="polite">${entries.map(([id, done]) => `<li><button data-processing-item="${id}" aria-label="Análise técnica: ${esc(ITEMS[id].titulo || ITEMS[id].nome)}: ${done ? "concluído" : "processando"}">${done ? ICO_OK : '<span class="cat-spin" aria-hidden="true"></span>'}<span>Análise técnica: ${esc(ITEMS[id].titulo || ITEMS[id].nome)}</span></button></li>`).join("")}</ul>`;
+}
 function itemSkeletonHTML() {
   const row = () => `<div class="sk-row"><div class="sk-cell wide"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div></div>`;
   return `<div class="to-collapsibles">
@@ -1160,10 +1180,11 @@ function metaSkeletonHTML() {
 }
 /* mostra o estado de reprocessamento (skeleton do item inteiro, inclusive o sub-header, + sonner) na tela atual */
 function showItemReprocessing(val) {
-  const toSum = $("#toSummary"); if (toSum) { toSum.classList.remove("sk-summary"); toSum.innerHTML = metaSkeletonHTML(); }
-  $("#toBody").innerHTML = itemSkeletonHTML();
-  showReprocessSonner(val);
-  sizeMatrixHeight();
+  $("#toSummary").hidden = true;
+  $("#toBody").classList.add("processing-body");
+  $("#toBody").innerHTML = `<div class="processing-message" role="status"><span class="cat-spin" aria-hidden="true"></span><p>Estamos preparando este resultado. Ele ficará disponível assim que for concluído.</p></div>`;
+  hideReprocessSonner();
+  renderProcessingCard();
 }
 /* Trocar categoria afeta o ITEM inteiro e pode demorar 1min+. O estado é POR ITEM e persiste:
    o usuário pode navegar entre itens; ao voltar ao item que ainda reprocessa, vê o loading de novo. */
@@ -1175,9 +1196,13 @@ function reprocessCategory(anchor, val) {
   const item = active;
   if (reprocessing[item] && reprocessing[item].timer) clearTimeout(reprocessing[item].timer);
   reprocessing[item] = { val, comp };
+  processingResults[item] = false;
   showItemReprocessing(val);
   reprocessing[item].timer = setTimeout(() => {
     const done = reprocessing[item]; delete reprocessing[item];
+    processingResults[item] = true;
+    renderProcessingCard();
+    renderGrid();
     if (active === item) {
       hideReprocessSonner();
       openTable(item);
