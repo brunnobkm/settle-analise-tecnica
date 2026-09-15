@@ -525,13 +525,19 @@ function editSecLabel() {
 }
 function openEditDrawer(target) {
   editTarget = target;
-  if (target.type === "produto") { editSnapshot = SPECS ? clone(SPECS) : null; editSnapshotDiff = new Set(addedDiff[active] || []); }
+  if (target.type === "produto") { editSnapshot = SPECS ? clone(SPECS) : null; SPECS = clone(SPECS); editSnapshotDiff = new Set(addedDiff[active] || []); }
   else if (target.type === "checklist") editSnapshot = clone(currentChecklists[target.sec]);
   else { const it = ITEMS[active]; editSnapshot = { quantidade: it.quantidade, unidadeMedida: it.unidadeMedida, vu: it.valorUnitario.v, vt: it.valorTotal.v }; }
   renderEditDrawer();
   $("#editOverlay").hidden = false; $("#editDrawer").hidden = false;
 }
-function closeEditDrawer() { $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; editSnapshotDiff = null; editTarget = null; }
+function closeEditDrawer() { closeSpecMenu(); $("#editToast")?.classList.remove("show"); $("#editDrawer").hidden = true; $("#editOverlay").hidden = true; editSnapshot = null; editSnapshotDiff = null; editTarget = null; }
+function captureEditValues() {
+  $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(el => {
+    const spec = SPECS[+el.dataset.eri];
+    if (spec) setRequiredValue(spec, String(el.value || ""));
+  });
+}
 function cancelEditDrawer() {
   if (editSnapshot && editTarget) {
     // produto: restaura SPECS e o conjunto de diferenciais adicionados (desfaz o que foi adicionado pelo "+" no sheet)
@@ -561,7 +567,7 @@ function renderEditDrawer() {
       const control = isBool
         ? `<select class="ed-input" data-eri="${ri}"><option${/^sim/i.test(spec.exig) ? " selected" : ""}>Sim</option><option${/^n[aã]o/i.test(spec.exig) ? " selected" : ""}>Não</option></select>`
         : `<input class="ed-input" data-eri="${ri}" value="${full}">`;
-      return `<div class="ed-field"><label>${esc(spec.req)}</label>${control}</div>`;
+      return `<div class="ed-field"><label>${esc(spec.req)}</label><div class="ed-value-row">${control}${spec.fromDiff ? `<button class="act-ico danger" data-edit-remove="${ri}" aria-label="Remover ${esc(spec.req)}">${ICO_TRASH}</button>` : ""}</div></div>`;
     }).join("");
     // Sem "Adicionar requisito" em produto: o card "Especificações não exigidas pelo edital" (com o +) já cumpre esse papel.
     addBtn = "";
@@ -579,6 +585,7 @@ function renderEditDrawer() {
   const refCards = editTarget.type === "produto"
     ? editRefCards(it)
     : (temProduto ? collapsible("Descrição completa", `<p class="cps-desc">${esc(it.descricao || it.nome)}</p>`, null, true) : "");
+  $("#editHeaderAdd").innerHTML = editTarget.type === "produto" ? specFooterHTML(true) : "";
   $("#editBody").innerHTML = `
     <div class="ed-hintbox">${hint}</div>
     ${refCards}
@@ -846,9 +853,10 @@ function collapsiblesHTML(it) {
   const prodComps = it.componentes.filter(c => c.mecanica === "produto");
   return `<div class="to-collapsibles">${html}</div>`;
 }
-function specFooterHTML() {
+function specFooterHTML(header = false) {
   const available = (activeComp?.catalogoNaoEdital || []).filter(d => d.vals && !SPECS.some(s => s.req === d.req));
-  return `<footer class="spec-footer"><button class="comp-edit" data-addspec aria-haspopup="menu" aria-expanded="false" aria-controls="specMenu" ${available.length ? "" : "disabled"}>${available.length ? "Adicionar especificação" : "Todas as especificações adicionadas"}</button></footer>`;
+  const button = `<button class="comp-edit" data-addspec aria-haspopup="menu" aria-expanded="false" aria-controls="specMenu" ${available.length ? "" : 'disabled title="Todas as especificações adicionadas"'}>Adicionar especificação</button>`;
+  return header ? button : `<footer class="spec-footer">${button}</footer>`;
 }
 let specMenuAnchor = null;
 function closeSpecMenu(restoreFocus = false) {
@@ -912,6 +920,56 @@ function addDiferencial(reqName, fromSheet) {
   toast(`"${reqName}" adicionada à tabela. Informe o valor requerido, ou deixe como não exigido.`);
 }
 /* remover uma linha vinda da seção "não exigidas": some da comparação e volta para a seção */
+function confirmRemoveSpec(reqName, fromSheet, trigger) {
+  if (!SPECS.some(s => s.fromDiff && s.req === reqName)) return;
+  const item = active;
+  const overlay = document.createElement("div");
+  overlay.className = "warn-overlay";
+  const modal = document.createElement("div");
+  modal.className = "warn-modal";
+  modal.setAttribute("role", "alertdialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "removeSpecTitle");
+  modal.setAttribute("aria-describedby", "removeSpecText");
+  modal.innerHTML = `<h3 id="removeSpecTitle">Excluir requisito</h3><p id="removeSpecText">Você tem certeza de que deseja excluir o requisito?</p><div class="warn-actions"><button class="btn" data-cancel>Cancelar</button><button class="btn danger" data-confirm>Excluir</button></div>`;
+  const close = () => {
+    document.removeEventListener("keydown", onKey, true);
+    overlay.remove(); modal.remove();
+    if (trigger?.isConnected) trigger.focus();
+  };
+  const onKey = e => {
+    if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); close(); }
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const buttons = [...modal.querySelectorAll("button")];
+      buttons[document.activeElement === buttons[0] ? 1 : 0].focus();
+    }
+  };
+  overlay.onclick = close;
+  modal.querySelector("[data-cancel]").onclick = close;
+  modal.querySelector("[data-confirm]").onclick = () => {
+    close();
+    if (active !== item) return;
+    if (lockedByOther) { showLockAlert(lockedByOther); return; }
+    if (fromSheet) {
+      if (editTarget?.type !== "produto") return;
+      captureEditValues();
+      const ri = SPECS.findIndex(s => s.fromDiff && s.req === reqName);
+      if (ri < 0) return;
+      SPECS.splice(ri, 1);
+      addedDiff[active]?.delete(reqName);
+      renderEditDrawer();
+      $("#editHeaderAdd button")?.focus();
+      toast(`"${reqName}" removida. Salve para aplicar na tabela.`);
+    } else {
+      removeDiferencial(reqName);
+      $("#matrixHost [data-addspec]")?.focus();
+    }
+  };
+  document.body.append(overlay, modal);
+  document.addEventListener("keydown", onKey, true);
+  modal.querySelector("[data-cancel]").focus();
+}
 function removeDiferencial(reqName) {
   if (active == null || !SPECS) return;
   const i = SPECS.findIndex(s => s.fromDiff && s.req === reqName);
@@ -1008,7 +1066,27 @@ function extractDescricao() {
 }
 
 let toastT;
-function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
+function toast(msg) {
+  const drawer = $("#editDrawer");
+  let t = $("#toast");
+  t.classList.remove("show");
+  $("#editToast")?.classList.remove("show");
+  if (drawer && !drawer.hidden) {
+    t = $("#editToast");
+    if (!t) {
+      t = document.createElement("div");
+      t.id = "editToast";
+      t.className = "toast edit-toast";
+      t.setAttribute("role", "status");
+      drawer.appendChild(t);
+    }
+    t.style.bottom = (drawer.querySelector(".ed-foot").offsetHeight + 12) + "px";
+  }
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove("show"), 2400);
+}
 // sonner padrão para qualquer ação ainda não prototipada
 function notPrototyped() { toast("Essa ação ainda não está prototipada."); }
 // alerta ao tentar editar um item que outra pessoa está reprocessando (soft lock)
@@ -1228,10 +1306,22 @@ function wire() {
   });
   $("#toEditCtrls").addEventListener("click", e => { if (e.target.closest("#btnEditItem")) openEditDrawer({ type: "item" }); });
   $("#editClose").onclick = cancelEditDrawer;
+  $("#editHeaderAdd").addEventListener("click", e => {
+    const add = e.target.closest("[data-addspec]");
+    if (add && !add.disabled) { captureEditValues(); openSpecMenu(add); }
+  });
   $("#editCancel").onclick = cancelEditDrawer;
   $("#editOverlay").onclick = cancelEditDrawer;
   $("#editSave").onclick = saveEditDrawer;
   $("#editBody").addEventListener("click", e => {
+    const add = e.target.closest("[data-addspec]");
+    if (add) { captureEditValues(); openSpecMenu(add); return; }
+    const remove = e.target.closest("[data-edit-remove]");
+    if (remove) {
+      const spec = SPECS[+remove.dataset.editRemove];
+      if (spec?.fromDiff) confirmRemoveSpec(spec.req, true, remove);
+      return;
+    }
     // icon group do card de descrição (mesmo da leitura): ver no edital + copiar; e o caret colapsa
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
     if (e.target.closest("[data-descextrair]")) { notPrototyped(); return; }
@@ -1309,7 +1399,7 @@ function wire() {
     if (e.target.closest("[data-extrairvazio]")) { extractFromEdital(); return; }
     const na = e.target.closest("[data-addna]"); if (na) { addNaoAnalisado(na.dataset.addna); return; }
     const df = e.target.closest("[data-adddiff]"); if (df) { addDiferencial(df.dataset.adddiff); return; }
-    const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { removeDiferencial(rmd.dataset.rmdiff); return; }
+    const rmd = e.target.closest("[data-rmdiff]"); if (rmd) { confirmRemoveSpec(rmd.dataset.rmdiff, false, rmd); return; }
     if (e.target.closest("[data-descedital]")) { openDescOrigin(); return; }
     if (e.target.closest("[data-descextrair]")) { notPrototyped(); return; }
     const dtog = e.target.closest("[data-desctoggle]"); if (dtog) { dtog.closest("[data-descblock]").classList.toggle("open"); return; }
@@ -1343,9 +1433,15 @@ function wire() {
   });
   $("#specMenu").addEventListener("click", e => {
     const option = e.target.closest("[data-specval]"); if (!option) return;
+    const fromSheet = !!specMenuAnchor?.closest("#editDrawer");
     closeSpecMenu();
     if (lockedByOther) { showLockAlert(lockedByOther); return; }
-    addDiferencial(option.dataset.specval);
+    addDiferencial(option.dataset.specval, fromSheet);
+    if (fromSheet) {
+      renderEditDrawer();
+      const field = $("#editBody").querySelector(".ed-field:last-of-type .ed-input") || [...$("#editBody").querySelectorAll(".ed-input")].at(-1);
+      field?.focus();
+    }
   });
   document.addEventListener("click", e => {
     if (!e.target.closest("#specMenu, [data-addspec]")) closeSpecMenu();

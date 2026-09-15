@@ -873,6 +873,7 @@ td.cell.diff { background: #FAFAFA; }
 /* ---------- Toast ---------- */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px); background: #FFF; color: var(--foreground); border: 1px solid var(--border); font-size: 13px; font-weight: 500; padding: 13px 16px; border-radius: var(--r-field); box-shadow: 0 4px 12px rgba(0,0,0,.1); opacity: 0; transition: opacity .2s, transform .2s; z-index: 30; pointer-events: none; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.edit-toast { position: absolute; width: calc(100% - 36px); box-sizing: border-box; overflow-wrap: anywhere; }
 
 @media (max-width: 1200px) { .stats { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
@@ -996,3 +997,10 @@ td.cell.diff { background: #FAFAFA; }
 .processing-card button:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; background: var(--muted); }
 .processing-card button > span:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .processing-card .cat-spin, .processing-card svg { flex-shrink: 0; width: 14px; height: 14px; }
+.ed-value-row { display: flex; align-items: center; gap: 8px; }
+.ed-value-row .ed-input { flex: 1; min-width: 0; }
+.ed-value-row .act-ico { flex-shrink: 0; opacity: 1; }
+.ed-head { gap: 8px; flex-wrap: wrap; }
+#editHeaderAdd { margin-left: auto; }
+#editHeaderAdd:empty { display: none; }
+#editHeaderAdd .comp-edit:disabled { opacity: .5; cursor: default; }
