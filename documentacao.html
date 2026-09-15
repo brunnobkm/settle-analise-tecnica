@@ -141,7 +141,7 @@
       <tr><td>Atende</td><td>SKUs que cumprem 100% das especificações</td></tr>
       <tr><td>Não atende</td><td>SKUs que não cumprem tudo</td></tr>
     </table>
-    <p class="note">Em produto, toda especificação exigida é sempre analisada — não existe "falta analisar".</p>
+    <p class="note">Quando faltam valores dos SKUs, as especificações ficam pendentes. SKUs sem divergências e com pendências aparecem no indicador "Análise pendente", exibido quando necessário. Eles não contam como atendidos nem como não atendidos. O percentual considera todas as exigências, inclusive pendentes, e não chega a 100% enquanto faltar informação. Os indicadores atualizam ao editar ou remover uma especificação.</p>
     <h3>Software — conta por requisito</h3>
     <p>7 cards: <b>Percentual de aderência</b> · Total de requisitos · Atende · Atende parcialmente · Atende com parceiro · Não atende · Falta analisar. O Percentual de aderência é sempre exibido.</p>
     <div class="box tip"><h4>Em aberto</h4><p style="margin:0">O resumo executivo <b>geral</b> (agregando todos os itens, no topo da lista) foi <b>removido por ora</b>, aguardando feedback. A regra de atende/não atende por item (e um possível estado "Em atenção") ainda não foi definida.</p></div>
@@ -151,8 +151,7 @@
     <p>Aparecem em itens com produto. Todos colapsam pelo cabeçalho (setinha).</p>
     <ul>
       <li><b>Descrição completa</b> — texto longo. No hover do card aparece o icon group: <b>Copiar a descrição</b> e <b>Ver no edital</b> (setinha), nessa ordem.</li>
-      <li><b>Especificações não exigidas pelo edital</b> — vêm do catálogo, o edital não pede. Cada uma tem o botão <b>+</b> para adicionar à comparação (seção 10).</li>
-      <li><b>Especificações no edital não analisadas</b> — o edital exige mas falta o valor no catálogo. Só referência (sem +).</li>
+      <li>Os antigos cards de especificações foram removidos. As não exigidas ficam disponíveis no seletor do rodapé da tabela. As exigidas sem valores dos SKUs entram automaticamente como linhas da tabela.</li>
     </ul>
 
     <!-- 7 -->
@@ -184,23 +183,22 @@
 
     <!-- 9 -->
     <h2 id="editar">9. Sheet "Editar informações"</h2>
-    <p>Abre pela seção de produto. Não tem a linha "Seção: ..." nem botão "Adicionar requisito" (as badges de não exigidas cumprem esse papel). Contém, acima dos campos editáveis, os <b>mesmos cards colapsáveis</b> da leitura:</p>
+    <p>Abre pela seção de produto. Mostra a Descrição completa e os campos da coluna Valor requerido. Salvar aplica as alterações e atualiza a comparação e o resumo; Cancelar descarta as alterações. A adição de especificações acontece no rodapé da tabela.</p>
     <ul>
       <li><b>Descrição completa</b> (com o icon group).</li>
-      <li><b>Especificações não exigidas pelo edital</b> (com o + funcional). No sheet, o + só afeta a própria lista (rola até o item novo); a <b>tabela só muda ao Salvar</b> (com o dado adicionado, com ou sem valor), e <b>Cancelar desfaz</b>.</li>
-      <li><b>Especificações no edital não analisadas</b> (referência).</li>
     </ul>
     <h3>Edição inline do "Valor requerido" (na matriz)</h3>
     <p>Editar direto na célula um valor <b>extraído do edital</b>: na 1ª vez mostra o modal <b>"Confirmar edição?"</b> (editar perde o vínculo com o trecho do edital); depois não pergunta mais. Tooltip do check/cancelar: "Confirmar e recalcular" / "Cancelar edição".</p>
 
     <!-- 10 -->
-    <h2 id="diferencial">10. Especificações não exigidas · botão + (diferencial)</h2>
-    <p>Ao clicar no <b>+</b>, a especificação entra na comparação como <b>diferencial</b>, vai para o fim da lista/tabela com a célula do valor requerido ativa.</p>
+    <h2 id="diferencial">10. Especificações na tabela</h2>
+    <p>O botão <b>Adicionar especificação</b> no rodapé abre um dropdown com as especificações do catálogo não exigidas pelo edital. Selecionar uma opção adiciona a linha no final da tabela, com os valores dos SKUs e o Valor requerido vazio e ativo. A opção sai do menu. Excluir pela coluna Ações devolve a opção ao menu. Quando todas forem adicionadas, o botão fica desabilitado.</p>
+    <p>Preencher o Valor requerido faz a linha entrar na comparação, tanto pela célula quanto pelo sheet. Apagar esse valor de uma especificação adicionada devolve a linha ao estado não exigido, fora do cálculo.</p>
+    <p>As especificações exigidas sem valores dos SKUs aparecem automaticamente no final da tabela, com o valor extraído do edital. Nas células dos SKUs, mostramos <b>Valor não informado</b> e circle-alert. Tooltip: "O valor exigido foi extraído do edital, mas não temos o valor desta especificação para este SKU. Sem essa informação, não é possível verificar se o produto atende." Essas linhas não têm ação de excluir. Editar o valor requerido não preenche a informação ausente do SKU.</p>
     <ul>
       <li><b>Diferencial não conta no atende</b> (não entra na aderência).</li>
       <li>A célula abre <b>em branco</b> (sem placeholder). A linha fica <b>branca</b> como as demais.</li>
       <li><b>Não</b> mostra o modal "Confirmar edição?" (não é edição de dado extraído). Tooltip do check/cancelar: "Confirmar o valor" / "Cancelar".</li>
-      <li>Tooltip do +: "à tabela" na leitura, "à lista" no sheet de editar.</li>
       <li>Não existe badge "Diferencial" na linha.</li>
     </ul>
     <div class="box warn"><h4>Sem valor informado</h4><p style="margin:0">As células de cada SKU dessa linha mostram um <b>circle-alert</b> com tooltip (não há comparação, pois o edital não exige). O chip do valor fica como <b>"Não informado"</b>.</p></div>

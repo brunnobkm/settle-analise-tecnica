@@ -40,6 +40,10 @@ function matrixOf(comp) {
     const s = clone(comp.reqs); (comp.overrides || []).forEach(o => s[o.ri].cells[o.ci] = { st: o.st, v: o.v, c: o.c });
     // "Não extraído" não existe (decisão Alice 04/08): specs que o SKU tem mas o edital não exige NÃO entram na comparação.
     // Elas vão para a seção "Especificações não exigidas pelo edital" (ver collapsiblesHTML).
+    (comp.naoAnalisadas || []).forEach(n => {
+      if (s.some(spec => spec.req === n.req)) return;
+      s.push({ req: n.req, exig: n.valorEdital || "", unidade: n.unidade || "", pendingAnalysis: true, origem: { doc: "Edital (Termo de Referência)", pag: "", trecho: n.trecho || n.valorEdital || "" }, cells: comp.skus.map(() => ({ st: "ne", v: "", c: null })) });
+    });
     comp._m = s;
   }
   return comp._m;
@@ -54,7 +58,7 @@ function scoresFor(specs, skus) {
       else if (cell.st === "no") { evaluable++; diverg.push(spec.req); }
       else if (cell.st === "ne") ne++;
     });
-    return { i, sku, ok, evaluable, ne, pct: evaluable ? Math.round(ok / evaluable * 100) : 0, diverg };
+    return { i, sku, ok, evaluable, ne, pct: evaluable + ne ? Math.min(ne ? 99 : 100, Math.round(ok / (evaluable + ne) * 100)) : 0, diverg };
   });
 }
 /* compara o valor do produto com a exigência do edital → atende (ok) / não atende (no) / não avaliável (ne) */
@@ -89,7 +93,7 @@ const splitOp = value => { const m = String(value == null ? "" : value).match(OP
 const opTag = op => op ? `<span class="op-fixed">${esc(op)} </span>` : "";
 const rankFor = sc => [...sc].sort((a, b) => b.pct - a.pct || a.ne - b.ne || b.ok - a.ok);
 const bestOf = (specs, skus) => rankFor(scoresFor(specs, skus))[0];
-const prodSummary = comp => { const best = bestOf(matrixOf(comp), comp.skus); return { best, ok: best.diverg.length === 0 }; };
+const prodSummary = comp => { const best = bestOf(matrixOf(comp), comp.skus); return { best, ok: !!best && best.evaluable > 0 && best.ne === 0 && best.diverg.length === 0 }; };
 // análise vazia = veio sem nenhum requisito/especificação real. Não pode marcar "atende".
 const emptyComp = comp => comp.mecanica === "produto" ? !matrixOf(comp).some(sp => !sp.exigNa && !sp.diferencial) : (comp.lista || []).length === 0;
 const isConcordant = spec => new Set(spec.cells.filter(c => c.st === "ok" || c.st === "no").map(c => c.st)).size <= 1;
@@ -212,7 +216,7 @@ function renderGrid() {
       ? (swComp.done
         ? `<span class="badge ${TIER(swComp.pct)}">Aderência ${swComp.pct}%</span>`
         : `<span class="badge mid" data-tip="${esc(swComp.analisadoPct + "% dos requisitos já foram analisados. A aderência aparece quando a análise for concluída.")}">Em análise · ${swComp.analisadoPct}%</span>`)
-      : (sum.status === "ok" ? `<span class="badge ok">Atende</span>` : `<span class="badge bad">Não atende</span>`);
+      : (sum.status === "ok" ? `<span class="badge ok">Atende</span>` : sum.comps.some(c => c.best && c.best.ne > 0 && !c.best.diverg.length) ? `<span class="badge warn">Análise pendente</span>` : `<span class="badge bad">Não atende</span>`);
     const qtyTxt = it.quantidade === "1" ? "1 unidade" : `${esc(it.quantidade)} unidades`;
     if (SEM_ARQUIVO) {
       // licitação sem arquivo: score ainda não gerado, sem Atende/Não atende, sem recomendação
@@ -309,7 +313,7 @@ function openTable(i) {
     // Produto mantém resumo ("Produto recomendado") + badge Atende/Não atende. Software passa a mostrar isso nos tiles do resumo.
     const compSum = isProd ? `<span class="comp-sum">${secSummary(cs)}</span>` : `<span class="comp-spacer"></span>`;
     const compStatus = isProd
-      ? `<span class="comp-status badge ${cs.ok ? "ok" : "bad"}">${cs.ok ? "Atende" : "Não atende"}</span>`
+      ? `<span class="comp-status badge ${cs.ok ? "ok" : cs.best?.ne && !cs.best.diverg.length ? "warn" : "bad"}">${cs.ok ? "Atende" : cs.best?.ne && !cs.best.diverg.length ? "Análise pendente" : "Não atende"}</span>`
       : "";
     secs += `<details class="comp-acc" open><summary class="comp-head">${catBtn}${compSum}${compStatus}${editBtn}${concluirBtn}${CARET}</summary><div class="comp-acc-body">${hostHTML}</div></details>`;
   });
@@ -340,7 +344,8 @@ function sizeMatrixHeight() {
       const chEl = card.querySelector(".comp-head");
       const chH = chEl ? chEl.getBoundingClientRect().height : 52;
       // 32 = padding vertical do corpo do card; 32 = 16 (gap acima do card) + 16 (gap abaixo)
-      const h = window.innerHeight - headH - metaH - chH - 32 - 32;
+      const footerH = card.querySelector(".spec-footer")?.getBoundingClientRect().height || 0;
+      const h = window.innerHeight - headH - metaH - chH - footerH - 32 - 32;
       // altura automática (do tamanho do conteúdo) com teto: poucas linhas ficam compactas, muitas rolam
       tw.style.height = "";
       tw.style.maxHeight = Math.max(240, Math.round(h)) + "px";
@@ -465,14 +470,15 @@ function updateProdSecSummary() {
   if (!details || !BEST) return;
   const chosenIdx = prefs.chosen[active], mono = m => `<span style="font-family:var(--mono)">${esc(m)}</span>`;
   const nenhum = !!(activeComp && activeComp.nenhumProduto);
-  const ok = !nenhum && BEST.diverg.length === 0;
+  const ok = !nenhum && BEST.evaluable > 0 && BEST.ne === 0 && BEST.diverg.length === 0;
   let html;
   if (nenhum) html = ""; // texto "Nenhum produto se aplica" fica só na tela vazia da tabela, não no header
   else if (chosenIdx != null && MX_SKUS[chosenIdx]) { const s = MX_SKUS[chosenIdx]; html = `<span class="ic-reco-inline chosen"><b>✓ Produto escolhido:</b> ${mono(s.model)} · ${esc(s.brand)}</span>`; }
   else if (!ok) html = ""; // não atende: sem produto recomendado
   else html = `<span class="ic-reco-inline prod"><b>Melhor produto:</b> ${mono(BEST.sku.model)} · ${esc(BEST.sku.brand)}</span>`;
   const sum = details.querySelector(".comp-sum"); if (sum) sum.innerHTML = html;
-  const st = details.querySelector(".comp-status"); if (st) { st.className = "comp-status badge " + (ok ? "ok" : "bad"); st.textContent = ok ? "Atende" : "Não atende"; }
+  const pending = !nenhum && BEST.ne > 0 && !BEST.diverg.length;
+  const st = details.querySelector(".comp-status"); if (st) { st.className = "comp-status badge " + (ok ? "ok" : pending ? "warn" : "bad"); st.textContent = ok ? "Atende" : pending ? "Análise pendente" : "Não atende"; }
 }
 
 /* ---------- Mecânica: matriz (produto) ---------- */
@@ -492,6 +498,14 @@ const fzStyle = c => c.frozen ? ` style="left:${c.left}px"` : "";
 const colCtrls = c => `<span class="col-resize" data-resize="${c.key}" data-tip="Arraste para redimensionar a largura"></span>`;
 function cellTd(cell, ri, ci, exigNa, c, unidade, chosen) {
   const ch = chosen ? " chosen" : ""; // SKU escolhido: coluna inteira em verde
+  if (cell.st === "ne") {
+    const missingValue = !cell.v || cell.v === "—";
+    const label = missingValue ? "Valor não informado" : "Não analisado";
+    const tip = missingValue
+      ? "O valor exigido foi extraído do edital, mas não temos o valor desta especificação para este SKU. Sem essa informação, não é possível verificar se o produto atende."
+      : "Esta especificação consta no edital, mas ainda não foi possível verificar se este produto atende.";
+    return `<td class="cell${ch}${fzCls(c)}"${fzStyle(c)}><div class="cell-line" data-tip="${tip}"><span class="ico-nm">${ICO_ALERT}</span><span class="cell-val">${label}</span></div></td>`;
+  }
   if (exigNa) return `<td class="cell na-cell${ch}${fzCls(c)}"${fzStyle(c)}><span class="cell-val" data-full="${esc(cell.v)}">${esc(cell.v)}</span></td>`;
   if (cell.st === "diff") return `<td class="cell diff${ch}${fzCls(c)}"${fzStyle(c)}><div class="cell-line"><span class="ico-nm" data-tip="Sem valor requerido informado. Como o edital não exige esta especificação, não há comparação de atende / não atende. Informe um valor requerido para comparar.">${ICO_ALERT}</span><span class="cell-val" data-full="${esc(cell.v)}">${esc(splitUnit(cell.v, unidade))}</span>${unitTag(unidade)}</div></td>`;
   const icoInner = cell.st === "ok" ? ICO_OK_C : cell.st === "no" ? ICO_NO_C : "";
@@ -582,11 +596,9 @@ function saveEditDrawer() {
   } else if (editTarget.type === "produto") {
     $("#editBody").querySelectorAll(".ed-input[data-eri]").forEach(el => {
       const ri = +el.dataset.eri, spec = SPECS[ri]; if (!spec || spec.exigNa) return;
-      const val = String(el.value != null ? el.value : "").trim(), wasMissing = spec.naoExtraido;
-      if (!val) { if (!wasMissing) spec.exig = ""; return; }
-      spec.exig = val; if (wasMissing) spec.naoExtraido = false;
+      const val = String(el.value != null ? el.value : "").trim();
+      setRequiredValue(spec, val);
     });
-    SPECS.forEach(spec => { if (!spec.exigNa && !spec.naoExtraido && spec.exig) rematchRow(spec); });
     recompute(); renderMatrix(); updateProdSecSummary();
   } else {
     const l = currentChecklists[editTarget.sec];
@@ -637,6 +649,9 @@ function pendenteHTML() {
 }
 function renderMatrix() {
   const host = $("#matrixHost"); if (!host) return;
+  if (activeComp) activeComp._m = SPECS;
+  refreshItemResumo();
+  updateProdSecSummary();
   if (activeComp && activeComp.nenhumProduto) { host.innerHTML = noProdHTML(activeComp); sizeMatrixHeight(); return; }
   const chosenIdx = prefs.chosen[active];
   // Preço/Estoque: reserva o espaço só quando ALGUM SKU tem a info (para alinhar as alturas). Se NENHUM tiver, colapsa (não reserva).
@@ -675,7 +690,8 @@ function renderMatrix() {
       // ícone da FONTE à esquerda do nome do produto/marca; estoque abaixo (some quando não informado)
       head += `<th class="col-sku${isChosen ? " chosen" : ""}${fzCls(c)}"${fzStyle(c)}>
         <div class="sku-idrow">${sourceIcon}<div class="sku-id"><div class="sku-model" data-full="${esc(sku.model)}">${esc(sku.model)}</div><div class="sku-brand" data-full="${esc(sku.brand)}">${esc(sku.brand)}</div></div></div>
-        <div class="sku-fit"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable}</span></div>
+        <div class="sku-fit"><span class="score-pct">${sc.pct}%</span><span class="score-frac">${sc.ok}/${sc.evaluable + sc.ne}</span></div>
+        ${sc.ne ? `<div class="ex-note">${sc.ne} especificações pendentes</div>` : ""}
         <div class="score-bar"><span class="score-fill ${fitCls}" style="width:${sc.pct}%"></span></div>
         ${precoLine}
         ${anyEstoque ? `<div class="sku-src">${estoqueBadge}</div>` : ""}
@@ -709,11 +725,20 @@ function renderMatrix() {
     });
     body += row + `</tr>`;
   });
-  host.innerHTML = `<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  host.innerHTML = `<div class="table-wrap"><table class="cmp" style="width:${totalW}px">${colgroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${specFooterHTML()}`;
   if (editingRow != null) { const inp = host.querySelector(".val-inline-input"); if (inp) { inp.focus(); inp.select(); } }
   sizeMatrixHeight();
 }
 /* edição inline do "Valor requerido" (matriz): editar direto na célula com confirmação (check) antes de recalcular */
+function setRequiredValue(spec, value) {
+  spec.exig = value.trim();
+  if (spec.exig) spec.naoExtraido = false;
+  if (spec.fromDiff) {
+    spec.diferencial = !spec.exig;
+    if (spec.diferencial) { spec.cells.forEach(cell => { cell.st = "diff"; }); return; }
+  }
+  rematchRow(spec);
+}
 function startInlineEdit(ri) { editingRow = ri; renderMatrix(); }
 function cancelInlineEdit() { editingRow = null; renderMatrix(); }
 function commitInline(ri) {
@@ -721,13 +746,9 @@ function commitInline(ri) {
   let converted = false;
   if (inp && spec) {
     const raw = String(inp.value || "").trim();
-    if (raw) {
-      const op = splitOp(spec.exig).op;
-      spec.exig = op ? op + " " + joinUnit(raw, spec.unidade) : joinUnit(raw, spec.unidade);
-      if (spec.naoExtraido) spec.naoExtraido = false;
-      if (spec.diferencial) { spec.diferencial = false; converted = true; } // informou valor requerido: vira requisito e passa a contar no atende
-      rematchRow(spec);
-    }
+    const op = splitOp(spec.exig).op;
+    converted = !!spec.diferencial && !!raw;
+    setRequiredValue(spec, raw ? (op ? op + " " : "") + joinUnit(raw, spec.unidade) : "");
   }
   editingRow = null; recompute(); renderMatrix(); updateProdSecSummary();
   toast(converted ? "Valor requerido definido, agora este requisito conta no atende" : "Valor requerido atualizado, análise recalculada");
@@ -767,12 +788,14 @@ function resProdTiles(prod, caption) {
   // Resumo de produto por SKU: quantos SKUs foram comparados, quantos atendem 100% e quantos não.
   const specs = matrixOf(prod), scores = scoresFor(specs, prod.skus);
   const analisados = scores.length;
-  const atende = scores.filter(s => s.evaluable > 0 && s.pct === 100).length;
-  const nao = analisados - atende;
+  const atende = scores.filter(s => s.evaluable > 0 && s.ne === 0 && s.pct === 100).length;
+  const nao = scores.filter(s => s.diverg.length > 0).length;
+  const pendentes = scores.filter(s => s.ne > 0 && !s.diverg.length).length;
   return `<div class="resumo-block">${caption ? `<div class="resumo-cap">${esc(caption)}</div>` : ""}<div class="item-resumo">
     ${resTile("", RES_I.layers, analisados, "SKUs analisados", "Produtos (SKUs) do seu catálogo comparados com as exigências deste item.")}
     ${resTile("ok", RES_I.check, atende, "Atende", "SKUs que cumprem 100% das especificações exigidas pelo edital.")}
     ${resTile("bad", RES_I.cross, nao, "Não atende", "SKUs que não cumprem todas as especificações exigidas.")}
+    ${pendentes ? resTile("warn", RES_I.help, pendentes, "Análise pendente", "SKUs sem divergências identificadas, mas com especificações que ainda precisam ser analisadas.") : ""}
   </div></div>`;
 }
 function resChkTiles(chk, caption) {
@@ -819,47 +842,38 @@ function collapsiblesHTML(it) {
   const temProduto = it.componentes.some(c => c.mecanica === "produto");
   let html = temProduto ? descBlockHTML(it) : "";
   const prodComps = it.componentes.filter(c => c.mecanica === "produto");
-  // (1) não exigidas pelo edital: o SKU tem o valor, o edital não pede → diferencial (opção B: "+" leva à tabela)
-  const dset = addedDiff[active] || new Set();
-  const seenD = new Set();
-  const naoExig = prodComps.flatMap(c => c.catalogoNaoEdital || [])
-    .map(t => typeof t === "string" ? { req: t } : t)
-    .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
-  if (naoExig.length) {
-    const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na tabela e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
-    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" data-tip="Adicionar esta especificação à tabela para comparar os produtos">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
-    html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
-  }
-  // (2) no edital não analisados: o edital exige, mas ainda não foi analisado. Só referência (badges), SEM "+" (decisão da reunião ~8:01).
-  const na = prodComps.flatMap(c => c.naoAnalisadas || []);
-  if (na.length) {
-    const note = "Especificações exigidas pelo edital que ainda não foram analisadas (falta o valor no seu catálogo).";
-    html += collapsible("Especificações no edital não analisadas", tagList(na.map(n => n.req), note), na.length, true);
-  }
   return `<div class="to-collapsibles">${html}</div>`;
+}
+function specFooterHTML() {
+  const available = (activeComp?.catalogoNaoEdital || []).filter(d => d.vals && !SPECS.some(s => s.req === d.req));
+  return `<footer class="spec-footer"><button class="comp-edit" data-addspec aria-haspopup="menu" aria-expanded="false" aria-controls="specMenu" ${available.length ? "" : "disabled"}>${available.length ? "Adicionar especificação" : "Todas as especificações adicionadas"}</button></footer>`;
+}
+let specMenuAnchor = null;
+function closeSpecMenu(restoreFocus = false) {
+  $("#specMenu").hidden = true;
+  if (specMenuAnchor) {
+    specMenuAnchor.setAttribute("aria-expanded", "false");
+    if (restoreFocus) specMenuAnchor.focus();
+  }
+  specMenuAnchor = null;
+}
+function openSpecMenu(anchor) {
+  if (!$("#specMenu").hidden) { closeSpecMenu(true); return; }
+  const menu = $("#specMenu");
+  const available = (activeComp?.catalogoNaoEdital || []).filter(d => d.vals && !SPECS.some(s => s.req === d.req));
+  menu.innerHTML = available.map(d => `<button class="km-item" role="menuitem" data-specval="${esc(d.req)}">${esc(d.req)}</button>`).join("");
+  specMenuAnchor = anchor;
+  anchor.setAttribute("aria-expanded", "true");
+  menu.hidden = false;
+  const r = anchor.getBoundingClientRect();
+  const top = r.bottom + 6 + menu.offsetHeight > innerHeight - 8 ? r.top - menu.offsetHeight - 6 : r.bottom + 6;
+  menu.style.top = Math.max(8, top) + "px";
+  menu.style.left = Math.max(8, Math.min(r.left, innerWidth - menu.offsetWidth - 8)) + "px";
+  menu.querySelector("button")?.focus({ preventScroll: true });
 }
 /* Cards de referência (colapsáveis) DENTRO do sheet de editar: mesma cara dos da tela atrás, porém read-only. */
 function editRefCards(it) {
-  const prodComps = it.componentes.filter(c => c.mecanica === "produto");
-  // Descrição = MESMO card da leitura (com o icon group no hover: ver no edital + copiar)
-  let html = descBlockHTML(it);
-  // "não exigidas": com o "+" para adicionar à comparação (mesmo comportamento da tela de leitura); some as já adicionadas
-  const dset = addedDiff[active] || new Set();
-  const seenD = new Set();
-  const naoExig = prodComps.flatMap(c => c.catalogoNaoEdital || [])
-    .map(t => typeof t === "string" ? { req: t } : t)
-    .filter(d => !seenD.has(d.req) && seenD.add(d.req) && !dset.has(d.req));
-  if (naoExig.length) {
-    const note = "Especificações que estão cadastradas no catálogo e o edital não exige. Clique no + para adicionar na lista e ter o comparativo dessa especificação (entra como diferencial, não conta no atende).";
-    const tags = `<div class="ex-note">${esc(note)}</div><div class="tag-list">${naoExig.map(d => d.vals ? `<button class="tag-item na-tag diff-tag" data-adddiff="${esc(d.req)}" data-tip="Adicionar esta especificação à lista para comparar os produtos">${esc(d.req)}<span class="na-add">${ICO_PLUS}</span></button>` : `<span class="tag-item">${esc(d.req)}</span>`).join("")}</div>`;
-    html += collapsible("Especificações não exigidas pelo edital", tags, naoExig.length, true);
-  }
-  const na = prodComps.flatMap(c => c.naoAnalisadas || []);
-  if (na.length) {
-    const note = "Especificações exigidas pelo edital que ainda não foram analisadas (falta o valor no seu catálogo).";
-    html += collapsible("Especificações no edital não analisadas", tagList(na.map(n => n.req), note), na.length, true);
-  }
-  return html;
+  return descBlockHTML(it);
 }
 /* "+" numa spec "no edital não analisados": adiciona ao fim da comparação e some da seção */
 function addNaoAnalisado(reqName) {
@@ -881,7 +895,7 @@ function addDiferencial(reqName, fromSheet) {
   if (active == null || !SPECS) return;
   const prodComp = ITEMS[active].componentes.find(c => c.mecanica === "produto");
   const d = prodComp && (prodComp.catalogoNaoEdital || []).map(t => typeof t === "string" ? { req: t } : t).find(x => x.req === reqName);
-  if (!d || !d.vals) return;
+  if (!d || !d.vals || SPECS.some(s => s.req === reqName)) return;
   SPECS.push({ req: d.req, exig: "", diferencial: true, fromDiff: true, unidade: d.unidade || "", modulo: "Diferencial", origem: { doc: "Catálogo do produto", pag: "—", trecho: "Especificação do produto, não exigida pelo edital." }, cells: MX_SKUS.map((_, i) => ({ st: "diff", v: (d.vals && d.vals[i]) || "—", c: null })) });
   (addedDiff[active] || (addedDiff[active] = new Set())).add(reqName);
   recompute();
@@ -1013,7 +1027,7 @@ function hideLockAlert() { const ov = document.getElementById("lockOverlay"), m 
 /* ============================================================
    Edição inline + interações
    ============================================================ */
-const rematchRow = spec => { if (spec.exigNa) return; spec.cells.forEach(cc => cc.st = evalCell(cc.v, spec.exig)); };
+const rematchRow = spec => { if (spec.exigNa || spec.pendingAnalysis) return; spec.cells.forEach(cc => cc.st = evalCell(cc.v, spec.exig)); };
 function commitEdit(el) {
   const ri = +el.dataset.ri, kind = el.dataset.edit, txt = el.textContent.trim(), spec = SPECS[ri];
   // edição só acontece no modo de edição; guarda o valor e reprocessa só no Salvar (sem auto-recálculo)
@@ -1297,6 +1311,34 @@ function wire() {
     const cn = e.target.closest("[data-clnote]"); if (cn) { notPrototyped(); return; }
     const ac = e.target.closest("[data-addcol]"); if (ac) { notPrototyped(); return; }
   });
+  tb.addEventListener("click", e => {
+    const anchor = e.target.closest("[data-addspec]"); if (!anchor) return;
+    if (lockedByOther) { showLockAlert(lockedByOther); return; }
+    openSpecMenu(anchor);
+  });
+  $("#specMenu").addEventListener("click", e => {
+    const option = e.target.closest("[data-specval]"); if (!option) return;
+    closeSpecMenu();
+    if (lockedByOther) { showLockAlert(lockedByOther); return; }
+    addDiferencial(option.dataset.specval);
+  });
+  document.addEventListener("click", e => {
+    if (!e.target.closest("#specMenu, [data-addspec]")) closeSpecMenu();
+  });
+  document.addEventListener("keydown", e => {
+    if ($("#specMenu").hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); closeSpecMenu(true); }
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+      e.preventDefault();
+      const options = [...$("#specMenu").querySelectorAll("button")];
+      const i = options.indexOf(document.activeElement);
+      const next = e.key === "Home" ? 0 : e.key === "End" ? options.length - 1 : (i + (e.key === "ArrowDown" ? 1 : -1) + options.length) % options.length;
+      options[next]?.focus();
+    }
+    if (e.key === "Tab") closeSpecMenu(true);
+  }, true);
+  window.addEventListener("resize", () => closeSpecMenu());
+  document.addEventListener("scroll", e => { if (!$("#specMenu").contains(e.target)) closeSpecMenu(); }, true);
   tb.addEventListener("keydown", e => {
     const inp = e.target.closest(".val-inline-input"); if (!inp) return;
     if (e.key === "Enter") { e.preventDefault(); tryCommitInline(+inp.dataset.vedit); }

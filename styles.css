@@ -971,3 +971,9 @@ td.cell.diff { background: #FAFAFA; }
 .warn-modal h3 { margin: 0 0 10px; font-size: 16px; font-weight: 600; }
 .warn-modal p { margin: 0 0 18px; font-size: 13.5px; color: var(--foreground); line-height: 1.6; }
 .warn-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.spec-footer { padding: 12px 0; border-top: 1px solid var(--border); }
+.spec-footer .comp-edit { max-width: 100%; }
+.spec-footer .comp-edit:disabled { opacity: .5; cursor: default; background: var(--brand); border-color: var(--brand); }
+.spec-menu { max-width: calc(100vw - 16px); max-height: min(320px, calc(100dvh - 16px)); overflow-y: auto; }
+.spec-menu .km-item { overflow-wrap: anywhere; }
+.spec-menu .km-item:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; background: var(--muted); }
