@@ -1001,6 +1001,8 @@ td.cell.diff { background: #FAFAFA; }
 .ed-value-row .ed-input { flex: 1; min-width: 0; }
 .ed-value-row .act-ico { flex-shrink: 0; opacity: 1; }
 .ed-head { gap: 8px; flex-wrap: wrap; }
+.to-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.to-heading .nb-iconbtn { flex-shrink: 0; }
 #editHeaderAdd { margin-left: auto; }
 #editHeaderAdd:empty { display: none; }
 #editHeaderAdd .comp-edit:disabled { opacity: .5; cursor: default; }
